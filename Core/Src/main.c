@@ -387,8 +387,11 @@ int main(void)
 			}
 			disablePWM();
 
-			/*校准后Flash参数写入*/
-			Write_MotorData();
+			/*校准后Flash参数写入（仅校准成功时）*/
+			if(p_encoder_g->cali_finish == 1 || p_motor_g->motor_calibrated == 1)
+			{
+				Write_MotorData();
+			}
 
 			printf("\n\r Calibration complete.  Press 'esc' to return to menu\n\r");
 			caliOn_flag = 0;
