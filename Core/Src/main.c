@@ -195,18 +195,18 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 		/*转矩控制精度测试*/
-		if(p_motor_g->controlMode == FOC_CURRENT_LOOP && TorqueTestFlag == 1 && TorqueTestLoop != 0 && FSMstate == MOTOR_MODE)
+		if (p_motor_g->controlMode == FOC_CURRENT_LOOP && TorqueTestFlag == 1 && TorqueTestLoop != 0 && FSMstate == MOTOR_MODE)
 		{
-			for(uint8_t n=1;n<11;n++)
+			for (uint8_t n=1;n<11;n++)
 			{
 				Motor_Iq = 24.32447f*n/10.0f;
 				HAL_Delay(5000);
 			}
 			TorqueTestLoop--;
-			if(TorqueTestLoop==0) Motor_Iq=0;
+			if (TorqueTestLoop==0) Motor_Iq=0;
 		}
 		
-		if(u8_100usFlag == 1)//100us时基
+		if (u8_100usFlag == 1)//100us时基
 		{
 			Pack_ActiveReport_Current(FOC_CAN_TxData ,p_motor_g->Q_axis_current_filt);
 			CAN_SendMessage(CanID_Upload,FOC_CAN_TxData,8);//测试上传CAN ID = 0x700
@@ -214,18 +214,18 @@ int main(void)
 			u8_100usFlag = 0;
 		}
 			
-		if(u8_1msFlag == 1)//1ms时基
+		if (u8_1msFlag == 1)//1ms时基
 		{
 			Calc_current_rms();
 			temperatureSample();
 			
 			static uint8_t cnt=0;
-			if(fabs(p_position_loop_g->target - p_encoder2_g->pos_abs) < 0.015)
-			//if(fabs(Motor_P - p_encoder2_g->pos_abs) < 0.015)
+			if (fabs(p_position_loop_g->target - p_encoder2_g->pos_abs) < 0.015)
+			//if (fabs(Motor_P - p_encoder2_g->pos_abs) < 0.015)
 			{
-				if(cnt < 20)
+				if (cnt < 20)
 					cnt ++;
-				if(cnt == 10)
+				if (cnt == 10)
 				{
 					bTargetPosFinish = true;
 				}
@@ -236,13 +236,13 @@ int main(void)
 				bTargetPosFinish = false;
 			}
 			
-			if(VOFA_On)
+			if (VOFA_On)
 			{
 				LoadData();
 				HAL_UART_Transmit_DMA(&huart6,VOFA_dma_tx_buf,4*CH_COUNT+4);
 			}
 			
-			if(bDynamMode == true)
+			if (bDynamMode == true)
 			{
 				Pack_ActiveReport(FOC_CAN_TxData,p_encoder2_g->pos_abs,p_encoder2_g->mech_vel,p_motor_g->Q_axis_current_filt*KT_OUT,p_motor_g->Err1,p_motor_g->Err2,p_motor_g->Warning);
 				CAN_SendMessage(CanID_Upload,FOC_CAN_TxData,16);//测试上传CAN ID = 0x7FE
@@ -252,19 +252,19 @@ int main(void)
 		}
 
 		// Flash写入标志检查（主循环执行，避免ISR阻塞）
-		if(flash_write_pending == 1)
+		if (flash_write_pending == 1)
 		{
 			flash_write_pending = 0;
 			Write_MotorData();
 		}
 
-		if(stateChange==1)
+		if (stateChange==1)
 		{
 			FSMstate = MOTOR_MODE;
 			state_change = 1;
 			stateChange = 0;
 		}
-		if(stateChange==2)
+		if (stateChange==2)
 		{
 			enablePWM();
 			ApplyVoltDQToSVPWM(1.5, 0, PI/2.0f);
@@ -273,7 +273,7 @@ int main(void)
 			disablePWM();
 		}
 
-//		if(HAL_GPIO_ReadPin(K1_GPIO_Port,K1_Pin) == GPIO_PIN_RESET)  /* 霍尔传感器状态获取 */
+//		if (HAL_GPIO_ReadPin(K1_GPIO_Port,K1_Pin) == GPIO_PIN_RESET)  /* 霍尔传感器状态获取 */
 //		{
 ////		caliOn_flag = 1;
 ////		p_encoder_g->cali_start = 1;
@@ -308,7 +308,7 @@ int main(void)
 //			 HAL_Delay(50);
 
 			/*测试接收后回传数据*/
-//			if(USART2_RX_COMPLETE == 1)
+//			if (USART2_RX_COMPLETE == 1)
 //			{
 //				RS485DIR_TX;
 //				HAL_UART_Transmit_DMA(&huart2,USART2_RX_BUF,8);
@@ -317,7 +317,7 @@ int main(void)
 //			}
 			
 			/*485发送测试 2.5M可正常发送*/
-//			if(RS485_TXcnt)
+//			if (RS485_TXcnt)
 //			{
 //				uint8_t rs485buf_Tx[8]={0x01,0x03,0x00,0x00,0x00,0x08,0x44,0x0C};
 //				HAL_GPIO_WritePin(GPIOD,GPIO_PIN_7,GPIO_PIN_SET);	
@@ -340,14 +340,14 @@ int main(void)
 //			}
 //			HAL_Delay(1000);
 
-//		if(VOFA_cnt==VOFA_Period&&VOFA_On)//发送三个变量总线用时约170us，所以两个周期发送一次 这里需要注意的一点，如果发送间隔小于实际发送所有变量所需时间时，可能会导致转速环下转速跳变...
+//		if (VOFA_cnt==VOFA_Period&&VOFA_On)//发送三个变量总线用时约170us，所以两个周期发送一次 这里需要注意的一点，如果发送间隔小于实际发送所有变量所需时间时，可能会导致转速环下转速跳变...
 //		{
 //			LoadData();
 //			HAL_UART_Transmit_DMA(&huart8,VOFA_dma_tx_buf,4*CH_COUNT+4);
 //			VOFA_cnt=0;
 //		}
 
-		if(caliOn_flag == 1)
+		if (caliOn_flag == 1)
 		{
 //			CalcCurrentOffset(&p_motor_g->phase_a_current_offset,&p_motor_g->phase_b_current_offset);//计算电流偏置
 			enablePWM();
@@ -360,7 +360,7 @@ int main(void)
 			/*测试硬件过流*/
 //			p_motor_g->phase_order = POSITIVE_PHASE_ORDER;
 //			float v_d = 0.0f;
-//			for(uint32_t i=0;i<6000;i++)
+//			for (uint32_t i=0;i<6000;i++)
 //			{
 //				v_d += 0.01f;
 //				ApplyVoltDQToSVPWM(v_d, 0, 0);
@@ -372,14 +372,14 @@ int main(void)
 //			state_change = 0;
 			
 			/*编码器校准*/
-			if(p_encoder_g->cali_start == 1)
+			if (p_encoder_g->cali_start == 1)
 			{
 				p_encoder_g->cali_start = 0;
 				calibrate();//整定过程中电流波形周期变化
 //				order_phases();//相序检测
 			}
 			/*电阻电感整定*/
-			if(p_motor_g->cali_start == 1)
+			if (p_motor_g->cali_start == 1)
 			{
 				p_motor_g->cali_start = 0;
 				Motor.MeasureResistance();
@@ -388,7 +388,7 @@ int main(void)
 			disablePWM();
 
 			/*校准后Flash参数写入（仅校准成功时）*/
-			if(p_encoder_g->cali_finish == 1 || p_motor_g->motor_calibrated == 1)
+			if (p_encoder_g->cali_finish == 1 || p_motor_g->motor_calibrated == 1)
 			{
 				Write_MotorData();
 			}
@@ -419,12 +419,12 @@ void SystemClock_Config(void)
   */
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
 
-  while(!__HAL_PWR_GET_FLAG(PWR_FLAG_VOSRDY)) {}
+  while (!__HAL_PWR_GET_FLAG(PWR_FLAG_VOSRDY)) {}
 
   __HAL_RCC_SYSCFG_CLK_ENABLE();
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE0);
 
-  while(!__HAL_PWR_GET_FLAG(PWR_FLAG_VOSRDY)) {}
+  while (!__HAL_PWR_GET_FLAG(PWR_FLAG_VOSRDY)) {}
 
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.

@@ -127,11 +127,11 @@ void Write_MotorData(void)
 /*Flash参数读取*/
 void Read_MotorData (void)
 {
-	for(uint16_t i=0; i<32; i++)
+	for (uint16_t i=0; i<32; i++)
 		flash_buffer[i] = *(uint32_t*)(DATA_FLASH_ADDR + 4*i);
 
 	// 校验magic number，无效则使用默认值
-	if(flash_buffer[31] != FLASH_MAGIC)
+	if (flash_buffer[31] != FLASH_MAGIC)
 	{
 		printf("Flash data invalid, using defaults\r\n");
 		return;
@@ -139,12 +139,12 @@ void Read_MotorData (void)
 
 	p_encoder_g->cali_finish = flash_buffer[2];
 	p_motor_g->motor_calibrated = flash_buffer[5];
-	if(p_encoder_g->cali_finish == 1)
+	if (p_encoder_g->cali_finish == 1)
 	{
 		p_encoder_g->elec_offset = uint2float(flash_buffer[0]);//电角度偏移
 		p_motor_g->phase_order = uint2float(flash_buffer[1]);//相序
 	}
-	if(p_motor_g->motor_calibrated == 1)
+	if (p_motor_g->motor_calibrated == 1)
 	{
 		p_motor_g->phase_resistance = uint2float(flash_buffer[3]);//电阻
 		p_motor_g->phase_inductance = uint2float(flash_buffer[4]);//电感

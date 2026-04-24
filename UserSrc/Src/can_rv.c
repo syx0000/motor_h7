@@ -37,11 +37,11 @@ void CAN_SendMessage(uint32_t id, uint8_t *data, uint8_t len)
 	TxHeader.Identifier = id; // 设置报文ID
 	TxHeader.IdType = FDCAN_STANDARD_ID; //标准ID
 	TxHeader.TxFrameType = FDCAN_DATA_FRAME;//数据帧
-	if(len == 8)
+	if (len == 8)
 		TxHeader.DataLength = FDCAN_DLC_BYTES_8; // 使用宏定义数据长度
-	else if(len == 12)
+	else if (len == 12)
 		TxHeader.DataLength = FDCAN_DLC_BYTES_12; // 使用宏定义数据长度
-	else if(len == 16)
+	else if (len == 16)
 		TxHeader.DataLength = FDCAN_DLC_BYTES_16; // 使用宏定义数据长度
 	else
 		TxHeader.DataLength = FDCAN_DLC_BYTES_8; // 默认8字节
@@ -87,16 +87,16 @@ void CAN_Config(void)
 //  sFilterConfig.SlaveStartFilterBank = 14;
 //	
 //	
-// if(HAL_CAN_ConfigFilter(&hcan1,&sFilterConfig) != HAL_OK)//初始化过滤器
+// if (HAL_CAN_ConfigFilter(&hcan1,&sFilterConfig) != HAL_OK)//初始化过滤器
 //	  {
 //		Error_Handler();
 //		}
-// if(HAL_CAN_Start(&hcan1) != HAL_OK)//打开can
+// if (HAL_CAN_Start(&hcan1) != HAL_OK)//打开can
 //	 {
 //		Error_Handler();//这里会返回错误（硬件同步失败：CAN_MSR-INAK） 更换can芯片后正常
 //		printf("CAN IC Damaged");
 //	 }
-// if(HAL_CAN_ActivateNotification(&hcan1,CAN_IT_RX_FIFO0_MSG_PENDING) != HAL_OK)//开启接受邮邮箱0挂起中断
+// if (HAL_CAN_ActivateNotification(&hcan1,CAN_IT_RX_FIFO0_MSG_PENDING) != HAL_OK)//开启接受邮邮箱0挂起中断
 //	 {
 //		Error_Handler();
 //	 }
@@ -116,11 +116,11 @@ void HAL_CAN_RxFifo0MsgPendingCallback(FDCAN_RxHeaderTypeDef *hfdcan1)
 //		CAN_MsgProcess(&RxHeader,CAN_RxData);
 		
 //		/*PD控制通信协议*/
-//		if(p_motor_g->controlMode == MIT_PD)
+//		if (p_motor_g->controlMode == MIT_PD)
 //		{
-//			if( (RxHeader.StdId == 0x36) && (CAN_RxData[0] == CAN_ID) && (CAN_RxData[1] == 0x1C) )//切换控制模式
+//			if ( (RxHeader.StdId == 0x36) && (CAN_RxData[0] == CAN_ID) && (CAN_RxData[1] == 0x1C) )//切换控制模式
 //			{
-//				switch(CAN_RxData[2])
+//				switch (CAN_RxData[2])
 //				{
 //						case MIT_PD:
 //							p_motor_g->controlMode = MIT_PD; 
@@ -138,26 +138,26 @@ void HAL_CAN_RxFifo0MsgPendingCallback(FDCAN_RxHeaderTypeDef *hfdcan1)
 //						break;
 //				}
 //			}
-//			if((uint8_t)RxHeader.StdId == CAN_ID)
+//			if ((uint8_t)RxHeader.StdId == CAN_ID)
 //			{
-//					if(((CAN_RxData[0]==0xFF) && (CAN_RxData[1]==0xFF) && (CAN_RxData[2]==0xFF) && (CAN_RxData[3]==0xFF) && 
+//					if (((CAN_RxData[0]==0xFF) && (CAN_RxData[1]==0xFF) && (CAN_RxData[2]==0xFF) && (CAN_RxData[3]==0xFF) && 
 //							(CAN_RxData[4]==0xFF) && (CAN_RxData[5]==0xFF) && (CAN_RxData[6]==0xFF) && (CAN_RxData[7]==0xFC)))//FF FF FF FF FF FF FF FC
 //					{
 //							FSMstate = MOTOR_MODE;//切电机模式
 //							state_change = 1;
 //					}
-//					else if(((CAN_RxData[0]==0xFF) && (CAN_RxData[1]==0xFF) && (CAN_RxData[2]==0xFF) && (CAN_RxData[3]==0xFF) && 
+//					else if (((CAN_RxData[0]==0xFF) && (CAN_RxData[1]==0xFF) && (CAN_RxData[2]==0xFF) && (CAN_RxData[3]==0xFF) && 
 //							(CAN_RxData[4]==0xFF) && (CAN_RxData[5]==0xFF) && (CAN_RxData[6]==0xFF) && (CAN_RxData[7]==0xFD)))//FF FF FF FF FF FF FF FD
 //					{
 //							FSMstate = REST_MODE;//切休息模式
 //							state_change = 1;
 //					}
-//					else if(((CAN_RxData[0]==0xFF) && (CAN_RxData[1]==0xFF) && (CAN_RxData[2]==0xFF) && (CAN_RxData[3]==0xFF) && 
+//					else if (((CAN_RxData[0]==0xFF) && (CAN_RxData[1]==0xFF) && (CAN_RxData[2]==0xFF) && (CAN_RxData[3]==0xFF) && 
 //							(CAN_RxData[4]==0xFF) && (CAN_RxData[5]==0xFF) && (CAN_RxData[6]==0xFF) && (CAN_RxData[7]==0xFE)))//FF FF FF FF FF FF FF FE
 //					{
 //	//            PositionSensor_ZeroPosition();//设置当前位置为机械零位
 //					}
-//					else if(FSMstate == MOTOR_MODE)//80 00 A0 00 00 A0 08 F5   0,2.5,0,1.25,0.6  80 00 80 00 00 00 08 00 停止
+//					else if (FSMstate == MOTOR_MODE)//80 00 A0 00 00 A0 08 F5   0,2.5,0,1.25,0.6  80 00 80 00 00 00 08 00 停止
 //					{
 //							unpack_cmd(CAN_RxData, &controller);//指令解码，得到PD控制所需的5个参数
 //					}
@@ -168,13 +168,13 @@ void HAL_CAN_RxFifo0MsgPendingCallback(FDCAN_RxHeaderTypeDef *hfdcan1)
 //		else
 //		{
 //					/*FOC闭环通信协议*/
-//				switch(RxHeader.StdId)
+//				switch (RxHeader.StdId)
 //			{
 //				uint32_t parameterSet;
 //				float target;
 //			//电机状态控制命令  1，电机失能；2，电机使能
 //					case 0x38://帧ID
-//						switch(CAN_RxData[CAN_ID])
+//						switch (CAN_RxData[CAN_ID])
 //						{
 //							case 0x01:
 //								FSMstate = REST_MODE;//切休息模式
@@ -190,15 +190,15 @@ void HAL_CAN_RxFifo0MsgPendingCallback(FDCAN_RxHeaderTypeDef *hfdcan1)
 //					break;
 
 //					case 0x36://帧ID
-//						if(CAN_RxData[0] == CAN_ID)
+//						if (CAN_RxData[0] == CAN_ID)
 //						{
 //							parameterSet = (CAN_RxData[5]<<24) | (CAN_RxData[4]<<16) | (CAN_RxData[3]<<8) | CAN_RxData[2];
-//							switch(CAN_RxData[1])
+//							switch (CAN_RxData[1])
 //							{
 //							case 0x1C://控制模式
-//								if(FSMstate == REST_MODE)//电机必须为空闲状态
+//								if (FSMstate == REST_MODE)//电机必须为空闲状态
 //								{
-//									switch(parameterSet)
+//									switch (parameterSet)
 //									{
 //										case MIT_PD:
 //											p_motor_g->controlMode = MIT_PD;//CAN_ID 1C 01 00 00 00 00 00 
@@ -227,10 +227,10 @@ void HAL_CAN_RxFifo0MsgPendingCallback(FDCAN_RxHeaderTypeDef *hfdcan1)
 //					break;				
 
 //					case 0x32://帧ID
-//						if(FSMstate == MOTOR_MODE)//电机必须为使能状态
+//						if (FSMstate == MOTOR_MODE)//电机必须为使能状态
 //						{
 //							target =  (int16_t)((CAN_RxData[2*CAN_ID]<<8) | CAN_RxData[2*CAN_ID+1])/100.0f;
-//							switch(p_motor_g->controlMode)
+//							switch (p_motor_g->controlMode)
 //							{
 //								case FOC_CURRENT_LOOP:
 //									Motor_Iq = fmaxf(fminf(target, iq_max), iq_min);//电流限幅
@@ -259,10 +259,10 @@ void HAL_CAN_RxFifo0MsgPendingCallback(FDCAN_RxHeaderTypeDef *hfdcan1)
 //					}
 //					break;
 //					case 0x33://帧ID
-//						if(FSMstate == MOTOR_MODE)//电机必须为使能状态
+//						if (FSMstate == MOTOR_MODE)//电机必须为使能状态
 //						{
 //							target =  ((int16_t)((CAN_RxData[2*(CAN_ID-4)]<<8) | CAN_RxData[2*(CAN_ID-4)+1]))/100.0f;
-//							switch(p_motor_g->controlMode)
+//							switch (p_motor_g->controlMode)
 //							{
 //								case FOC_CURRENT_LOOP:
 //									target = fmaxf(fminf(target, iq_max), iq_min);//电流限幅
@@ -320,15 +320,15 @@ void pack_reply(uint8_t *tData,float pos, float vel, float torque, uint16_t err1
 	tData[9] = temp_Mos;//Mos温度
 	tData[10] = temp_Mos>>8;
 	
-	if(FSMstate == REST_MODE)
+	if (FSMstate == REST_MODE)
 		state &= 0xFE;
 	else
 		state |= 0x01;
 	
-	if(err1!=0 || err2!=0)
+	if (err1!=0 || err2!=0)
 		state |= 0x02;
 	
-	if(warning!=0)
+	if (warning!=0)
 		state |= 0x04;
 
 	
@@ -387,18 +387,18 @@ void Pack_ActiveReport(uint8_t *tData,float pos, float vel, float torque, uint16
 	tData[10] = temp_Motor;//Mos温度
 	tData[11] = temp_Motor>>8;
 	
-	if(FSMstate == REST_MODE)
+	if (FSMstate == REST_MODE)
 		state &= 0xFE;
 	else
 		state |= 0x01;
 	
-	if(err1!=0 || err2!=0)
+	if (err1!=0 || err2!=0)
 		state |= 0x02;
 	
-	if(warning!=0)
+	if (warning!=0)
 		state |= 0x04;
 	
-	if(bTargetPosFinish == true)
+	if (bTargetPosFinish == true)
 		state |= 0x08;
 	else
 		state &= 0xF7;
@@ -434,7 +434,7 @@ void unpack_position_cmd(uint8_t CAN_RxData[])
 	
 	Motor_P = (uint32_to_float(p_raw, p_min, p_max, 24)) + p_encoder2_g->mech_offset;
 	
-	if(p_motor_g->controlMode == FOC_POSITION_LOOP_PP && trajcplt == 0)
+	if (p_motor_g->controlMode == FOC_POSITION_LOOP_PP && trajcplt == 0)
 	{
 		init_planner(p_planner_s, p_encoder2_g->pos_abs, Motor_P, 8.376f, 2.0f, 2.0f); //目标位置、最大速度、加速度、减速度需要按照需求设置
 		trajcplt = 1;
@@ -442,7 +442,7 @@ void unpack_position_cmd(uint8_t CAN_RxData[])
 
 	p_position_loop_g->output_limit = (uint32_to_float(v_raw, w_min, w_max, 16)) * GR;//位置模式时，速度指令用于限制运行转速
 
-	if(bPos_PP_Flag != true)//非位置PP模式
+	if (bPos_PP_Flag != true)//非位置PP模式
 		p_motor_g->controlMode = FOC_POSITION_LOOP;//设置位置模式
 }
 
@@ -483,38 +483,38 @@ void CAN_MsgProcess(uint32_t Identifier, uint8_t *FDCANRxData)
 	bool bSaveDataFlag = false;
 	CAN_timeout = 0; // 收到CAN消息，清零超时计数器
 
-	for(uint8_t i=0;i<64;i++)
+	for (uint8_t i=0;i<64;i++)
 	{
 		FDCAN1_RX_DATA[i] = FDCANRxData[i];
 		FDCANRxData[i] = 0;
 	}
-	if(Identifier==0x80+FDCAN_ID) 
+	if (Identifier==0x80+FDCAN_ID) 
 	{
-		//if(bDynamMode == false)
+		//if (bDynamMode == false)
 			CAN_SendMessage(FDCAN_ID+0x100,FDCAN1_TxData,12);//反馈状态(单轴)
 	}
 	
-	if(Identifier==0x700+FDCAN_ID) //使能、失能、设置位置零点、清除错误
+	if (Identifier==0x700+FDCAN_ID) //使能、失能、设置位置零点、清除错误
 	{
-		if(((FDCAN1_RX_DATA[0]==0xFF) && (FDCAN1_RX_DATA[1]==0xFF) && (FDCAN1_RX_DATA[2]==0xFF) && (FDCAN1_RX_DATA[3]==0xFF) && 
+		if (((FDCAN1_RX_DATA[0]==0xFF) && (FDCAN1_RX_DATA[1]==0xFF) && (FDCAN1_RX_DATA[2]==0xFF) && (FDCAN1_RX_DATA[3]==0xFF) && 
 			(FDCAN1_RX_DATA[4]==0xFF) && (FDCAN1_RX_DATA[5]==0xFF) && (FDCAN1_RX_DATA[6]==0xFF) && (FDCAN1_RX_DATA[7]==0xFA)))
 		{
 			FSMstate = MOTOR_MODE;//使能
 			state_change = 1;
 		}
-		else if(((FDCAN1_RX_DATA[0]==0xFF) && (FDCAN1_RX_DATA[1]==0xFF) && (FDCAN1_RX_DATA[2]==0xFF) && (FDCAN1_RX_DATA[3]==0xFF) && 
+		else if (((FDCAN1_RX_DATA[0]==0xFF) && (FDCAN1_RX_DATA[1]==0xFF) && (FDCAN1_RX_DATA[2]==0xFF) && (FDCAN1_RX_DATA[3]==0xFF) && 
 			(FDCAN1_RX_DATA[4]==0xFF) && (FDCAN1_RX_DATA[5]==0xFF) && (FDCAN1_RX_DATA[6]==0xFF) && (FDCAN1_RX_DATA[7]==0xFB)))
 		{
 			FSMstate = REST_MODE;//失能
 			state_change = 1;
 		}
-		else if(((FDCAN1_RX_DATA[0]==0xFF) && (FDCAN1_RX_DATA[1]==0xFF) && (FDCAN1_RX_DATA[2]==0xFF) && (FDCAN1_RX_DATA[3]==0xFF) && 
+		else if (((FDCAN1_RX_DATA[0]==0xFF) && (FDCAN1_RX_DATA[1]==0xFF) && (FDCAN1_RX_DATA[2]==0xFF) && (FDCAN1_RX_DATA[3]==0xFF) && 
 			(FDCAN1_RX_DATA[4]==0xFF) && (FDCAN1_RX_DATA[5]==0xFF) && (FDCAN1_RX_DATA[6]==0xFF) && (FDCAN1_RX_DATA[7]==0xFC)))
 		{
 			p_encoder2_g->mech_offset = p_encoder2_g->mech_abs;//设置位置零点
 			flash_write_pending = 1;
 		}
-		else if(((FDCAN1_RX_DATA[0]==0xFF) && (FDCAN1_RX_DATA[1]==0xFF) && (FDCAN1_RX_DATA[2]==0xFF) && (FDCAN1_RX_DATA[3]==0xFF) && 
+		else if (((FDCAN1_RX_DATA[0]==0xFF) && (FDCAN1_RX_DATA[1]==0xFF) && (FDCAN1_RX_DATA[2]==0xFF) && (FDCAN1_RX_DATA[3]==0xFF) && 
 			(FDCAN1_RX_DATA[4]==0xFF) && (FDCAN1_RX_DATA[5]==0xFF) && (FDCAN1_RX_DATA[6]==0xFF) && (FDCAN1_RX_DATA[7]==0xFD)))
 		{
 			p_motor_g->error = Normal;//清除错误
@@ -524,20 +524,20 @@ void CAN_MsgProcess(uint32_t Identifier, uint8_t *FDCANRxData)
 		}
 		
 		pack_reply(FOC_CAN_TxData,p_encoder2_g->pos_abs,p_encoder2_g->mech_vel,p_motor_g->Q_axis_current_filt*KT_OUT,p_motor_g->Err1,p_motor_g->Err2,p_motor_g->Warning);
-		//if(bDynamMode == false)
+		//if (bDynamMode == false)
 			CAN_SendMessage(0x100+FDCAN_ID,FOC_CAN_TxData,12);
 	}
-	if(Identifier==0x600+FDCAN_ID)//对象字典读写
+	if (Identifier==0x600+FDCAN_ID)//对象字典读写
 	{
 		uint16_t parameter_U16;
 		uint32_t parameter_U32;
 		uint32_t parameterIndex = FDCAN1_RX_DATA[1]|FDCAN1_RX_DATA[2]<<8;
 		uint32_t parameterLength = FDCAN1_RX_DATA[3];
-		switch(FDCAN1_RX_DATA[0])
+		switch (FDCAN1_RX_DATA[0])
 		{
 			case 0x40://对象字典读
 			{
-				switch(parameterIndex)
+				switch (parameterIndex)
 				{
 					case 0x2000://位置范围下限
 					{
@@ -672,13 +672,13 @@ void CAN_MsgProcess(uint32_t Identifier, uint8_t *FDCANRxData)
 				FDCAN1_TxData[1] = FDCAN1_RX_DATA[1];
 				FDCAN1_TxData[2] = FDCAN1_RX_DATA[2];
 				FDCAN1_TxData[3] = FDCAN1_RX_DATA[3];
-				//if(bDynamMode == false)
+				//if (bDynamMode == false)
 					CAN_SendMessage(FDCAN_ID+0x580,FDCAN1_TxData,8);
 			}
 			break;
 			case 0x23://对象字典写
 			{
-				switch(parameterIndex)
+				switch (parameterIndex)
 				{
 					case 0x2000://位置范围下限
 					{
@@ -774,7 +774,7 @@ void CAN_MsgProcess(uint32_t Identifier, uint8_t *FDCANRxData)
 					break;
 					case 0x2F02://编码器零位学习（0-无操作，1-回零校准）
 					{
-						if(FDCAN1_RX_DATA[4] == 1)
+						if (FDCAN1_RX_DATA[4] == 1)
 						{
 							FSMstate = CALIBRATION_MODE;
 							p_encoder_g->cali_start = 1;
@@ -784,7 +784,7 @@ void CAN_MsgProcess(uint32_t Identifier, uint8_t *FDCANRxData)
 					break;
 					case 0x2F03://位置模式（0-CSP模式，1-PP测试模式）
 					{
-						if(FDCAN1_RX_DATA[4] == 1)
+						if (FDCAN1_RX_DATA[4] == 1)
 						{
 							p_motor_g->controlMode = FOC_POSITION_LOOP_PP;
 							bPos_PP_Flag = true;
@@ -803,16 +803,16 @@ void CAN_MsgProcess(uint32_t Identifier, uint8_t *FDCANRxData)
 					break;
 					case 0x2F05://测试命令（0-无操作，1-电流环带宽测试，2-测试状态上传命令）
 					{
-						if(FDCAN1_RX_DATA[4] == 1)
+						if (FDCAN1_RX_DATA[4] == 1)
 							;//
-						else if(FDCAN1_RX_DATA[4] == 2)
+						else if (FDCAN1_RX_DATA[4] == 2)
 							bDynamMode = true;//测功机测试模式，1ms周期上传扭矩速度位置，电机/MOS温度，状态信息
 					}
 					break;
 					default:
 					break;
 				}
-				if(bSaveDataFlag == true)
+				if (bSaveDataFlag == true)
 					flash_write_pending = 1;
 				
 				FDCAN1_TxData[0] = 0x60;
@@ -823,7 +823,7 @@ void CAN_MsgProcess(uint32_t Identifier, uint8_t *FDCANRxData)
 				FDCAN1_TxData[5] = FDCAN1_RX_DATA[5];
 				FDCAN1_TxData[6] = FDCAN1_RX_DATA[6];
 				FDCAN1_TxData[7] = FDCAN1_RX_DATA[7];
-				//if(bDynamMode == false)
+				//if (bDynamMode == false)
 					CAN_SendMessage(FDCAN_ID+0x580,FDCAN1_TxData,8);
 			}
 			break;
@@ -833,40 +833,40 @@ void CAN_MsgProcess(uint32_t Identifier, uint8_t *FDCANRxData)
 		}
 	}
 
-	switch(Identifier)
+	switch (Identifier)
 	{
 		case 0x80:{//反馈状态(广播)
 			//CAN_SendMessage(FDCAN_ID+0x100,FDCAN1_TxData,8);
 			pack_reply(FOC_CAN_TxData,p_encoder2_g->pos_abs,p_encoder2_g->mech_vel,p_motor_g->Q_axis_current_filt*KT_OUT,p_motor_g->Err1,p_motor_g->Err2,p_motor_g->Warning);
-			//if(bDynamMode == false)
+			//if (bDynamMode == false)
 				CAN_SendMessage(0x100+FDCAN_ID,FOC_CAN_TxData,12);
 		}
 		break;
 		case 0x200:{//速度模式
 			unpack_speed_cmd(FDCAN1_RX_DATA);
 			pack_reply(FOC_CAN_TxData,p_encoder2_g->pos_abs,p_encoder2_g->mech_vel,p_motor_g->Q_axis_current_filt*KT_OUT,p_motor_g->Err1,p_motor_g->Err2,p_motor_g->Warning);
-			//if(bDynamMode == false)
+			//if (bDynamMode == false)
 				CAN_SendMessage(0x100+FDCAN_ID,FOC_CAN_TxData,12);
 		}
 		break;
 		case 0x300:{//扭矩模式
 			unpack_torque_cmd(FDCAN1_RX_DATA);
 			pack_reply(FOC_CAN_TxData,p_encoder2_g->pos_abs,p_encoder2_g->mech_vel,p_motor_g->Q_axis_current_filt*KT_OUT,p_motor_g->Err1,p_motor_g->Err2,p_motor_g->Warning);
-			//if(bDynamMode == false)
+			//if (bDynamMode == false)
 				CAN_SendMessage(0x100+FDCAN_ID,FOC_CAN_TxData,12);
 		}
 		break;
 		case 0x400:{//位置模式
 			unpack_position_cmd(FDCAN1_RX_DATA);
 			pack_reply(FOC_CAN_TxData,p_encoder2_g->pos_abs,p_encoder2_g->mech_vel,p_motor_g->Q_axis_current_filt*KT_OUT,p_motor_g->Err1,p_motor_g->Err2,p_motor_g->Warning);
-			//if(bDynamMode == false)
+			//if (bDynamMode == false)
 				CAN_SendMessage(0x100+FDCAN_ID,FOC_CAN_TxData,12);
 		}
 		break;
 		case 0x500:{//MIT模式
 			unpack_MIT_cmd(FDCAN1_RX_DATA);
 			pack_reply(FOC_CAN_TxData,p_encoder2_g->pos_abs,p_encoder2_g->mech_vel,p_motor_g->Q_axis_current_filt*KT_OUT,p_motor_g->Err1,p_motor_g->Err2,p_motor_g->Warning);
-			//if(bDynamMode == false)
+			//if (bDynamMode == false)
 				CAN_SendMessage(0x100+FDCAN_ID,FOC_CAN_TxData,12);
 		}
 		break;

@@ -92,14 +92,14 @@ void Motor_Init(void)
 
 	// 电机温度初始化（防止ADC=4095除零）
 	float adc1_voltage = (float)ADC1->DR * 3.3f / 4095.0f;
-	if(adc1_voltage >= 3.29f) // 接近满量程，分母接近0
+	if (adc1_voltage >= 3.29f) // 接近满量程，分母接近0
 	{
 		TEMP_MOTOR_filter1 = 25.0f; // 默认室温
 	}
 	else
 	{
 		float r1_ntc = 10.0f * adc1_voltage / (3.3f - adc1_voltage);
-		if(r1_ntc > 0.01f) // 防止log(0)
+		if (r1_ntc > 0.01f) // 防止log(0)
 			TEMP_MOTOR_filter1 = 1.0f / ((1.0f / 298.15f) + (logf(r1_ntc / 10.0f) / 3950.0f)) - 273.15f;
 		else
 			TEMP_MOTOR_filter1 = 25.0f;
@@ -108,14 +108,14 @@ void Motor_Init(void)
 
 	// MOS温度初始化（防止ADC=4095除零）
 	float adc2_voltage = (float)ADC2->DR * 3.3f / 4095.0f;
-	if(adc2_voltage >= 3.29f)
+	if (adc2_voltage >= 3.29f)
 	{
 		TEMP_MOS_filter1 = 25.0f;
 	}
 	else
 	{
 		float r2_ntc = 3.3f * adc2_voltage / (3.3f - adc2_voltage);
-		if(r2_ntc > 0.01f)
+		if (r2_ntc > 0.01f)
 			TEMP_MOS_filter1 = 1.0f / ((1.0f / 298.15f) + (logf(r2_ntc / 10.0f) / 3380.0f)) - 273.15f;
 		else
 			TEMP_MOS_filter1 = 25.0f;
@@ -154,7 +154,7 @@ void runpll_velocity()
 	
 	delta_enc = pos_abs_latched - count_in_cpr_; //LATCH
 	delta_enc = encoderMod(delta_enc,16384);
-	if(delta_enc > 8192)delta_enc -= 16384;
+	if (delta_enc > 8192)delta_enc -= 16384;
 	
 	shadow_count_ += delta_enc;
 	count_in_cpr_ += delta_enc;//count_in_cpr_=pos_abs_latched=pos_abs_
@@ -232,7 +232,7 @@ static void MeasureInductance(void)
 	float volt_d_test = voltage_test, volt_q_test = 0.0f;//1V
 	float K = 0.0f;
   uint8_t sampletime = 200;
-	for(int k = 0; k < measure_induct_num; k++)//measure_induct_num=15
+	for (int k = 0; k < measure_induct_num; k++)//measure_induct_num=15
 			current_sum[k] = 0.0f;
 	
   for (int i = 0; i < sampletime; i++)
@@ -243,18 +243,18 @@ static void MeasureInductance(void)
     measure_time = measure_induct_num;
     while (measure_time)//每进行一次电流采样就减1
       ;
-		for(int k = 0; k < measure_induct_num; k++)
+		for (int k = 0; k < measure_induct_num; k++)
 			current_sum[k] += current_a[k];
   }
 	//average for reducing the random error
-	for(int k = 0; k < measure_induct_num; k++)
+	for (int k = 0; k < measure_induct_num; k++)
 	{
 		current_sum[k] /= (float)sampletime;
 //		printf("%f \r\n", current_sum[k]);
 		current_sum[k] = IterationLn(current_sum[k], 100);//ln(current_sum[k])
 	}
 	// remove the first value
-	if(least_square_method(current_sum + 1, measure_induct_num - 1, &K))
+	if (least_square_method(current_sum + 1, measure_induct_num - 1, &K))
 	{
 		p_motor_g->phase_inductance = p_motor_g->phase_resistance / (-K * PWM_FREQUENCY_DEFAULT);
 		printf("K:%f,phase inductance: %.8f\r\n",K, p_motor_g->phase_inductance);
@@ -283,7 +283,7 @@ void CalcCurrentOffset(float *phase_a_offset, float *phase_b_offset, float *phas
 		//过采样
 //		uint32_t ADC_Value_sum[2] = {0};
 //		/* 在采样值数组中分别取出每个通道的采样值并求和 */
-//		for(uint8_t i = 0;i < ADC2_CHANNELS_WINDOW;i ++)
+//		for (uint8_t i = 0;i < ADC2_CHANNELS_WINDOW;i ++)
 //		{
 //			ADC_Value_sum[0] +=  ADC_Cur_vbus_Value[i*ADC2_CHANNELS+0];
 //			ADC_Value_sum[1] +=  ADC_Cur_vbus_Value[i*ADC2_CHANNELS+1];
@@ -296,7 +296,7 @@ void CalcCurrentOffset(float *phase_a_offset, float *phase_b_offset, float *phas
     currentB_raw = ADC1->JDR1;
 		currentC_raw = ADC1->JDR3;
 		printf("%d   %d   %d\r\n",currentA_raw,currentB_raw,currentC_raw);
-		if(i>=2)
+		if (i>=2)
 		{
 			a_offset_sum += (float) currentA_raw;
 			b_offset_sum += (float) currentB_raw;
@@ -328,7 +328,7 @@ void currentSample()
 	//过采样
 //		uint32_t ADC_Value_sum[2] = {0};
 //		/* 在采样值数组中分别取出每个通道的采样值并求和 */
-//		for(uint8_t i = 0;i < ADC2_CHANNELS_WINDOW;i ++)
+//		for (uint8_t i = 0;i < ADC2_CHANNELS_WINDOW;i ++)
 //		{
 //			ADC_Value_sum[0] +=  ADC_Cur_vbus_Value[i*ADC2_CHANNELS+0];
 //			ADC_Value_sum[1] +=  ADC_Cur_vbus_Value[i*ADC2_CHANNELS+1];
@@ -339,7 +339,7 @@ void currentSample()
 		float CurrentA_Raw = (float)ADC1->JDR2 - p_motor_g->phase_a_current_offset;
 		float CurrentB_Raw = (float)ADC1->JDR1 - p_motor_g->phase_b_current_offset;
 		float CurrentC_Raw = (float)ADC1->JDR3 - p_motor_g->phase_c_current_offset;
-		if(p_motor_g->phase_order == POSITIVE_PHASE_ORDER)
+		if (p_motor_g->phase_order == POSITIVE_PHASE_ORDER)
 		{
 //			p_motor_g->phase_b_current = (p_motor_g->volt2amp_rate * CurrentB_Raw)/10.0f/0.005f;
 //			p_motor_g->phase_a_current = (p_motor_g->volt2amp_rate * CurrentA_Raw)/10.0f/0.005f;
@@ -378,7 +378,7 @@ void Calc_current_rms(void)
 {
     float sumA = 0,sumB = 0,sumC = 0;
     // 1. 平方累加
-    for(int i=0; i<SAMPLE_CNT; i++)
+    for (int i=0; i<SAMPLE_CNT; i++)
 	{
         sumA += p_motor_g->phase_a_current * p_motor_g->phase_a_current;
 		sumB += p_motor_g->phase_b_current * p_motor_g->phase_b_current;
@@ -402,11 +402,11 @@ void temperatureSample()
 //	float r1_ntc = RES_DIVIDE_MOTOR*((float)ADC1->DR*ADC_supply/ADC_resolution)/(ADC_supply-((float)ADC1->DR*ADC_supply/ADC_resolution));//电机绕组端NTC电阻阻值 单位：kΩ
 	float adc_jdr2 = (float)ADC2->JDR2 / ADC_resolution;
 	float r1_ntc;
-	if(adc_jdr2 >= 0.999f)
+	if (adc_jdr2 >= 0.999f)
 		r1_ntc = 999.0f; // 防止除零
 	else
 		r1_ntc = RES_DIVIDE_MOTOR * (adc_jdr2 / (1.0f - adc_jdr2));
-	if(r1_ntc < 0.01f) r1_ntc = 0.01f; // 防止log(0)
+	if (r1_ntc < 0.01f) r1_ntc = 0.01f; // 防止log(0)
 	TEMP_MOTOR = 1.0f / ( (1.0f / (ABSOLUTE_ZERO + 25.0f) ) + (logf(r1_ntc / NOMINAL_RES_MOTOR) / B_CONST_MOTOR ) ) - ABSOLUTE_ZERO;//单位：摄氏度
 //	计算绝对差值
 //  float delta = fabsf(TEMP_MOTOR - TEMP_MOTOR_filter1);
@@ -435,11 +435,11 @@ void temperatureSample()
 	
 	float adc_jdr1 = (float)ADC2->JDR1 / ADC_resolution;
 	float r2_ntc;
-	if(adc_jdr1 >= 0.999f)
+	if (adc_jdr1 >= 0.999f)
 		r2_ntc = 999.0f;
 	else
 		r2_ntc = RES_DIVIDE_MOS * (adc_jdr1 / (1.0f - adc_jdr1));
-	if(r2_ntc < 0.01f) r2_ntc = 0.01f;
+	if (r2_ntc < 0.01f) r2_ntc = 0.01f;
 
 	TEMP_MOS = 1.0f / ( (1.0f / (ABSOLUTE_ZERO + 25.0f) ) + (logf(r2_ntc / NOMINAL_RES_MOS) / B_CONST_MOS ) ) - ABSOLUTE_ZERO;//摄氏度
 	TEMP_MOS_filter1 = 0.6*TEMP_MOS + 0.4*TEMP_MOS_filter1;//一阶低通

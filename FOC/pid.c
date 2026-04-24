@@ -110,7 +110,7 @@ static void SetTarget(pid_t *pid, float target)
 //				    pid->err = pid->target - feedback;
 //						pid->P = pid->kp * pid->err;//比例系数×误差
 //						pid->output = pid->P + pid->feedforward * pid->feedforward_ratio;
-//						if(fabsf(pid->output) > pid->output_limit) pid->I = 0.0f;//如果比例部分已经大于限幅，则将积分项设为0
+//						if (fabsf(pid->output) > pid->output_limit) pid->I = 0.0f;//如果比例部分已经大于限幅，则将积分项设为0
 //						else
 //						{	
 //							pid->I += pid->ki * pid->err;//积分系数×误差（一直累积）
@@ -129,18 +129,18 @@ static void SetTarget(pid_t *pid, float target)
 static float DoPidCalc(pid_t *pid, float feedback)
 {
 	pid->err = pid->target - feedback;
-	if((fabsf(pid->err)<pid->deadband)&&(p_motor_g->controlMode == FOC_POSITION_LOOP))//位置环添加死区
+	if ((fabsf(pid->err)<pid->deadband)&&(p_motor_g->controlMode == FOC_POSITION_LOOP))//位置环添加死区
 	{
 		pid->output = 0.0f;
 		return pid->output;
 	}
-//	if(fabsf(pid->err)>pid->deadband)//添加死区
+//	if (fabsf(pid->err)>pid->deadband)//添加死区
 	{
 		pid->P = pid->kp * pid->err;//比例系数×误差
 		pid->output = pid->P + pid->feedforward * pid->feedforward_ratio;
 
 		// 积分饱和冻结策略：输出饱和时停止积分累积
-		if(fabsf(pid->output + pid->I) < pid->output_limit)
+		if (fabsf(pid->output + pid->I) < pid->output_limit)
 		{
 			pid->I += pid->ki * pid->err;//积分系数×误差（一直累积）
 		}

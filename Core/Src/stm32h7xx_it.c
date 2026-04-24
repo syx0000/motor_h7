@@ -292,7 +292,7 @@ void TIM1_UP_IRQHandler(void)
 	u8_100usFlag = 1;
 	
 	u32Timecnt++;
-	if(u32Timecnt >= PWM_FREQUENCY_DEFAULT/1000)//1ms
+	if (u32Timecnt >= PWM_FREQUENCY_DEFAULT/1000)//1ms
 	{
 		u32Timecnt = 0;
 		u8_1msFlag = 1;
@@ -319,12 +319,12 @@ void TIM1_UP_IRQHandler(void)
 ////		static uint16_t IRQ_count2;
 //		IRQ_count++;
 ////		IRQ_count2++;
-//		if(IRQ_count==5000)
+//		if (IRQ_count==5000)
 //		{
 //			HAL_GPIO_TogglePin(LED_RUN_GPIO_Port,LED_RUN_Pin);
 //			IRQ_count=0;
 //		}
-//		if(IRQ_count2==1)
+//		if (IRQ_count2==1)
 //		{
 //			RS485DIR_TX;
 //			HAL_UART_Transmit_DMA(&huart2,USART2_TX_BUF,1);
@@ -334,19 +334,19 @@ void TIM1_UP_IRQHandler(void)
 	
 		float PP_position;  //PP修改版临时位置变量
 		/// Check state machine state, and run the appropriate function
-		switch(FSMstate)
+		switch (FSMstate)
 		{
 			case REST_MODE:// Do nothing
-				if(state_change)
+				if (state_change)
 				{
 					enter_menu_state();
 				}
 			break;
 			
 			case CALIBRATION_MODE:// Run encoder calibration procedure
-				if(state_change)
+				if (state_change)
 				{
-					if(p_motor_g->cali_start == 1||p_encoder_g->cali_start == 1)//电机参数辨识或者编码器整定
+					if (p_motor_g->cali_start == 1||p_encoder_g->cali_start == 1)//电机参数辨识或者编码器整定
 						caliOn_flag = 1;
 					
 					state_change = 0;
@@ -354,9 +354,9 @@ void TIM1_UP_IRQHandler(void)
 			break;
 
 			case MOTOR_MODE:// Run torque control
-				if(state_change)//如果是第一次进电机模式（首次进入意味着刚切换到电机模式，还未发送运动指令）
+				if (state_change)//如果是第一次进电机模式（首次进入意味着刚切换到电机模式，还未发送运动指令）
 				{
-					if(p_encoder_g->cali_finish != 1)//未校准，拒绝进入MOTOR_MODE
+					if (p_encoder_g->cali_finish != 1)//未校准，拒绝进入MOTOR_MODE
 					{
 						FSMstate = REST_MODE;
 						state_change = 0;
@@ -380,7 +380,7 @@ void TIM1_UP_IRQHandler(void)
 				else
 				{
 					CAN_timeout++ ;
-					if((CAN_timeout > CAN_TIMEOUT) && (CAN_TIMEOUT > 0))
+					if ((CAN_timeout > CAN_TIMEOUT) && (CAN_TIMEOUT > 0))
 					{
 						p_position_loop_g->target = p_encoder2_g->pos_abs;//当前位置值赋给指令值，以免位置环下刚进入电机模式，电机便会运动到0（p_position_loop_g->target初始化一般为0）			
 						p_motor_g->i_d_ref = 0;/*电流环id指令清零*/
@@ -393,7 +393,7 @@ void TIM1_UP_IRQHandler(void)
 						traj_complete = 0;
 						PD_FOC_clear();
 					}
-					switch(p_motor_g->controlMode)
+					switch (p_motor_g->controlMode)
 					{
 						//0：PD控制 3：电流环 2：速度环 1：位置环 4：PP模式
 						case MIT_PD:
@@ -401,7 +401,7 @@ void TIM1_UP_IRQHandler(void)
 							CurrentLoop();//电流环
 						break;
 						case FOC_CURRENT_LOOP:
-							if(SweepSineStart == 1)
+							if (SweepSineStart == 1)
 							{
 								p_motor_g->i_d_ref = SweepSine_Update_ISR(&id_sweep_gen);
 								p_motor_g->i_q_ref = 0.0f; 
@@ -428,7 +428,7 @@ void TIM1_UP_IRQHandler(void)
 							CurrentLoop();
 						break;
 						case FOC_VELOCITY_LOOP:
-							if(vel_loop_flag==1)//vel_calc_period次电流环运行一次速度环
+							if (vel_loop_flag==1)//vel_calc_period次电流环运行一次速度环
 							{
 								p_velocity_loop_g->targetend = Motor_W;
 								vel_loop_flag = 0;
@@ -437,7 +437,7 @@ void TIM1_UP_IRQHandler(void)
 							CurrentLoop();
 						break;
 						case FOC_POSITION_LOOP:
-							if(pos_loop_flag==1)//pos_calc_period次速度环运行一次位置环
+							if (pos_loop_flag==1)//pos_calc_period次速度环运行一次位置环
 							{
 								pos_loop_flag = 0;
 								
@@ -445,7 +445,7 @@ void TIM1_UP_IRQHandler(void)
 								PositionLoop();
 								
 							}
-							if(vel_loop_flag==1)//vel_calc_period次电流环运行一次速度环
+							if (vel_loop_flag==1)//vel_calc_period次电流环运行一次速度环
 							{
 								vel_loop_flag = 0;
 								VelocityLoop();
@@ -453,15 +453,15 @@ void TIM1_UP_IRQHandler(void)
 							CurrentLoop();
 						break;
 						case FOC_POSITION_LOOP_PP:
-							if(pos_loop_flag==1)//pos_calc_period次速度环运行一次位置环
+							if (pos_loop_flag==1)//pos_calc_period次速度环运行一次位置环
 							{
-								if(trajcplt)
+								if (trajcplt)
 								{
 									trajectory_tim_count++;		//NUM_STEPS次取一次位置插值 5次为2ms规划一次
-									if(trajectory_tim_count > NUM_STEPS - 1)
+									if (trajectory_tim_count > NUM_STEPS - 1)
 									{//只要小于规划次数，就一直赋值给目标位置
 										trajectory_tim_count = 0;
-										if(get_next_position(p_planner_s, STEP_PANNEL, &PP_position))
+										if (get_next_position(p_planner_s, STEP_PANNEL, &PP_position))
 										{
 											p_position_loop_g->target = PP_position;
 											trace_task_complete = 0x00;
@@ -477,7 +477,7 @@ void TIM1_UP_IRQHandler(void)
 								PositionLoop();
 								pos_loop_flag = 0;
 							}
-							if(vel_loop_flag==1)//vel_calc_period次电流环运行一次速度环
+							if (vel_loop_flag==1)//vel_calc_period次电流环运行一次速度环
 							{
 								vel_loop_flag = 0;
 								VelocityLoop();
@@ -491,7 +491,7 @@ void TIM1_UP_IRQHandler(void)
 			break;
 						
 			case SETUP_MODE:
-				if(state_change)
+				if (state_change)
 				{
 					enter_setup_state();
 					state_change = 0;
@@ -499,7 +499,7 @@ void TIM1_UP_IRQHandler(void)
 			break;
 						
 			case ENCODER_MODE:
-				if(state_change)
+				if (state_change)
 				{
 //					printf("Ouput-end Mechanical Angle:  %frad   Motor-end Mechanical Angle:  %frad   Electrical Angle:  %frad    Raw:  %dcnt\n\r",p_my_configure->state.hy_rad_multiturn/36000.0f*PI_TIMES_2, p_encoder_g->pos_abs, Mod(p_encoder_g->elec_pos,0.0f,PI_TIMES_2), encoder1_raw);
 					state_change = 0;
@@ -507,7 +507,7 @@ void TIM1_UP_IRQHandler(void)
 			break;
 				
 			case HOMING_MODE:
-				if(state_change)
+				if (state_change)
 				{
 					p_motor_g->i_d_ref = 0;/*电流环id指令清零*/
 					p_motor_g->i_q_ref = 0;/*电流环iq指令清零*/
@@ -521,19 +521,19 @@ void TIM1_UP_IRQHandler(void)
 				else
 				{
 						CurrentLoop();
-						if(vel_loop_flag==1)//两次电流环运行一次速度环 10k-5k
+						if (vel_loop_flag==1)//两次电流环运行一次速度环 10k-5k
 						{
 							vel_loop_flag = 0;
 							VelocityLoop();
 						}
-						if(pos_loop_flag==1)//两次速度环运行一次位置环 5k-2.5k
+						if (pos_loop_flag==1)//两次速度环运行一次位置环 5k-2.5k
 						{
 							p_position_loop_g->target = p_encoder2_g->mech_offset;
 							pos_loop_flag = 0;
 							Homing();
 						}
 				}
-				if(fabs(p_encoder2_g->mech_offset - p_encoder2_g->mech_abs)<0.05) 
+				if (fabs(p_encoder2_g->mech_offset - p_encoder2_g->mech_abs)<0.05) 
 				{
 					disablePWM();
 					FSMstate = REST_MODE;
@@ -550,7 +550,7 @@ void TIM1_UP_IRQHandler(void)
 
 		/*VOFA+发送数据 使用DMA，三个变量约2.2us*/
 //		VOFA_cnt++;
-//		if(VOFA_cnt==VOFA_Period&&VOFA_On)//发送三个变量总线用时约170us，所以两个周期发送一次 这里需要注意的一点，如果发送间隔小于实际发送所有变量所需时间时，可能会导致转速环下转速跳变...
+//		if (VOFA_cnt==VOFA_Period&&VOFA_On)//发送三个变量总线用时约170us，所以两个周期发送一次 这里需要注意的一点，如果发送间隔小于实际发送所有变量所需时间时，可能会导致转速环下转速跳变...
 //		{
 //			LoadData();
 //	//		ISR_start = DWT_CYCCNT;      // 记录起始计数值
@@ -574,7 +574,7 @@ void TIM1_UP_IRQHandler(void)
 void USART1_IRQHandler(void)
 {
 /* USER CODE BEGIN USART1_IRQn 0 */
-	if(USART1->ISR & USART_ISR_RXNE_RXFNE)//接收中断
+	if (USART1->ISR & USART_ISR_RXNE_RXFNE)//接收中断
 	{
 		/* USER CODE END USART1_IRQn 0 */
 		HAL_UART_IRQHandler(&huart1);
@@ -582,20 +582,20 @@ void USART1_IRQHandler(void)
 		char c = USART1_aRxBuffer[0];
 		USART1_RX_BUF[USART1_RX_STA&0x7FFF]= USART1_aRxBuffer[0]; //接收数据转存
 		USART1_RX_STA++;
-		if(USART1_RX_STA>(USART1_REC_LEN-1))USART1_RX_STA=0;//接收数据错误,重新开始接收
+		if (USART1_RX_STA>(USART1_REC_LEN-1))USART1_RX_STA=0;//接收数据错误,重新开始接收
 	
-		if(c == 27)//ESC
+		if (c == 27)//ESC
 		{
 			FSMstate = REST_MODE;
 			state_change = 1;
 			char_count = 0;
 			cmd_id = 0;
-			for(int i = 0; i<8; i++)
+			for (int i = 0; i<8; i++)
 			{
 				cmd_val[i] = 0;
 			}
 		}
-		if(FSMstate == REST_MODE)
+		if (FSMstate == REST_MODE)
 		{
 			switch (c)
 			{
@@ -650,7 +650,7 @@ void USART1_IRQHandler(void)
 	//				flash_reg[135] = float2uint(p_encoder2_g->mech_offset);			
 	//				Flash.Erase();//擦除FLASH	
 	//					
-	//				for(uint16_t i=0; i<NUMBER_PARA; i++)  //保存140个参数
+	//				for (uint16_t i=0; i<NUMBER_PARA; i++)  //保存140个参数
 	//				{
 	//					FLASH_ProgramWord(PARAM_FLASH_SECTOR+4*i, flash_reg[i]);
 	//				}
@@ -659,9 +659,9 @@ void USART1_IRQHandler(void)
 				break;
 			}
 		}
-		else if(FSMstate == SETUP_MODE)
+		else if (FSMstate == SETUP_MODE)
 		{
-			if(c == 13)//回车
+			if (c == 13)//回车
 			{					
 				switch (cmd_id)
 				{
@@ -699,8 +699,8 @@ void USART1_IRQHandler(void)
 						controller.ki_q = I_BW*2.0f*PI*p_motor_g->phase_resistance*(1/PWM_FREQUENCY_DEFAULT);
 						controller.k_d = I_BW*2.0f*PI*p_motor_g->phase_inductance;//比例参数：电流环带宽*相电感
 						controller.k_q = I_BW*2.0f*PI*p_motor_g->phase_inductance;
-						if(I_BW_set>2000.0f) printf("I_BW set max %.1f.  Press 'esc' to return to menu or continue to set parameter.\n\r",I_BW);
-						else if(I_BW_set<100.0f) printf("I_BW set min %.1f.  Press 'esc' to return to menu or continue to set parameter.\n\r",I_BW);
+						if (I_BW_set>2000.0f) printf("I_BW set max %.1f.  Press 'esc' to return to menu or continue to set parameter.\n\r",I_BW);
+						else if (I_BW_set<100.0f) printf("I_BW set min %.1f.  Press 'esc' to return to menu or continue to set parameter.\n\r",I_BW);
 						else	printf("I_BW set succeed,%.1f.  Press 'esc' to return to menu or continue to set parameter.\n\r",I_BW);
 						break;
 					
@@ -717,8 +717,8 @@ void USART1_IRQHandler(void)
 					case 'o':
 						I_SWOver_set=atof(cmd_val);
 						I_SWOver = fmaxf(fminf(atof(cmd_val), 50.0f), 0.0f);
-						if(I_SWOver_set>50.0f) printf("I_SWOver set max %.1f.  Press 'esc' to return to menu or continue to set parameter\n\r",I_SWOver);
-						else if(I_SWOver_set<0.0f) printf("I_SWOver set min %.1f.  Press 'esc' to return to menu or continue to set parameter\n\r",I_SWOver);
+						if (I_SWOver_set>50.0f) printf("I_SWOver set max %.1f.  Press 'esc' to return to menu or continue to set parameter\n\r",I_SWOver);
+						else if (I_SWOver_set<0.0f) printf("I_SWOver set min %.1f.  Press 'esc' to return to menu or continue to set parameter\n\r",I_SWOver);
 						else printf("I_SWOver set succeed,%.1f.  Press 'esc' to return to menu or continue to set parameter.\n\r",I_SWOver);
 						break;
 									
@@ -726,8 +726,8 @@ void USART1_IRQHandler(void)
 						Velocity_P_set=atof(cmd_val);
 						Velocity_P = fmaxf(fminf(atof(cmd_val), 1.0f), 0.0f);
 						p_velocity_loop_g->kp = Velocity_P;
-						if(Velocity_P_set>1.0f) printf("Velocity_P set max %.1f.  Press 'esc' to return to menu or continue to set parameter\n\r",Velocity_P);
-						else if(Velocity_P_set<0.0f) printf("Velocity_P set min %.1f.  Press 'esc' to return to menu or continue to set parameter\n\r",Velocity_P);
+						if (Velocity_P_set>1.0f) printf("Velocity_P set max %.1f.  Press 'esc' to return to menu or continue to set parameter\n\r",Velocity_P);
+						else if (Velocity_P_set<0.0f) printf("Velocity_P set min %.1f.  Press 'esc' to return to menu or continue to set parameter\n\r",Velocity_P);
 						else	printf("Velocity_P set succeed,%.7f.  Press 'esc' to return to menu or continue to set parameter.\n\r",Velocity_P);
 						break;
 									
@@ -735,8 +735,8 @@ void USART1_IRQHandler(void)
 						Velocity_I_set=atof(cmd_val);
 						Velocity_I = fmaxf(fminf(atof(cmd_val), 1.0f), 0.0f);
 						p_velocity_loop_g->ki = Velocity_I;
-						if(Velocity_I_set>1.0f) printf("Velocity_I set max %.1f.  Press 'esc' to return to menu or continue to set parameter\n\r",Velocity_I);
-						else if(Velocity_I_set<0.0f) printf("Velocity_I set min %.1f.  Press 'esc' to return to menu or continue to set parameter\n\r",Velocity_I);
+						if (Velocity_I_set>1.0f) printf("Velocity_I set max %.1f.  Press 'esc' to return to menu or continue to set parameter\n\r",Velocity_I);
+						else if (Velocity_I_set<0.0f) printf("Velocity_I set min %.1f.  Press 'esc' to return to menu or continue to set parameter\n\r",Velocity_I);
 						else	printf("Velocity_I set succeed,%.7f.  Press 'esc' to return to menu or continue to set parameter.\n\r",Velocity_I);
 						break;
 										
@@ -744,8 +744,8 @@ void USART1_IRQHandler(void)
 						Position_P_set=atof(cmd_val);
 						Position_P = fmaxf(fminf(atof(cmd_val), 100.0f), 0.0f);
 						p_position_loop_g->kp = Position_P;
-						if(Position_P_set>100.0f) printf("Position_P set max %.1f.  Press 'esc' to return to menu or continue to set parameter\n\r",Position_P);
-						else if(Position_P_set<0.0f) printf("Position_P set min %.1f.  Press 'esc' to return to menu or continue to set parameter\n\r",Position_P);
+						if (Position_P_set>100.0f) printf("Position_P set max %.1f.  Press 'esc' to return to menu or continue to set parameter\n\r",Position_P);
+						else if (Position_P_set<0.0f) printf("Position_P set min %.1f.  Press 'esc' to return to menu or continue to set parameter\n\r",Position_P);
 						else	printf("Position_P set succeed,%.7f.  Press 'esc' to return to menu or continue to set parameter.\n\r",Position_P);
 						break;
 									
@@ -753,8 +753,8 @@ void USART1_IRQHandler(void)
 						Position_I_set=atof(cmd_val);
 						Position_I = fmaxf(fminf(atof(cmd_val), 1.0f), 0.0f);
 						p_position_loop_g->ki = Position_I;
-						if(Position_I_set>1.0f) printf("Position_I set max %.1f.  Press 'esc' to return to menu or continue to set parameter\n\r",Position_I);
-						else if(Position_I_set<0.0f) printf("Position_I set min %.1f.  Press 'esc' to return to menu or continue to set parameter\n\r",Position_I);
+						if (Position_I_set>1.0f) printf("Position_I set max %.1f.  Press 'esc' to return to menu or continue to set parameter\n\r",Position_I);
+						else if (Position_I_set<0.0f) printf("Position_I set min %.1f.  Press 'esc' to return to menu or continue to set parameter\n\r",Position_I);
 						else	printf("Position_I set succeed,%.7f.  Press 'esc' to return to menu or continue to set parameter.\n\r",Position_I);
 						break;
 					/*电流环PI参数*/
@@ -763,8 +763,8 @@ void USART1_IRQHandler(void)
 						Current_P = fmaxf(fminf(atof(cmd_val), 100.0f), 0.0f);
 						controller.k_d = Current_P;
 						controller.k_q = Current_P;
-						if(Current_P_set>100.0f) printf("Current_P set max %.1f.  Press 'esc' to return to menu or continue to set parameter\n\r",Current_P);
-						else if(Current_P_set<0.0f) printf("Current_P set min %.1f.  Press 'esc' to return to menu or continue to set parameter\n\r",Current_P);
+						if (Current_P_set>100.0f) printf("Current_P set max %.1f.  Press 'esc' to return to menu or continue to set parameter\n\r",Current_P);
+						else if (Current_P_set<0.0f) printf("Current_P set min %.1f.  Press 'esc' to return to menu or continue to set parameter\n\r",Current_P);
 						else	printf("Current_P set succeed,%.7f.  Press 'esc' to return to menu or continue to set parameter.\n\r",Current_P);
 						break;
 									
@@ -773,23 +773,23 @@ void USART1_IRQHandler(void)
 						Current_I = fmaxf(fminf(atof(cmd_val), 1.0f), 0.0f);
 						controller.ki_d = Current_I;
 						controller.ki_q = Current_I;
-						if(Current_I_set>1.0f) printf("Current_I set max %.1f.  Press 'esc' to return to menu or continue to set parameter\n\r",Current_I);
-						else if(Current_I_set<0.0f) printf("Current_I set min %.1f.  Press 'esc' to return to menu or continue to set parameter\n\r",Current_I);
+						if (Current_I_set>1.0f) printf("Current_I set max %.1f.  Press 'esc' to return to menu or continue to set parameter\n\r",Current_I);
+						else if (Current_I_set<0.0f) printf("Current_I set min %.1f.  Press 'esc' to return to menu or continue to set parameter\n\r",Current_I);
 						else	printf("Current_I set succeed,%.7f.  Press 'esc' to return to menu or continue to set parameter.\n\r",Current_I);
 						break;
 									
 					case 'A':
 						FOC_velAccDec_set=atof(cmd_val);
 						FOC_velAccDec = fmaxf(fminf(atof(cmd_val), 5000.0f), 0.0f);
-						if(FOC_velAccDec_set>1.0f) printf("FOC_velAccDec set max %.1f.  Press 'esc' to return to menu or continue to set parameter\n\r",FOC_velAccDec);
-						else if(FOC_velAccDec_set<0.0f) printf("FOC_velAccDec set min %.1f.  Press 'esc' to return to menu or continue to set parameter\n\r",FOC_velAccDec);
+						if (FOC_velAccDec_set>1.0f) printf("FOC_velAccDec set max %.1f.  Press 'esc' to return to menu or continue to set parameter\n\r",FOC_velAccDec);
+						else if (FOC_velAccDec_set<0.0f) printf("FOC_velAccDec set min %.1f.  Press 'esc' to return to menu or continue to set parameter\n\r",FOC_velAccDec);
 						else	printf("FOC_velAccDec set succeed,%.5f.  Press 'esc' to return to menu or continue to set parameter.\n\r",FOC_velAccDec);
 						break;
 					case 't':
 						CAN_TIMEOUT = atoi(cmd_val);
 						break;
 					case 'r':
-						if(atoi(cmd_val)==0&&p_motor_g->error==HwOverCurrent) p_motor_g->error=Normal;
+						if (atoi(cmd_val)==0&&p_motor_g->error==HwOverCurrent) p_motor_g->error=Normal;
 						break;							 
 			   
 					default:
@@ -797,40 +797,40 @@ void USART1_IRQHandler(void)
 						break;
 				}
 				char_count = 0;
-				for(uint8_t i=0;i<8;i++) cmd_val[i]=0;
+				for (uint8_t i=0;i<8;i++) cmd_val[i]=0;
 			}
 			else
 			{
-				if(char_count == 0)
+				if (char_count == 0)
 				{
 					cmd_id = c;
 				}
-				else if(char_count - 1 < 8)
+				else if (char_count - 1 < 8)
 				{
 					cmd_val[char_count-1] = c;
 				}
 				char_count++;
 			}
 		}
-		else if(FSMstate == MOTOR_MODE)
+		else if (FSMstate == MOTOR_MODE)
 		{
-			if(c == 13)//回车
+			if (c == 13)//回车
 			{
 				switch (cmd_id)
 				{
 					case 'i':
 	//					Motor_Iq_set=atof(cmd_val);
 						Motor_Iq = fmaxf(fminf(atof(cmd_val), iq_max), iq_min);
-	//					if(Motor_Iq_set>iq_max) printf("Motor_Iq set max %.1f.  Press 'esc' to return to menu\n\r",Motor_Iq);
-	//					else if(Motor_Iq_set<iq_min) printf("Motor_Iq set min %.1f.  Press 'esc' to return to menu\n\r",Motor_Iq);
+	//					if (Motor_Iq_set>iq_max) printf("Motor_Iq set max %.1f.  Press 'esc' to return to menu\n\r",Motor_Iq);
+	//					else if (Motor_Iq_set<iq_min) printf("Motor_Iq set min %.1f.  Press 'esc' to return to menu\n\r",Motor_Iq);
 	//					else	printf("Motor_Iq set succeed,%.1f.  Press 'esc' to return to menu or continue to set parameter.\n\r",Motor_Iq);
 	//					printf("%.1f\n\r",Motor_Iq);
 						break;									
 					case 'v':
 	//					Motor_W_set=atof(cmd_val) * GR;
 						Motor_W = fmaxf(fminf(atof(cmd_val), w_max), w_min) * GR;
-	//					if(Motor_W_set>w_max) printf("Motor_W set max %.1f.  Press 'esc' to return to menu\n\r",Motor_W/GR);
-	//					else if(Motor_W_set<w_min) printf("Motor_W set min %.1f.  Press 'esc' to return to menu\n\r",Motor_W/GR);
+	//					if (Motor_W_set>w_max) printf("Motor_W set max %.1f.  Press 'esc' to return to menu\n\r",Motor_W/GR);
+	//					else if (Motor_W_set<w_min) printf("Motor_W set min %.1f.  Press 'esc' to return to menu\n\r",Motor_W/GR);
 	//					else	printf("Motor_W set succeed,%.1f.  Press 'esc' to return to menu or continue to set parameter.\n\r",Motor_W/GR);
 	//					printf("%.1f\n\r",Motor_W);
 						//之所以不再打印，是因为这个会导致发送速度指令0（速度指令切换...）之后产生大电流，具体原因待评估※！！！！！！！！！！？？？？？？？
@@ -840,7 +840,7 @@ void USART1_IRQHandler(void)
 	//					Motor_P = fmaxf(fminf(atof(cmd_val), p_max), p_min);
 	//								
 	//					/*位置插补*/
-	////				if(trace_task_complete)
+	////				if (trace_task_complete)
 	//					{
 	//						p_data_soft_num = 0;  
 	//						trajectory_g.pos1 = p_encoder_g->pos_abs;			
@@ -854,7 +854,7 @@ void USART1_IRQHandler(void)
 	//						Trajectory.Get_Trape_Para(p_trajectory_g);
 	//						Trajectory.Get_Trape_Plan(p_trajectory_g);
 	//					}
-	////				for(uint16_t i = 0; i <= trajectory_g.p_data_max_num; i++)
+	////				for (uint16_t i = 0; i <= trajectory_g.p_data_max_num; i++)
 	////				{							
 	////					p_position_loop_g->target = trajectory_g.pos_demand[i];
 	////					p_velocity_loop_g->targetend = trajectory_g.vel_demand[i];
@@ -864,15 +864,15 @@ void USART1_IRQHandler(void)
 	////					HAL_Delay(1);
 	////				}
 	//								
-	////				if(Motor_P_set>p_max) printf("Motor_P set max %.1f.  Press 'esc' to return to menu\n\r",Motor_P);
-	////				else if(Motor_P_set<p_min) printf("Motor_P set min %.1f.  Press 'esc' to return to menu\n\r",Motor_P);
+	////				if (Motor_P_set>p_max) printf("Motor_P set max %.1f.  Press 'esc' to return to menu\n\r",Motor_P);
+	////				else if (Motor_P_set<p_min) printf("Motor_P set min %.1f.  Press 'esc' to return to menu\n\r",Motor_P);
 	////				else	printf("Motor_P set succeed,%.1f.  Press 'esc' to return to menu or continue to set parameter.\n\r",Motor_P);
 	//					printf("%.1f\n\r",Motor_P);
 	//					break;  								
 					case 'p':
 						Motor_P = fmaxf(fminf(atof(cmd_val), p_max), p_min) + p_encoder2_g->mech_offset;//在机械零位的基础上运动
 						/*位置插补*/
-						if(p_motor_g->controlMode == FOC_POSITION_LOOP_PP)
+						if (p_motor_g->controlMode == FOC_POSITION_LOOP_PP)
 						{
 							init_planner(p_planner_s, p_encoder2_g->pos_abs, Motor_P, 8.376f, 2.0f, 2.0f); //目标位置、最大速度、加速度、减速度需要按照需求设置
 							trajcplt = 1;
@@ -884,24 +884,24 @@ void USART1_IRQHandler(void)
 						break;
 				}
 				char_count = 0;
-				for(uint8_t i=0;i<8;i++) cmd_val[i]=0;
+				for (uint8_t i=0;i<8;i++) cmd_val[i]=0;
 			}
 			else
 			{
-				if(char_count == 0)
+				if (char_count == 0)
 				{
 					cmd_id = c;
 				}
-				else if(char_count - 1 < 8)
+				else if (char_count - 1 < 8)
 				{
 					cmd_val[char_count-1] = c;
 				}
 				char_count++;
 			}
 		}
-		else if(FSMstate == CALIBRATION_MODE)
+		else if (FSMstate == CALIBRATION_MODE)
 		{
-			if(c == 13)//回车
+			if (c == 13)//回车
 			{
 				switch (cmd_id)
 				{
@@ -943,7 +943,7 @@ void USART1_IRQHandler(void)
 void USART2_IRQHandler(void)
 {
   /* USER CODE BEGIN USART2_IRQn 0 */
-	if(__HAL_UART_GET_FLAG(&huart2,UART_FLAG_IDLE))//空闲中断
+	if (__HAL_UART_GET_FLAG(&huart2,UART_FLAG_IDLE))//空闲中断
 	{
 		IDLE_flag = 1;
 //		huart2.gState = HAL_UART_STATE_READY;
@@ -952,7 +952,7 @@ void USART2_IRQHandler(void)
 //		HAL_UARTEx_ReceiveToIdle_IT(&huart2, (unsigned char *)USART2_RX_BUF, USART2_REC_LEN);//开启空闲中断
 		HAL_UARTEx_ReceiveToIdle_DMA(&huart2, (unsigned char *)USART2_RX_BUF, USART2_REC_LEN);//开启空闲中断
 	}
-	else if(__HAL_UART_GET_FLAG(&huart2,UART_FLAG_TC))//发送完成中断
+	else if (__HAL_UART_GET_FLAG(&huart2,UART_FLAG_TC))//发送完成中断
 	{
 		RS485DIR_RX;                        //发送完毕 改成接收状态
 		HAL_UART_IRQHandler(&huart2);
@@ -990,7 +990,7 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
 		IDLE_flag = 0;
 		HAL_UART_DMAStop(huart);// 停止当前 DMA 传输（防止数据覆盖）
 		/*可以在这里将缓存USART2_RX_BUF中的数据转移到缓存USART2_RX_DATA中，然后清空USART2_RX_BUF，后面直接处理缓存USART2_RX_DATA*/
-		for(uint8_t i=0;i<USART2_RX_Cnt;i++)
+		for (uint8_t i=0;i<USART2_RX_Cnt;i++)
 		{
 			USART2_RX_DATA[i] = USART2_RX_BUF[i];
 			USART2_RX_BUF[i] = 0;

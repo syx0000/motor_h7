@@ -22,7 +22,7 @@ float DC_BUS = 0.0f;
 float TEMPERATURE_MOSFET = 0.0f,TEMPERATURE_MOTOR = 0.0f;
 void errorDiag(void)
 {
-//	if(p_encoder_g->mech_vel > w_max|p_encoder_g->mech_vel < w_min)
+//	if (p_encoder_g->mech_vel > w_max|p_encoder_g->mech_vel < w_min)
 //	{
 //		disablePWM();
 //		Report_OverSpeed = 1;
@@ -39,11 +39,11 @@ void errorDiag(void)
 	B_CURRENT = (b_cur[0] + b_cur[1] + b_cur[2]) / 3.0f;
 	C_CURRENT = (c_cur[0] + c_cur[1] + c_cur[2]) / 3.0f;
 	indexCur++;
-	if(indexCur >= 3) indexCur = 0;
+	if (indexCur >= 3) indexCur = 0;
 	if ( ( fabsf(A_CURRENT) > I_SWOver) || ( fabsf(B_CURRENT) > I_SWOver) || ( fabsf(C_CURRENT) > I_SWOver) )
 	{
 		SWOvercur_cnt++;
-		if(SWOvercur_cnt > 10)
+		if (SWOvercur_cnt > 10)
 		{
 			disablePWM();
 			p_motor_g->Err1 |= MotorErr1_PhaseOverCurrent;
@@ -58,7 +58,7 @@ void errorDiag(void)
 	else 
 	{
 		SWOvercur_cnt = 0;
-		if(p_motor_g->error==SwOverCurrent) p_motor_g->error=Normal;
+		if (p_motor_g->error==SwOverCurrent) p_motor_g->error=Normal;
 	}
 /*过压欠压保护*/
 	static uint8_t SWOvervolt_cnt = 0;
@@ -68,11 +68,11 @@ void errorDiag(void)
 	DC_bus[indexDC_bus] = p_motor_g->vbus;
 	DC_BUS = (DC_bus[0] + DC_bus[1] + DC_bus[2]) / 3.0f;
 	indexDC_bus++;
-	if(indexDC_bus >= 3) indexDC_bus = 0;
+	if (indexDC_bus >= 3) indexDC_bus = 0;
 	if (DC_BUS>60)//36-60
 	{
 		SWOvervolt_cnt++;
-		if(SWOvervolt_cnt > 3)
+		if (SWOvervolt_cnt > 3)
 		{
 			disablePWM();
 			p_motor_g->Err1 |= MotorErr1_OverVolt;
@@ -85,7 +85,7 @@ void errorDiag(void)
 	else if (DC_BUS<24)//36-60
 	{
 		SWUndervolt_cnt++;
-		if(SWUndervolt_cnt > 3)
+		if (SWUndervolt_cnt > 3)
 		{
 			disablePWM();
 			p_motor_g->Err2 |= MotorErr2_LowVotage;
@@ -99,7 +99,7 @@ void errorDiag(void)
 	{
 		SWOvervolt_cnt = 0;
 		SWUndervolt_cnt = 0;
-		if(p_motor_g->error==OverVolt||p_motor_g->error==UnderVolt) p_motor_g->error=Normal;
+		if (p_motor_g->error==OverVolt||p_motor_g->error==UnderVolt) p_motor_g->error=Normal;
 	}		
 
 /*MOS过温保护*/
@@ -109,12 +109,12 @@ void errorDiag(void)
 	temperature_MOS[indexTEMP_MOS] = TEMP_MOS_filter1;
 	TEMPERATURE_MOSFET = (temperature_MOS[0] + temperature_MOS[1] + temperature_MOS[2]) / 3.0f;
 	indexTEMP_MOS++;
-	if(indexTEMP_MOS >= 3) indexTEMP_MOS = 0;
+	if (indexTEMP_MOS >= 3) indexTEMP_MOS = 0;
 	
 	if (TEMPERATURE_MOSFET > TEMP_MOSOver)
 	{
 		OverTEMP_MOS_cnt++;
-		if(OverTEMP_MOS_cnt > 3)
+		if (OverTEMP_MOS_cnt > 3)
 		{
 			disablePWM();
 			p_motor_g->Err1 |= MotorErr1_MosOverT;
@@ -128,17 +128,17 @@ void errorDiag(void)
 	else if (TEMPERATURE_MOSFET > TEMP_MOSWARNING)
 	{
 		TempWarning_MOS_cnt++;
-		if(TempWarning_MOS_cnt > 3)
+		if (TempWarning_MOS_cnt > 3)
 		{
 			p_motor_g->Warning |= MotorWarning_MosOverT;
 		}
 	}
-	else if(TEMPERATURE_MOSFET < (TEMP_MOSOver-5.0))
+	else if (TEMPERATURE_MOSFET < (TEMP_MOSOver-5.0))
 	{
 		OverTEMP_MOS_cnt = 0;
-		if(p_motor_g->error==MOS_OverTEMP) p_motor_g->error=Normal;
+		if (p_motor_g->error==MOS_OverTEMP) p_motor_g->error=Normal;
 	}
-	else if(TEMPERATURE_MOSFET < (TEMP_MOSWARNING-5.0))
+	else if (TEMPERATURE_MOSFET < (TEMP_MOSWARNING-5.0))
 	{
 		TempWarning_MOS_cnt = 0;
 	}
@@ -150,12 +150,12 @@ void errorDiag(void)
 	temperature_MOTOR[indexTEMP_MOTOR] = TEMP_MOTOR_filter2;
 	TEMPERATURE_MOTOR = (temperature_MOTOR[0] + temperature_MOTOR[1] + temperature_MOTOR[2]) / 3.0f;
 	indexTEMP_MOTOR++;
-	if(indexTEMP_MOTOR >= 3) indexTEMP_MOTOR = 0;
+	if (indexTEMP_MOTOR >= 3) indexTEMP_MOTOR = 0;
 	
 	if (TEMPERATURE_MOTOR > TEMP_MOTOROver)
 	{
 		OverTEMP_MOTOR_cnt++;
-		if(OverTEMP_MOTOR_cnt > 3)
+		if (OverTEMP_MOTOR_cnt > 3)
 		{
 			disablePWM();
 
@@ -170,17 +170,17 @@ void errorDiag(void)
 	else if (TEMPERATURE_MOTOR > TEMP_MOTORWARNING)
 	{
 		TempWarning_MOTOR_cnt++;
-		if(TempWarning_MOTOR_cnt > 3)
+		if (TempWarning_MOTOR_cnt > 3)
 		{
 			p_motor_g->Warning |= MotorWarning_MotorOverT;
 		}
 	}
-	else if(TEMPERATURE_MOTOR < (TEMP_MOTOROver-5.0))
+	else if (TEMPERATURE_MOTOR < (TEMP_MOTOROver-5.0))
 	{
 		OverTEMP_MOTOR_cnt = 0;
-		if(p_motor_g->error==MOTOR_OverTEMP) p_motor_g->error=Normal;
+		if (p_motor_g->error==MOTOR_OverTEMP) p_motor_g->error=Normal;
 	}
-	else if(TEMPERATURE_MOTOR < (TEMP_MOTORWARNING-5.0))
+	else if (TEMPERATURE_MOTOR < (TEMP_MOTORWARNING-5.0))
 	{
 		TempWarning_MOTOR_cnt = 0;
 	}
@@ -188,54 +188,54 @@ void errorDiag(void)
 
 void errorReport(void)
 {
-//	if(Report_SWOvercur||Report_HWOvercur||Report_SWOvervolt||Report_MOS_OverTEMP||Report_MOTOR_OverTEMP)//下电霍尔电流传感器输出低电压会误报软件过流Report_SWOvercur
-	if(Report_HWOvercur||Report_SWOvervolt||Report_MOS_OverTEMP||Report_MOTOR_OverTEMP)//下电霍尔电流传感器输出低电压会误报软件过流Report_SWOvercur
+//	if (Report_SWOvercur||Report_HWOvercur||Report_SWOvervolt||Report_MOS_OverTEMP||Report_MOTOR_OverTEMP)//下电霍尔电流传感器输出低电压会误报软件过流Report_SWOvercur
+	if (Report_HWOvercur||Report_SWOvervolt||Report_MOS_OverTEMP||Report_MOTOR_OverTEMP)//下电霍尔电流传感器输出低电压会误报软件过流Report_SWOvercur
 	{
 //		HAL_GPIO_WritePin(LED3_GPIO_Port,LED3_Pin,GPIO_PIN_RESET);//红灯
 //		flash_reg[134] = p_motor_g->lastError;
 //		Flash.Erase();//擦除FLASH
-//		for(uint16_t i=0; i<NUMBER_PARA; i++)  //保存140个参数
+//		for (uint16_t i=0; i<NUMBER_PARA; i++)  //保存140个参数
 //		{
 //			FLASH_ProgramWord(PARAM_FLASH_SECTOR+4*i, flash_reg[i]);
 //		}
 	}
-	if(Report_SWOvercur==1)
+	if (Report_SWOvercur==1)
 	{
 		printf("Software overcurrent,%.1f,%.1f,%.1f",a_cur_record,b_cur_record,c_cur_record);
 		HAL_Delay(200);
 		Report_SWOvercur = 0;
 	}			
-	if(Report_HWOvercur==1)
+	if (Report_HWOvercur==1)
 	{
 		printf("Hardware overcurrent,%.1f,%.1f,%.1f",a_cur_record,b_cur_record,c_cur_record);
 		HAL_Delay(200);
 		Report_HWOvercur = 0;
 	}	
-	if(Report_SWOvervolt==1) 
+	if (Report_SWOvervolt==1) 
 	{
 		printf("Over voltage,%.1f",DC_bus_record);
 		HAL_Delay(200);
 		Report_SWOvervolt = 0;
 	}	
-	if(Report_SWUndervolt==1)
+	if (Report_SWUndervolt==1)
 	{
 		printf("Under voltage,%.1f",DC_bus_record);
 		HAL_Delay(200);
 		Report_SWUndervolt = 0;
 	}
-	if(Report_MOS_OverTEMP==1)
+	if (Report_MOS_OverTEMP==1)
 	{
 		printf("MOS over temperature,%.1f",temperature_MOS_record);
 		HAL_Delay(200);
 		Report_MOS_OverTEMP = 0;
 	}
-	if(Report_MOTOR_OverTEMP==1)
+	if (Report_MOTOR_OverTEMP==1)
 	{
 		printf("MOTOR over temperature,%.1f",temperature_MOTOR_record);
 		HAL_Delay(200);
 		Report_MOTOR_OverTEMP = 0;
 	}
-	if(Report_OverSpeed==1)
+	if (Report_OverSpeed==1)
 	{
 		printf("MOTOR over speed,%.1f",p_encoder_g->mech_vel);
 		HAL_Delay(200);

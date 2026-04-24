@@ -34,17 +34,17 @@ void order_phases()
 	float theta_start;
     
 	/// Rotate voltage angle
-	while(theta_ref < 4*PI)//rotate for 2 electrical cycles
+	while (theta_ref < 4*PI)//rotate for 2 electrical cycles
 	{                                                       
 		ApplyVoltDQToSVPWM(v_d, v_q, theta_ref);
 		HAL_Delay(0);
 		encoderSample();//采集最新鲜的编码器位置  在执行该函数时进了TIM1更新中断怎么办？？？函数重入？
 		theta_actual = p_encoder_g->pos_abs;
-		if(theta_ref==0)
+		if (theta_ref==0)
 		{
 			theta_start = theta_actual;
 		}
-		if(sample_counter > 50)
+		if (sample_counter > 50)
 		{
 			sample_counter = 0 ;
 			printf("%.4f   %.4f\n\r", theta_ref/p_motor_g->pole_pairs, theta_actual);
@@ -58,11 +58,11 @@ void order_phases()
 	int direction = ((theta_end - theta_start) > 0);//编码器增加
 	printf("Theta Start:   %f    Theta End:  %f\n\r", theta_start, theta_end);
 	printf("Direction:  %d\n\r", direction);
-	if(direction)
+	if (direction)
 	{
 		printf("Encoder&Motor in same order\n\r");
 	}
-	else if(!direction)
+	else if (!direction)
 	{
 		printf("Encoder&Motor in different order\n\r");
 	}
@@ -85,7 +85,7 @@ void calibrate()
 	float 	delta = 2*PI*p_motor_g->pole_pairs/(n*n2);      // change in angle between samples
 
 //	PositionSensor_WriteLUT(lut);//offset_lut清零
-//	for(uint32_t i=0;i<2688;i++) error_filt[i] = 0;	//以免连续两次整定error_filt未清零
+//	for (uint32_t i=0;i<2688;i++) error_filt[i] = 0;	//以免连续两次整定error_filt未清零
 
 	float theta_ref = 0;
 	float theta_actual = 0;
@@ -98,9 +98,9 @@ void calibrate()
 	HAL_Delay(2000);
 
 	printf("rotations Current Angle  Rotor Angle  error  Raw Encoder\n\r");
-	for(int i = 0; i<n; i++)//n=128*NPP
+	for (int i = 0; i<n; i++)//n=128*NPP
 	{// rotate forwards
-		for(int j = 0; j<n2; j++)//n2=40  for smoothing motion
+		for (int j = 0; j<n2; j++)//n2=40  for smoothing motion
 		{
 			theta_ref += delta;//2*PI*NPP/(n*n2)
 			ApplyVoltDQToSVPWM(v_d, v_q, theta_ref);
@@ -115,9 +115,9 @@ void calibrate()
 		printf("%d   %.4f   %.4f   %.4f   %d\n\r", p_encoder_g->rotations, theta_ref/(float)p_motor_g->pole_pairs, theta_actual, error_f[i], raw_f[i]);
 	} 
     
-	for(int i = 0; i<n; i++)
+	for (int i = 0; i<n; i++)
 	{	// rotate backwards
-		for(int j = 0; j<n2; j++)
+		for (int j = 0; j<n2; j++)
 		{
 			theta_ref -= delta;//从2*PI*NPP开始减
 			ApplyVoltDQToSVPWM(v_d, v_q, theta_ref);
@@ -133,7 +133,7 @@ void calibrate()
 	}    
         
 	float offset = 0;                                  
-	for(int i = 0; i<n; i++)
+	for (int i = 0; i<n; i++)
 	{
 		offset += (error_f[i] + error_b[n-1-i])/(2.0f*n);                   // calclate average position sensor offset
 	}                         
@@ -154,14 +154,14 @@ void calibrate()
 //    /* 对error[n]进行FIR滤波，得到error_filt[n] 得到的error_filt[i]是error[i]前后128个数的平均*/
 //    for (uint32_t i = 0; i<n; i++)
 //    {
-//        for(uint32_t j = 0; j<window; j++)//window==128
+//        for (uint32_t j = 0; j<window; j++)//window==128
 //        {
 //            int32_t ind =  j + i - window/2;        // Indexes from -window/2 to + window/2  -64 to +64（i=0）   -63 to +65（i=1）
-//            if(ind < 0)
+//            if (ind < 0)
 //            {
 //                ind += n;//-64+128*NPP
 //            }                                  		  // Moving average wraps around 环形滑窗滤波
-//            else if(ind > n-1)
+//            else if (ind > n-1)
 //            {
 //                ind -= n;
 //            }					
@@ -176,7 +176,7 @@ void calibrate()
 //    for (uint32_t i = 0; i<n_lut; i++)//n_lut=128
 //    {                                          // build lookup table
 //        uint32_t ind = (raw_offset>>7) + i;
-//        if(ind > (n_lut-1))
+//        if (ind > (n_lut-1))
 //        { 
 //            ind -= n_lut;
 //        }

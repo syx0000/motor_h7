@@ -98,7 +98,7 @@ void encoderSample(void)//电机电角度标定后，位置加上偏移的角度
 	p_encoder_g->mech_abs = PI_TIMES_2 * (float)p_encoder_g->mech_pos * p_encoder_g->one_div_cpr;
 	p_encoder_g->delta_mech_pos = p_encoder_g->mech_pos - p_encoder_g->last_mech_pos;
 	// judge rotations
-	if(p_encoder_g->delta_mech_pos > p_encoder_g->cpr_div_two)//正常情况下差值很小，除非是从0到cpr或者从cpr到0的跳变会导致差值大于cpr_div_two
+	if (p_encoder_g->delta_mech_pos > p_encoder_g->cpr_div_two)//正常情况下差值很小，除非是从0到cpr或者从cpr到0的跳变会导致差值大于cpr_div_two
 	{
 		p_encoder_g->rotations -= 1;
 		p_encoder_g->delta_mech_pos -= p_encoder_g->cpr;
@@ -114,14 +114,14 @@ void encoderSample(void)//电机电角度标定后，位置加上偏移的角度
 	// 计算电角度（减去电角度偏移）
 	p_encoder_g->elec_pos = ((float)p_encoder_g->mech_pos * p_encoder_g->one_div_cpr)*(float)p_motor_g->pole_pairs*PI_TIMES_2 - p_encoder_g->elec_offset;
 	p_encoder_g->elec_pos = fmodf(p_encoder_g->elec_pos, PI_TIMES_2);
-	if(p_encoder_g->elec_pos < 0) p_encoder_g->elec_pos += PI_TIMES_2;
+	if (p_encoder_g->elec_pos < 0) p_encoder_g->elec_pos += PI_TIMES_2;
 	
 	p_encoder2_g->last_mech_pos = p_encoder2_g->mech_pos;
 	p_encoder2_g->mech_pos = angleInner;
 	p_encoder2_g->mech_abs = PI_TIMES_2 * (float)p_encoder2_g->mech_pos * p_encoder2_g->one_div_cpr;
 	p_encoder2_g->delta_mech_pos = p_encoder2_g->mech_pos - p_encoder2_g->last_mech_pos;
 	// judge rotations
-	if(p_encoder2_g->delta_mech_pos > p_encoder2_g->cpr_div_two)//正常情况下差值很小，除非是从0到cpr或者从cpr到0的跳变会导致差值大于cpr_div_two
+	if (p_encoder2_g->delta_mech_pos > p_encoder2_g->cpr_div_two)//正常情况下差值很小，除非是从0到cpr或者从cpr到0的跳变会导致差值大于cpr_div_two
 	{
 		p_encoder2_g->rotations -= 1;
 		p_encoder2_g->delta_mech_pos -= p_encoder2_g->cpr;
@@ -136,7 +136,7 @@ void encoderSample(void)//电机电角度标定后，位置加上偏移的角度
 	
 	static uint8_t vel_calc_count = 0;//vel_calc_count为静态局部变量
 	vel_calc_count++;
-	if(vel_calc_count >= VEL_CALC_PERIOD)
+	if (vel_calc_count >= VEL_CALC_PERIOD)
 	{
 		vel_calc_count = 0;
 		vel_loop_flag = 1;
@@ -145,7 +145,7 @@ void encoderSample(void)//电机电角度标定后，位置加上偏移的角度
 	
 	static uint8_t pos_calc_count = 0;
 	pos_calc_count++;
-	if(pos_calc_count >= POS_CALC_PERIOD)
+	if (pos_calc_count >= POS_CALC_PERIOD)
 	{
 		pos_calc_count = 0;
 		pos_loop_flag = 1;
@@ -160,7 +160,7 @@ void encoderSample(void)//电机电角度标定后，位置加上偏移的角度
 static void prvCalcVelocity(void)
 {
 	delta_encoder_cnt_M = p_encoder_g->mech_pos-p_encoder_g->mech_pos_several_times_before;
-	if(delta_encoder_cnt_M > p_encoder_g->cpr_div_two) delta_encoder_cnt_M -= p_encoder_g->cpr;
+	if (delta_encoder_cnt_M > p_encoder_g->cpr_div_two) delta_encoder_cnt_M -= p_encoder_g->cpr;
 	else if (delta_encoder_cnt_M < -p_encoder_g->cpr_div_two) delta_encoder_cnt_M += p_encoder_g->cpr;
 	
 	p_encoder_g->mech_vel = delta_encoder_cnt_M * PI_TIMES_2 * PWM_FREQUENCY_DEFAULT / p_encoder_g->cpr / (float)VEL_CALC_PERIOD;
@@ -174,7 +174,7 @@ static void prvCalcVelocity(void)
 	}
 	M_velVec[0] = p_encoder_g->mech_vel;
 	p_encoder_g->mech_vel =  sum_M/(float)V_WINDOW_N;
-	if((p_encoder_g->mech_vel == 0) && (FSMstate == MOTOR_MODE)) vel_zero_cnt++;
+	if ((p_encoder_g->mech_vel == 0) && (FSMstate == MOTOR_MODE)) vel_zero_cnt++;
 
 	// 一阶低通滤波
 	p_encoder_g->mech_vel_filt += v_filter_k * (p_encoder_g->mech_vel - p_encoder_g->mech_vel_filt);
@@ -184,7 +184,7 @@ static void prvCalcVelocity(void)
 	
 	
 	delta_encoderInner_cnt_M = p_encoder2_g->mech_pos-p_encoder2_g->mech_pos_several_times_before;
-	if(delta_encoderInner_cnt_M > p_encoder2_g->cpr_div_two) delta_encoderInner_cnt_M -= p_encoder2_g->cpr;
+	if (delta_encoderInner_cnt_M > p_encoder2_g->cpr_div_two) delta_encoderInner_cnt_M -= p_encoder2_g->cpr;
 	else if (delta_encoderInner_cnt_M < -p_encoder2_g->cpr_div_two) delta_encoderInner_cnt_M += p_encoder2_g->cpr;
 	
 	p_encoder2_g->mech_vel = delta_encoderInner_cnt_M * PI_TIMES_2 * PWM_FREQUENCY_DEFAULT / p_encoder2_g->cpr / (float)VEL_CALC_PERIOD;

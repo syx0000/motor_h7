@@ -153,7 +153,7 @@ static void SVPWM(float alpha, float beta)//SVPWM算法 具体可见https://blog
 	}
 	//calculate the tim1's turning time
 	__asm volatile("cpsid i");//关闭中断的汇编指令（C语言中嵌入汇编）
-	if(p_motor_g->phase_order == POSITIVE_PHASE_ORDER)
+	if (p_motor_g->phase_order == POSITIVE_PHASE_ORDER)
 	{
 		__HAL_TIM_SetCompare(&htim1, TIM_CHANNEL_1, Ta);
 		__HAL_TIM_SetCompare(&htim1, TIM_CHANNEL_2, Tb);
@@ -259,7 +259,7 @@ void PositionLoop(void)//位置环 PI运算得到速度给定
 void VelocityLoop(void)//速度环 PI运算得到q轴电流给定 p_motor_g->i_d_ref和p_motor_g->i_q_ref
 {
 	/*速度斜坡规划*/
-	if(p_motor_g->controlMode == FOC_VELOCITY_LOOP)//速度闭环添加规划
+	if (p_motor_g->controlMode == FOC_VELOCITY_LOOP)//速度闭环添加规划
 	{
 		float max_step_size = fabsf(FOC_velAccDec * VEL_CALC_PERIOD / PWM_FREQUENCY_DEFAULT);
 		float full_step = p_velocity_loop_g->targetend - p_velocity_loop_g->target;
@@ -268,14 +268,14 @@ void VelocityLoop(void)//速度环 PI运算得到q轴电流给定 p_motor_g->i_d
 	}
 	/*位置闭环下摆臂实验中增加前馈控制，提高速度环响应速度*/
 //	p_velocity_loop_g->feedforward_ratio = 1;
-//	if(p_motor_g->controlMode == FOC_POSITION_LOOP) p_velocity_loop_g->feedforward = p_encoder2_g->compSin*1.75f;//重力补偿
+//	if (p_motor_g->controlMode == FOC_POSITION_LOOP) p_velocity_loop_g->feedforward = p_encoder2_g->compSin*1.75f;//重力补偿
 	/*速度闭环下摆臂实验中增加前馈控制，提高速度环响应速度*/
 //	p_velocity_loop_g->feedforward_ratio = 1;
-//	if(p_motor_g->controlMode == FOC_VELOCITY_LOOP) p_velocity_loop_g->feedforward = p_encoder_g->compSin*1.75f;//重力补偿 42.236,37.14 (43.48,35.805)
+//	if (p_motor_g->controlMode == FOC_VELOCITY_LOOP) p_velocity_loop_g->feedforward = p_encoder_g->compSin*1.75f;//重力补偿 42.236,37.14 (43.48,35.805)
 //	float FF;
 //	FF = -Position_P*arm_cos_f32(encoder1_raw/16384.0f*4*PI-PI/7.0f);
 //	p_velocity_loop_g->feedforward_ratio = 1;
-//	if(p_motor_g->controlMode == FOC_VELOCITY_LOOP) p_velocity_loop_g->feedforward = FF;
+//	if (p_motor_g->controlMode == FOC_VELOCITY_LOOP) p_velocity_loop_g->feedforward = FF;
 
 	
 //	Pid.DoPidCalc(p_velocity_loop_g, vel_estimate_);//PLL:vel_estimate_(电机端机械转速 rad/s) 发散后vel_estimate_为一个很大的值
@@ -314,14 +314,14 @@ void CurrentLoop()//电流环 CLARK和PARK变换+PI+SVPWM
 	controller.d_int += controller.ki_d*i_d_error;
 	controller.q_int += controller.ki_q*i_q_error;
 
-	if(controller.d_int>OVERMODULATION*p_motor_g->vbus)
+	if (controller.d_int>OVERMODULATION*p_motor_g->vbus)
 		controller.d_int=OVERMODULATION*p_motor_g->vbus;
-	else if(controller.d_int<-OVERMODULATION*p_motor_g->vbus) 
+	else if (controller.d_int<-OVERMODULATION*p_motor_g->vbus) 
 		controller.d_int=-OVERMODULATION*p_motor_g->vbus;
 	
-	if(controller.q_int>OVERMODULATION*p_motor_g->vbus) 
+	if (controller.q_int>OVERMODULATION*p_motor_g->vbus) 
 		controller.q_int=OVERMODULATION*p_motor_g->vbus;
-	else if(controller.q_int<-OVERMODULATION*p_motor_g->vbus) 
+	else if (controller.q_int<-OVERMODULATION*p_motor_g->vbus) 
 		controller.q_int=-OVERMODULATION*p_motor_g->vbus;
 	
 	/*使用给定电角速度计算前馈*/
@@ -339,7 +339,7 @@ void CurrentLoop()//电流环 CLARK和PARK变换+PI+SVPWM
 	limit_norm(&controller.v_d, &controller.v_q,1.15f*p_motor_g->vbus);       // Normalize voltage vector to lie within curcle of radius v_bus
 //	limit_normlization(&controller->v_d, &controller->v_q, OVERMODULATION*controller->v_bus);       // Normalize voltage vector to lie within curcle of radius v_bus
 
-	if(svpwm_on == 1)
+	if (svpwm_on == 1)
 		SVPWM(cos_theta * controller.v_d - sin_theta * controller.v_q, sin_theta * controller.v_d + cos_theta * controller.v_q);
 }
 
@@ -372,8 +372,8 @@ void PD_FOC_clear(void)
 	controller.t_ff = 0;
 	controller.p_des = p_encoder2_g->pos_abs;
 	controller.v_des = 0;
-	if(FSMstate == MOTOR_MODE)  printf("\n\r Entering Motor Mode \n\r");
-	else if(FSMstate == HOMING_MODE)  printf("\n\r Entering Homing Mode \n\r");
+	if (FSMstate == MOTOR_MODE)  printf("\n\r Entering Motor Mode \n\r");
+	else if (FSMstate == HOMING_MODE)  printf("\n\r Entering Homing Mode \n\r");
 }
 
 void enablePWM(void)
@@ -411,7 +411,7 @@ void limit_norm(float *x, float *y, float limit)
 {
 //    float norm = sqrt(*x * *x + *y * *y);//双精度（避免使用，STM32F446无硬件FPU双精度支持）
 	float norm = sqrtf(*x * *x + *y * *y);//单精度
-    if(norm > limit)
+    if (norm > limit)
     {
         *x = *x * limit/norm;
         *y = *y * limit/norm;
@@ -454,8 +454,8 @@ int encoderMod(const int dividend, const int divisor)
 float Clamp(volatile float num, volatile float low, volatile float high)
 {
 	float output = num;
-	if(num<low) output = low;
-	else if(num>high) output = high;
+	if (num<low) output = low;
+	else if (num>high) output = high;
 	return output;
 }
 
@@ -527,14 +527,14 @@ bool least_square_method(float *data, uint8_t num, float *K)
 	int32_t sum_num = num * (num + 1) / 2;
 	int32_t sum_num_2 = num * (num + 1) * (2 * num + 1) / 6;
 	float sum_data = 0.0f, sum_multi = 0.0f;
-	for(int i = 0; i < num; i++)
+	for (int i = 0; i < num; i++)
 	{
 		sum_data += *(data + i);
 		sum_multi += (*(data + i)) * (i + 1); 
 	}
 	float sum_1 = 0.0f, sum_2 = 0.0f, sum_3 = 0.0f;
 	float ave_num = (float)(num + 1) / 2.0f, ave_data = sum_data / (float)num;
-	for(int k = 0; k < num; k++)
+	for (int k = 0; k < num; k++)
 	{
 		sum_1 += (k + 1 - ave_num) * (*(data + k) - ave_data);
 		sum_2 += (k + 1 - ave_num) * (k + 1 - ave_num);
@@ -542,7 +542,7 @@ bool least_square_method(float *data, uint8_t num, float *K)
 	}
 	float r_2 = sum_1 * sum_1 / (sum_2 * sum_3);
 	*K = (num * sum_multi - sum_num * sum_data) / (num * sum_num_2 - sum_num * sum_num);
-	if(r_2 > 0.98f)
+	if (r_2 > 0.98f)
 		return 1;
 	else
 	{
@@ -553,7 +553,7 @@ bool least_square_method(float *data, uint8_t num, float *K)
 bool least_square_method_flux(float *xdata, float *ydata, uint8_t num, float *K)
 {
 	float sum_xdata = 0.0f, sum_xdata_2 = 0.0f, sum_ydata = 0.0f, sum_multi = 0.0f;
-	for(int i = 0; i < num; i++)
+	for (int i = 0; i < num; i++)
 	{
 		sum_xdata += *(xdata + i);
 		sum_xdata_2 += (*(xdata + i)) * (*(xdata + i));
@@ -563,7 +563,7 @@ bool least_square_method_flux(float *xdata, float *ydata, uint8_t num, float *K)
 	float sum_1 = 0.0f, sum_2 = 0.0f, sum_3 = 0.0f;
 	float ave_xdata = sum_xdata / (float)num;
 	float ave_ydata = sum_ydata / (float)num;
-	for(int i = 0; i < num; i++)
+	for (int i = 0; i < num; i++)
 	{
 		sum_1 += (*(xdata + i) - ave_xdata) * (*(ydata + i) - ave_ydata);
 		sum_2 += (*(xdata + i) - ave_xdata) * (*(xdata + i) - ave_xdata);
@@ -571,7 +571,7 @@ bool least_square_method_flux(float *xdata, float *ydata, uint8_t num, float *K)
 	}
 	float r_2 = sum_1 * sum_1 / (sum_2 * sum_3);
 	*K = (num * sum_multi - sum_xdata * sum_ydata) / (num * sum_xdata_2 - sum_xdata * sum_xdata);
-	if(r_2 > 0.98f)
+	if (r_2 > 0.98f)
 		return 1;
 	else
 	{
@@ -615,7 +615,7 @@ uint8_t crcTable [256] =
 
 uint8_t calcCRC(uint8_t * buffer, uint8_t length){
 	uint8_t temp = *buffer++;
-	while(--length){
+	while (--length){
 	temp = *buffer++ ^ crcTable[temp];
 	}
 	return crcTable[temp];
@@ -636,7 +636,7 @@ void delay_us(uint16_t nus)
 //	HAL_TIM_Base_Start(&htim6);//start the timer
 //	//通过轮询的方式等待定时器的更新事件
 //	//当定时器溢出并计数器更新时，TIM_FLAG_UPDATE标志会被置位。
-//	while(__HAL_TIM_GET_FLAG(&htim6,TIM_FLAG_UPDATE)==RESET);
+//	while (__HAL_TIM_GET_FLAG(&htim6,TIM_FLAG_UPDATE)==RESET);
 //	__HAL_TIM_CLEAR_FLAG(&htim6,TIM_FLAG_UPDATE);//清楚更新标志位
 //		HAL_TIM_Base_Stop(&htim6);//Stop the timer
 }
@@ -660,7 +660,7 @@ uint8_t DWT_Init(void)
     DWT_CR |= DWT_CR_CYCCNTENA;
     
     // 检查计数器是否已启用并开始计数
-    if(DWT_CYCCNT) {
+    if (DWT_CYCCNT) {
         return 1; // 成功
     } else {
         return 0; // 失败
