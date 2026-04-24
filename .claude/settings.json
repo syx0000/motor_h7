@@ -1,5 +1,5 @@
 {
   "permissions": {
-    "allow": ["Bash(*)", "Read(*)", "Write(*)", "Edit(*)", "Glob(*)"]
+    "allow": ["Bash(*)", "Read(*)", "Write(*)", "Glob(*)"]
   }
 }

@@ -1,9 +1,0 @@
-five\arm_common_tables.o: ..\Drivers\CMSIS\DSP\Source\CommonTables\arm_common_tables.c
-five\arm_common_tables.o: ../Drivers/CMSIS/DSP/Include/arm_math.h
-five\arm_common_tables.o: ../Drivers/CMSIS/Include/cmsis_compiler.h
-five\arm_common_tables.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
-five\arm_common_tables.o: ../Drivers/CMSIS/Include/cmsis_armcc.h
-five\arm_common_tables.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
-five\arm_common_tables.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\math.h
-five\arm_common_tables.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\float.h
-five\arm_common_tables.o: ../Drivers/CMSIS/DSP/Include/arm_common_tables.h

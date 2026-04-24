@@ -1,7 +1,7 @@
 # Keil MDK-ARM build outputs
 MDK-ARM/FIVE/
+MDK-ARM/*.bin
 *.axf
-*.bin
 *.hex
 *.elf
 *.map
