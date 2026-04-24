@@ -356,6 +356,12 @@ void TIM1_UP_IRQHandler(void)
 			case MOTOR_MODE:// Run torque control
 				if(state_change)//如果是第一次进电机模式（首次进入意味着刚切换到电机模式，还未发送运动指令）
 				{
+					if(p_encoder_g->cali_finish != 1)//未校准，拒绝进入MOTOR_MODE
+					{
+						FSMstate = REST_MODE;
+						state_change = 0;
+						break;
+					}
 //					p_position_loop_g->target = p_encoder_g->pos_abs;//当前位置值赋给指令值，以免位置环下刚进入电机模式，电机便会运动到0（p_position_loop_g->target初始化一般为0）			
 					p_position_loop_g->target = p_encoder2_g->pos_abs;
 					p_motor_g->i_d_ref = 0;/*电流环id指令清零*/
