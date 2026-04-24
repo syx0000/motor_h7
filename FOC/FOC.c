@@ -310,19 +310,21 @@ void CurrentLoop()//电流环 CLARK和PARK变换+PI+SVPWM
 //启动dq轴电流滤波
 //	float i_d_error = p_motor_g->i_d_ref - p_motor_g->D_axis_current_filt;
 //	float i_q_error = p_motor_g->i_q_ref - p_motor_g->Q_axis_current_filt;
-	// Integrate Error //
-	controller.d_int += controller.ki_d*i_d_error;
-	controller.q_int += controller.ki_q*i_q_error;
+	// Integrate Error（冻结策略：输出饱和时停止积分累积）
+	float v_bus_limit = OVERMODULATION * p_motor_g->vbus;
+	float d_int_new = controller.d_int + controller.ki_d * i_d_error;
+	float q_int_new = controller.q_int + controller.ki_q * i_q_error;
 
-	if (controller.d_int>OVERMODULATION*p_motor_g->vbus)
-		controller.d_int=OVERMODULATION*p_motor_g->vbus;
-	else if (controller.d_int<-OVERMODULATION*p_motor_g->vbus) 
-		controller.d_int=-OVERMODULATION*p_motor_g->vbus;
-	
-	if (controller.q_int>OVERMODULATION*p_motor_g->vbus) 
-		controller.q_int=OVERMODULATION*p_motor_g->vbus;
-	else if (controller.q_int<-OVERMODULATION*p_motor_g->vbus) 
-		controller.q_int=-OVERMODULATION*p_motor_g->vbus;
+	// D轴：仅在积分不会导致输出饱和时才更新
+	if (fabsf(controller.k_d * i_d_error + d_int_new) < v_bus_limit)
+		controller.d_int = d_int_new;
+	// 积分限幅（防止极端情况）
+	controller.d_int = fmaxf(-v_bus_limit, fminf(v_bus_limit, controller.d_int));
+
+	// Q轴：同上
+	if (fabsf(controller.k_q * i_q_error + q_int_new) < v_bus_limit)
+		controller.q_int = q_int_new;
+	controller.q_int = fmaxf(-v_bus_limit, fminf(v_bus_limit, controller.q_int));
 	
 	/*使用给定电角速度计算前馈*/
 	controller.v_d_ff = -p_velocity_loop_g->target*p_motor_g->pole_pairs*p_motor_g->phase_inductance*p_motor_g->i_q_ref;

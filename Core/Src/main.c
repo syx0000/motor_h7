@@ -50,7 +50,6 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-uint8_t stateChange = 0;
 
 
 uint8_t TorqueTestFlag = 0;//测试转矩控制精度
@@ -256,21 +255,6 @@ int main(void)
 		{
 			flash_write_pending = 0;
 			Write_MotorData();
-		}
-
-		if (stateChange==1)
-		{
-			FSMstate = MOTOR_MODE;
-			state_change = 1;
-			stateChange = 0;
-		}
-		if (stateChange==2)
-		{
-			EnablePWM();
-			ApplyVoltDQToSVPWM(1.5, 0, PI/2.0f);
-			HAL_Delay(1000);
-			stateChange = 0;
-			DisablePWM();
 		}
 
 //		if (HAL_GPIO_ReadPin(K1_GPIO_Port,K1_Pin) == GPIO_PIN_RESET)  /* 霍尔传感器状态获取 */

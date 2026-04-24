@@ -92,7 +92,7 @@ void Motor_Init(void)
 
 	// 电机温度初始化（防止ADC = 4095除零）
 	float adc1_voltage = (float)ADC1->DR * 3.3f / 4095.0f;
-	if (adc1_voltage >= 3.29f) // 接近满量程，分母接近0
+	if (adc1_voltage >= 3.2f) // 接近满量程，分母接近0
 	{
 		TEMP_MOTOR_filter1 = 25.0f; // 默认室温
 	}
@@ -108,7 +108,7 @@ void Motor_Init(void)
 
 	// MOS温度初始化（防止ADC = 4095除零）
 	float adc2_voltage = (float)ADC2->DR * 3.3f / 4095.0f;
-	if (adc2_voltage >= 3.29f)
+	if (adc2_voltage >= 3.2f)
 	{
 		TEMP_MOS_filter1 = 25.0f;
 	}
@@ -401,8 +401,8 @@ void TemperatureSample()
 //	float r1_ntc = RES_DIVIDE_MOTOR*((float)ADC1->DR*ADC_supply/ADC_resolution)/(ADC_supply-((float)ADC1->DR*ADC_supply/ADC_resolution));//电机绕组端NTC电阻阻值 单位：kΩ
 	float adc_jdr2 = (float)ADC2->JDR2 / ADC_resolution;
 	float r1_ntc;
-	if (adc_jdr2 >= 0.999f)
-		r1_ntc = 999.0f; // 防止除零
+	if (adc_jdr2 >= 0.97f) // 更保守的阈值，防止除零
+		r1_ntc = 999.0f;
 	else
 		r1_ntc = RES_DIVIDE_MOTOR * (adc_jdr2 / (1.0f - adc_jdr2));
 	if (r1_ntc < 0.01f) r1_ntc = 0.01f; // 防止log(0)
@@ -434,7 +434,7 @@ void TemperatureSample()
 	
 	float adc_jdr1 = (float)ADC2->JDR1 / ADC_resolution;
 	float r2_ntc;
-	if (adc_jdr1 >= 0.999f)
+	if (adc_jdr1 >= 0.97f) // 更保守的阈值，防止除零
 		r2_ntc = 999.0f;
 	else
 		r2_ntc = RES_DIVIDE_MOS * (adc_jdr1 / (1.0f - adc_jdr1));

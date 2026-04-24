@@ -139,10 +139,11 @@ static float DoPidCalc(pid_t *pid, float feedback)
 		pid->P = pid->kp * pid->err;//比例系数×误差
 		pid->output = pid->P + pid->feedforward * pid->feedforward_ratio;
 
-		// 积分饱和冻结策略：输出饱和时停止积分累积
-		if (fabsf(pid->output + pid->I) < pid->output_limit)
+		// 积分饱和冻结策略：新积分值导致输出饱和时停止累积
+		float i_new = pid->I + pid->ki * pid->err;
+		if (fabsf(pid->output + i_new) < pid->output_limit)
 		{
-			pid->I += pid->ki * pid->err;//积分系数×误差（一直累积）
+			pid->I = i_new;
 		}
 		// 积分限幅
 		pid->I = MIN(pid->I, pid->output_limit);
