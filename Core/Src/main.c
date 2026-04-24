@@ -533,6 +533,7 @@ void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
+  disablePWM(); // 关闭PWM，防止电机失控
   __disable_irq();
   while (1)
   {
