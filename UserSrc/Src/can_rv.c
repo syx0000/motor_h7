@@ -516,7 +516,7 @@ void CAN_MsgProcess(uint32_t Identifier, uint8_t *FDCANRxData)
 			p_motor_g->error = Normal;//清除错误
 			p_motor_g->Err1 = MotorErr1_Nomal;
 			p_motor_g->Err2 = MotorErr1_Nomal;
-			p_motor_g->Err1 = MotorWarning_Nomal;
+			p_motor_g->Warning = MotorWarning_Nomal;
 		}
 		
 		pack_reply(FOC_CAN_TxData,p_encoder2_g->pos_abs,p_encoder2_g->mech_vel,p_motor_g->Q_axis_current_filt*KT_OUT,p_motor_g->Err1,p_motor_g->Err2,p_motor_g->Warning);

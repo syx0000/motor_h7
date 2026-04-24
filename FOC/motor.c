@@ -82,7 +82,7 @@ void Motor_Init(void)
 	p_motor_g->error = Normal;
 	p_motor_g->Err1 = MotorErr1_Nomal;
 	p_motor_g->Err2 = MotorErr1_Nomal;
-	p_motor_g->Err1 = MotorWarning_Nomal;
+	p_motor_g->Warning = MotorWarning_Nomal;
 //	voltage_coefficient = vlotage_resDivide * 3.3f / 4096.0f;
 	
 	p_motor_g->controlMode = FOC_POSITION_LOOP;//FOC_VELOCITY_LOOP;//默认FOC速度模式
