@@ -43,6 +43,8 @@ void CAN_SendMessage(uint32_t id, uint8_t *data, uint8_t len)
 		TxHeader.DataLength = FDCAN_DLC_BYTES_12; // 使用宏定义数据长度
 	else if(len == 16)
 		TxHeader.DataLength = FDCAN_DLC_BYTES_16; // 使用宏定义数据长度
+	else
+		TxHeader.DataLength = FDCAN_DLC_BYTES_8; // 默认8字节
 	TxHeader.ErrorStateIndicator = FDCAN_ESI_ACTIVE;
 	TxHeader.BitRateSwitch = FDCAN_BRS_ON; // 打开比特率切换
 	TxHeader.FDFormat = FDCAN_FD_CAN; // FDCAN帧格式
