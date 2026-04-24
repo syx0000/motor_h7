@@ -55,7 +55,6 @@ typedef struct _Encoder_t
 	volatile float mech_vel;
 	float mech_vel_filt;
 	float elec_vel;
-	float elec_pos_table[2048];
 	float elec_offset;
 	float mech_offset;//机械零位
 	float compSin;//机械角度正弦值
