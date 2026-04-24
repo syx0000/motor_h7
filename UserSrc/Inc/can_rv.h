@@ -16,7 +16,7 @@ extern float KP_MAX;
 extern float KD_MIN;
 extern float KD_MAX;
 
-/*Í¨ĞÅÄ£Ê½*/
+/*é€šä¿¡æ¨¡å¼*/
 #define CommAutoFeedback	1
 #define CommResponseMode	2
 
@@ -26,7 +26,7 @@ extern float KD_MAX;
 void CAN_SendMessage(uint32_t id, uint8_t *data, uint8_t len);
 void CAN_Config(void);
 
-void pack_reply(uint8_t *tData,float pos,	float vel, float torque, uint16_t err1, uint8_t err2, uint8_t warning);//·´À¡Ö¡
+void pack_reply(uint8_t *tData,float pos,	float vel, float torque, uint16_t err1, uint8_t err2, uint8_t warning);//åé¦ˆå¸§
 void Pack_ActiveReport_Current(uint8_t *tData ,float torque);
 void Pack_ActiveReport(uint8_t *tData,float pos, float vel, float torque, uint16_t err1, uint8_t err2, uint8_t warning);
 //void PD_pack_reply(uint8_t *tData, float p, float v, float t);

@@ -4,7 +4,7 @@
 #define _INTERACT_H
 #include "main.h"
 
-/*PD¿ØÖÆ*/
+/*PDæŽ§åˆ¶*/
 //#define P_MIN   -500.0f
 //#define P_MAX   500.0f
 //#define V_MIN   -10.0f

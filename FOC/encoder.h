@@ -41,11 +41,11 @@ typedef struct _Encoder_t
 	volatile float elec_pos;
 	volatile float pos_abs;	//absolute position in rad
 //	volatile float pos_abs_norotations;	
-	volatile float mechPosition;	//Êä³ö¶Ëabsolute position in rad
-	volatile float mech_abs;	//absolute »úĞµ position in rad
+	volatile float mechPosition;	//è¾“å‡ºç«¯absolute position in rad
+	volatile float mech_abs;	//absolute æœºæ¢° position in rad
 	float several_times_before_pos_abs;
 //	float several_times_before_pos_abs_norotations;
-	int32_t mech_pos;//±àÂëÆ÷»úĞµÎ»ÖÃ
+	int32_t mech_pos;//ç¼–ç å™¨æœºæ¢°ä½ç½®
 	int32_t mech_pos_several_times_before;
 	int32_t last_mech_pos;
 	int32_t delta_mech_pos;
@@ -57,10 +57,10 @@ typedef struct _Encoder_t
 	float elec_vel;
 	float elec_pos_table[2048];
 	float elec_offset;
-	float mech_offset;//»úĞµÁãÎ»
-	float compSin;//»úĞµ½Ç¶ÈÕıÏÒÖµ
+	float mech_offset;//æœºæ¢°é›¶ä½
+	float compSin;//æœºæ¢°è§’åº¦æ­£å¼¦å€¼
 	float phase_order;
-	/*Ğ£×¼*/
+	/*æ ¡å‡†*/
 	uint8_t cali_start;
 	uint8_t cali_finish;
 }Encoder_t;

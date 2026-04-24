@@ -2,9 +2,9 @@
 #include "main.h"
 
 #define TEMP_MOSWARNING		90.0f
-#define TEMP_MOSOver		100.0f//µ¥Î»£º¡æ
+#define TEMP_MOSOver		100.0f//å•ä½ï¼šâ„ƒ
 #define TEMP_MOTORWARNING	90.0f
-#define TEMP_MOTOROver		100.0f//µ¥Î»£º¡æ
+#define TEMP_MOTOROver		100.0f//å•ä½ï¼šâ„ƒ
 
 uint8_t Report_SWOvercur=0;
 uint8_t Report_HWOvercur=0;
@@ -28,7 +28,7 @@ void errorDiag(void)
 //		Report_OverSpeed = 1;
 //	}
 	
-/*Èí¼þ¹ýÁ÷±£»¤*/
+/*è½¯ä»¶è¿‡æµä¿æŠ¤*/
 	static uint8_t SWOvercur_cnt = 0;
 	static uint8_t indexCur = 0;
 //	static float A_CURRENT,B_CURRENT,C_CURRENT;
@@ -48,7 +48,7 @@ void errorDiag(void)
 			disablePWM();
 			p_motor_g->Err1 |= MotorErr1_PhaseOverCurrent;
 			p_motor_g->error = SwOverCurrent;
-			p_motor_g->lastError = SwOverCurrent;//¼ÇÂ¼¹ÊÕÏÀàÐÍ
+			p_motor_g->lastError = SwOverCurrent;//è®°å½•æ•…éšœç±»åž‹
 			a_cur_record = A_CURRENT;
 			b_cur_record = B_CURRENT;
 			c_cur_record = C_CURRENT;
@@ -60,7 +60,7 @@ void errorDiag(void)
 		SWOvercur_cnt = 0;
 		if(p_motor_g->error==SwOverCurrent) p_motor_g->error=Normal;
 	}
-/*¹ýÑ¹Ç·Ñ¹±£»¤*/
+/*è¿‡åŽ‹æ¬ åŽ‹ä¿æŠ¤*/
 	static uint8_t SWOvervolt_cnt = 0;
 	static uint8_t SWUndervolt_cnt = 0;
 	static uint8_t indexDC_bus = 0;
@@ -77,7 +77,7 @@ void errorDiag(void)
 			disablePWM();
 			p_motor_g->Err1 |= MotorErr1_OverVolt;
 			p_motor_g->error=OverVolt;
-			p_motor_g->lastError = OverVolt;//¼ÇÂ¼¹ÊÕÏÀàÐÍ
+			p_motor_g->lastError = OverVolt;//è®°å½•æ•…éšœç±»åž‹
 			DC_bus_record = DC_BUS;
 			Report_SWOvervolt = 1;
 		}
@@ -90,7 +90,7 @@ void errorDiag(void)
 			disablePWM();
 			p_motor_g->Err2 |= MotorErr2_LowVotage;
 			p_motor_g->error=UnderVolt;
-			p_motor_g->lastError = UnderVolt;//¼ÇÂ¼¹ÊÕÏÀàÐÍ
+			p_motor_g->lastError = UnderVolt;//è®°å½•æ•…éšœç±»åž‹
 			DC_bus_record = DC_BUS;
 			Report_SWUndervolt = 1;
 		}
@@ -102,7 +102,7 @@ void errorDiag(void)
 		if(p_motor_g->error==OverVolt||p_motor_g->error==UnderVolt) p_motor_g->error=Normal;
 	}		
 
-/*MOS¹ýÎÂ±£»¤*/
+/*MOSè¿‡æ¸©ä¿æŠ¤*/
 	static uint8_t TempWarning_MOS_cnt = 0,OverTEMP_MOS_cnt = 0;
 	static uint8_t indexTEMP_MOS = 0;
 //	static float TEMPERATURE_MOSFET;
@@ -118,7 +118,7 @@ void errorDiag(void)
 		{
 			p_motor_g->Warning |= MotorWarning_MosOverT;
 			//p_motor_g->error = MOS_OverTEMP;
-			//p_motor_g->lastError = MOS_OverTEMP;//¼ÇÂ¼¹ÊÕÏÀàÐÍ
+			//p_motor_g->lastError = MOS_OverTEMP;//è®°å½•æ•…éšœç±»åž‹
 			//temperature_MOS_record = TEMPERATURE_MOSFET;
 			//Report_MOS_OverTEMP = 1;
 		}
@@ -132,7 +132,7 @@ void errorDiag(void)
 			p_motor_g->Err1 |= MotorErr1_MosOverT;
 			
 			p_motor_g->error = MOS_OverTEMP;
-			p_motor_g->lastError = MOS_OverTEMP;//¼ÇÂ¼¹ÊÕÏÀàÐÍ
+			p_motor_g->lastError = MOS_OverTEMP;//è®°å½•æ•…éšœç±»åž‹
 			temperature_MOS_record = TEMPERATURE_MOSFET;
 			Report_MOS_OverTEMP = 1;
 		}
@@ -147,7 +147,7 @@ void errorDiag(void)
 		if(p_motor_g->error==MOS_OverTEMP) p_motor_g->error=Normal;
 	}
 	
-/*µç»ú¹ýÎÂ±£»¤*/
+/*ç”µæœºè¿‡æ¸©ä¿æŠ¤*/
 	static uint8_t TempWarning_MOTOR_cnt = 0,OverTEMP_MOTOR_cnt = 0;
 	static uint8_t indexTEMP_MOTOR = 0;
 //	static float TEMPERATURE_MOTOR;
@@ -163,7 +163,7 @@ void errorDiag(void)
 		{
 			p_motor_g->Warning |= MotorWarning_MotorOverT;
 			//p_motor_g->error = MOTOR_OverTEMP;
-			//p_motor_g->lastError = MOTOR_OverTEMP;//¼ÇÂ¼¹ÊÕÏÀàÐÍ
+			//p_motor_g->lastError = MOTOR_OverTEMP;//è®°å½•æ•…éšœç±»åž‹
 			//temperature_MOTOR_record = TEMPERATURE_MOTOR;
 			//Report_MOTOR_OverTEMP = 1;
 		}
@@ -178,7 +178,7 @@ void errorDiag(void)
 			p_motor_g->Err1 |= MotorErr1_MotorOverT;
 			
 			p_motor_g->error = MOTOR_OverTEMP;
-			p_motor_g->lastError = MOTOR_OverTEMP;//¼ÇÂ¼¹ÊÕÏÀàÐÍ
+			p_motor_g->lastError = MOTOR_OverTEMP;//è®°å½•æ•…éšœç±»åž‹
 			temperature_MOTOR_record = TEMPERATURE_MOTOR;
 			Report_MOTOR_OverTEMP = 1;
 		}
@@ -196,13 +196,13 @@ void errorDiag(void)
 
 void errorReport(void)
 {
-//	if(Report_SWOvercur||Report_HWOvercur||Report_SWOvervolt||Report_MOS_OverTEMP||Report_MOTOR_OverTEMP)//ÏÂµç»ô¶ûµçÁ÷´«¸ÐÆ÷Êä³öµÍµçÑ¹»áÎó±¨Èí¼þ¹ýÁ÷Report_SWOvercur
-	if(Report_HWOvercur||Report_SWOvervolt||Report_MOS_OverTEMP||Report_MOTOR_OverTEMP)//ÏÂµç»ô¶ûµçÁ÷´«¸ÐÆ÷Êä³öµÍµçÑ¹»áÎó±¨Èí¼þ¹ýÁ÷Report_SWOvercur
+//	if(Report_SWOvercur||Report_HWOvercur||Report_SWOvervolt||Report_MOS_OverTEMP||Report_MOTOR_OverTEMP)//ä¸‹ç”µéœå°”ç”µæµä¼ æ„Ÿå™¨è¾“å‡ºä½Žç”µåŽ‹ä¼šè¯¯æŠ¥è½¯ä»¶è¿‡æµReport_SWOvercur
+	if(Report_HWOvercur||Report_SWOvervolt||Report_MOS_OverTEMP||Report_MOTOR_OverTEMP)//ä¸‹ç”µéœå°”ç”µæµä¼ æ„Ÿå™¨è¾“å‡ºä½Žç”µåŽ‹ä¼šè¯¯æŠ¥è½¯ä»¶è¿‡æµReport_SWOvercur
 	{
-//		HAL_GPIO_WritePin(LED3_GPIO_Port,LED3_Pin,GPIO_PIN_RESET);//ºìµÆ
+//		HAL_GPIO_WritePin(LED3_GPIO_Port,LED3_Pin,GPIO_PIN_RESET);//çº¢ç¯
 //		flash_reg[134] = p_motor_g->lastError;
-//		Flash.Erase();//²Á³ýFLASH
-//		for(uint16_t i=0; i<NUMBER_PARA; i++)  //±£´æ140¸ö²ÎÊý
+//		Flash.Erase();//æ“¦é™¤FLASH
+//		for(uint16_t i=0; i<NUMBER_PARA; i++)  //ä¿å­˜140ä¸ªå‚æ•°
 //		{
 //			FLASH_ProgramWord(PARAM_FLASH_SECTOR+4*i, flash_reg[i]);
 //		}

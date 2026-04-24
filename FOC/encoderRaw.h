@@ -20,8 +20,8 @@ extern volatile uint32_t start_encoder_cnt_T;
 extern volatile uint32_t current_time_CNT_T;
 extern volatile uint32_t current_encoder_cnt_T;
 extern volatile uint8_t T_measurement_active;
-extern volatile uint32_t start_encoder_cnt_M;// ÆğÊ¼Î»ÖÃ
-extern volatile uint32_t current_encoder_cnt_M;// ½áÊøÎ»ÖÃ
+extern volatile uint32_t start_encoder_cnt_M;// èµ·å§‹ä½ç½®
+extern volatile uint32_t current_encoder_cnt_M;// ç»“æŸä½ç½®
 
 uint16_t calc_even_parity(uint16_t data);
 /* ------------------------------ Struct Typedef ------------------------------ */
