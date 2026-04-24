@@ -162,6 +162,7 @@ void Read_MotorData (void)
 	KP_MAX = uint2float(flash_buffer[15]);
 	KD_MIN = uint2float(flash_buffer[16]);
 	KD_MAX = uint2float(flash_buffer[17]);
+	FDCAN_ID = (uint8_t)flash_buffer[18];
 }
 
 typedef union
