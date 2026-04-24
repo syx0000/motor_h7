@@ -805,9 +805,9 @@ void USART1_IRQHandler(void)
 				{
 					cmd_id = c;
 				}
-				else
+				else if(char_count - 1 < 8)
 				{
-					cmd_val[char_count-1] = c;   
+					cmd_val[char_count-1] = c;
 				}
 				char_count++;
 			}
@@ -892,9 +892,9 @@ void USART1_IRQHandler(void)
 				{
 					cmd_id = c;
 				}
-				else
+				else if(char_count - 1 < 8)
 				{
-					cmd_val[char_count-1] = c;   
+					cmd_val[char_count-1] = c;
 				}
 				char_count++;
 			}
