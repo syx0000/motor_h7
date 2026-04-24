@@ -42,7 +42,13 @@ void init_planner(MotionPlanner* planner, float start_pos, float target, float v
 	// 计算运动方向
 	const float sign_dir = (displacement >= 0) ? 1.0f : -1.0f;
 		
-	float effective_acc = (acc * dec) / (acc + dec);
+	float effective_acc;
+	if((acc + dec) < 1e-6f)
+	{
+		planner->total_time = 0.0f;
+		return;
+	}
+	effective_acc = (acc * dec) / (acc + dec);
 //	float max_feasible_v = sqrtf(2 * effective_acc * abs_displacement + start_vel * start_vel);
 	float max_feasible_v = sqrtf(2 * effective_acc * abs_displacement);
 		
