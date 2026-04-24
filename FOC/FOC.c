@@ -299,7 +299,7 @@ void CurrentLoop()//电流环 CLARK和PARK变换+PI+SVPWM
 	p_motor_g->Q_axis_current = -sin_theta * p_motor_g->alpha_axis_current + cos_theta * p_motor_g->beta_axis_current;
 //	DQ First order low pass filter
 	p_motor_g->Q_axis_current_filt = (0.4f * p_motor_g->Q_axis_current_filt) + (0.6f * p_motor_g->Q_axis_current);
-	p_motor_g->D_axis_current_filt = (0.4f * p_motor_g->Q_axis_current_filt) + (0.6f * p_motor_g->D_axis_current);
+	p_motor_g->D_axis_current_filt = (0.4f * p_motor_g->D_axis_current_filt) + (0.6f * p_motor_g->D_axis_current);
 	
 	//电流限制
 	limit_norm(&p_motor_g->i_d_ref, &p_motor_g->i_q_ref,p_motor_g->IMax);
