@@ -111,7 +111,7 @@ extern ControllerStruct controller;
 #define _2_BY_3 			0.6666666666667f
 #define MAX(a, b) (a > b ? a : b)
 #define MIN(a, b) (a < b ? a : b)
-#define clamp(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
+#define CLAMP(amt, low, high) ((amt) < (low) ? (low) : ((amt) > (high) ? (high) : (amt)))
 #define ADC_sample_time 400.0f; // remain some time for ADC sample
 
 static void SVPWM(float alpha, float beta);
@@ -155,9 +155,9 @@ uint8_t DWT_Init(void);
 #define PWM_FREQUENCY_DEFAULT	10000.0f		// Frequence of pwm[Hz]
 #define PeriodPWM 0.0001f
 
-#define current_compensation_ratio 1.00f
-#define vel_calc_period 4  // 采集位置和解算速度的周期比值
-#define pos_calc_period 4  // 采集位置和进位置环的周期比值
+#define CURRENT_COMPENSATION_RATIO 1.00f
+#define VEL_CALC_PERIOD 4  // 采集位置和解算速度的周期比值
+#define POS_CALC_PERIOD 4  // 采集位置和进位置环的周期比值
 #define KT_OUT 1.48//3.5f            //KT*GR  模组测试得到
 #endif
 

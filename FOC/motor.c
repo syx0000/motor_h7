@@ -25,21 +25,20 @@ const float sample_resistance = 0.0025f;//采样电阻
 
 //const float voltage_coefficient = 0.016193848;//1M 910k 100k
 //static const float voltage_coefficient = 0.0169189453125;//1M 1M 100k
-//static const float voltage_coefficient = vlotage_resDivide*ADC_supply/ADC_resolution;
+//static const float voltage_coefficient = VOLTAGE_RES_DIVIDE*ADC_supply/ADC_resolution;
 static const float voltage_coefficient = ADC_supply/ADC_resolution;//1M 1M 100k
 /*电流采样*/
-#define HALL_sensitivity 0.044f//44mV/A
-//#define HALL_sensitivity 0.132f//44mV/A
+#define HALL_SENSITIVITY 0.044f // 44mV/A
 /*温度采样*/
-#define B_const_MOS 3950.0f
-#define resDivide_MOS 10.0f//kΩ
-#define nominalRes_MOS 10.0f//kΩ
+#define B_CONST_MOS 3950.0f
+#define RES_DIVIDE_MOS 10.0f // kΩ
+#define NOMINAL_RES_MOS 10.0f // kΩ
 
-#define B_const_MOTOR 3435.0f
-#define resDivide_MOTOR 10.0f//kΩ
-#define nominalRes_MOTOR 10.0f//kΩ
+#define B_CONST_MOTOR 3435.0f
+#define RES_DIVIDE_MOTOR 10.0f // kΩ
+#define NOMINAL_RES_MOTOR 10.0f // kΩ
 
-#define absoluteZero 273.15f//K
+#define ABSOLUTE_ZERO 273.15f // K
 
 float TEMP_MOTOR = 0.0f;
 float TEMP_MOS = 0.0f;
@@ -52,7 +51,7 @@ void Motor_Init(void)
 	p_motor_g->vbus = 48;
 	p_motor_g->phase_order = NEGATIVE_PHASE_ORDER;//反相序
 	p_motor_g->pole_pairs = 8;     // @todo flash
-	p_motor_g->IMax = 60.0f * current_compensation_ratio;//电流限制
+	p_motor_g->IMax = 60.0f * CURRENT_COMPENSATION_RATIO;//电流限制
 	p_motor_g->current_loop_bandwidth = PWM_FREQUENCY_DEFAULT / 10.0f; // @todo flash 10k/10=1k
 	p_motor_g->velocity_loop_bandwidth = 100.0f;
 	p_motor_g->direct_current = 0.6f;
@@ -83,7 +82,7 @@ void Motor_Init(void)
 	p_motor_g->Err1 = MotorErr1_Nomal;
 	p_motor_g->Err2 = MotorErr1_Nomal;
 	p_motor_g->Warning = MotorWarning_Nomal;
-//	voltage_coefficient = vlotage_resDivide * 3.3f / 4096.0f;
+//	voltage_coefficient = VOLTAGE_RES_DIVIDE * 3.3f / 4096.0f;
 	
 	p_motor_g->controlMode = FOC_POSITION_LOOP;//FOC_VELOCITY_LOOP;//默认FOC速度模式
 	p_motor_g->i_d_ref = 0;
@@ -399,16 +398,16 @@ void voltageSample()
 void temperatureSample()
 {
 	//电机温度计算
-//	float r1_ntc = resDivide_MOTOR*((float)ADC2->JDR2*ADC_supply/ADC_resolution)/(ADC_supply-((float)ADC2->JDR2*ADC_supply/ADC_resolution));//电机绕组端NTC电阻阻值 单位：kΩ
-//	float r1_ntc = resDivide_MOTOR*((float)ADC1->DR*ADC_supply/ADC_resolution)/(ADC_supply-((float)ADC1->DR*ADC_supply/ADC_resolution));//电机绕组端NTC电阻阻值 单位：kΩ
+//	float r1_ntc = RES_DIVIDE_MOTOR*((float)ADC2->JDR2*ADC_supply/ADC_resolution)/(ADC_supply-((float)ADC2->JDR2*ADC_supply/ADC_resolution));//电机绕组端NTC电阻阻值 单位：kΩ
+//	float r1_ntc = RES_DIVIDE_MOTOR*((float)ADC1->DR*ADC_supply/ADC_resolution)/(ADC_supply-((float)ADC1->DR*ADC_supply/ADC_resolution));//电机绕组端NTC电阻阻值 单位：kΩ
 	float adc_jdr2 = (float)ADC2->JDR2 / ADC_resolution;
 	float r1_ntc;
 	if(adc_jdr2 >= 0.999f)
 		r1_ntc = 999.0f; // 防止除零
 	else
-		r1_ntc = resDivide_MOTOR * (adc_jdr2 / (1.0f - adc_jdr2));
+		r1_ntc = RES_DIVIDE_MOTOR * (adc_jdr2 / (1.0f - adc_jdr2));
 	if(r1_ntc < 0.01f) r1_ntc = 0.01f; // 防止log(0)
-	TEMP_MOTOR = 1.0f / ( (1.0f / (absoluteZero + 25.0f) ) + (logf(r1_ntc / nominalRes_MOTOR) / B_const_MOTOR ) ) - absoluteZero;//单位：摄氏度
+	TEMP_MOTOR = 1.0f / ( (1.0f / (ABSOLUTE_ZERO + 25.0f) ) + (logf(r1_ntc / NOMINAL_RES_MOTOR) / B_CONST_MOTOR ) ) - ABSOLUTE_ZERO;//单位：摄氏度
 //	计算绝对差值
 //  float delta = fabsf(TEMP_MOTOR - TEMP_MOTOR_filter1);
 //  TEMP_MOTOR_filter1 = ((delta > 1) ? TEMP_MOTOR_filter1 : TEMP_MOTOR);//100us升不了1℃吧？
@@ -431,18 +430,18 @@ void temperatureSample()
 	//MOS温度计算
 	//共约3.5us 使用热敏电阻的Steinhart-Hart方程进行温度计算
 //	float r2_ntc = 3.3f*3.3f/((float)ADC2->DR*3.3f/4095.0f)-3.3;//kΩ
-//	float r2_ntc = resDivide_MOS*((float)ADC2->JDR1*ADC_supply/ADC_resolution)/(ADC_supply-((float)ADC2->JDR1*ADC_supply/ADC_resolution));//kΩ
-//	float r2_ntc = resDivide_MOS*((float)ADC2->DR*ADC_supply/ADC_resolution)/(ADC_supply-((float)ADC2->DR*ADC_supply/ADC_resolution));//kΩ
+//	float r2_ntc = RES_DIVIDE_MOS*((float)ADC2->JDR1*ADC_supply/ADC_resolution)/(ADC_supply-((float)ADC2->JDR1*ADC_supply/ADC_resolution));//kΩ
+//	float r2_ntc = RES_DIVIDE_MOS*((float)ADC2->DR*ADC_supply/ADC_resolution)/(ADC_supply-((float)ADC2->DR*ADC_supply/ADC_resolution));//kΩ
 	
 	float adc_jdr1 = (float)ADC2->JDR1 / ADC_resolution;
 	float r2_ntc;
 	if(adc_jdr1 >= 0.999f)
 		r2_ntc = 999.0f;
 	else
-		r2_ntc = resDivide_MOS * (adc_jdr1 / (1.0f - adc_jdr1));
+		r2_ntc = RES_DIVIDE_MOS * (adc_jdr1 / (1.0f - adc_jdr1));
 	if(r2_ntc < 0.01f) r2_ntc = 0.01f;
 
-	TEMP_MOS = 1.0f / ( (1.0f / (absoluteZero + 25.0f) ) + (logf(r2_ntc / nominalRes_MOS) / B_const_MOS ) ) - absoluteZero;//摄氏度
+	TEMP_MOS = 1.0f / ( (1.0f / (ABSOLUTE_ZERO + 25.0f) ) + (logf(r2_ntc / NOMINAL_RES_MOS) / B_CONST_MOS ) ) - ABSOLUTE_ZERO;//摄氏度
 	TEMP_MOS_filter1 = 0.6*TEMP_MOS + 0.4*TEMP_MOS_filter1;//一阶低通
 }
 

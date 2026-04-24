@@ -8,7 +8,7 @@
 #define POSITIVE_PHASE_ORDER	1.0f
 #define Motor_Rph	0.4965f//相电阻实测值(Ω)
 #define Motor_Lph	0.00025062f//相电感实测值(H)
-#define vlotage_resDivide 21.0f//电压采样分压电阻比例
+#define VOLTAGE_RES_DIVIDE 21.0f // 电压采样分压电阻比例
 
 //#define ADC_sample_time 400.0f; // remain some time for ADC sample
 

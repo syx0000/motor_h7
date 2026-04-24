@@ -4,11 +4,10 @@
 #include "stdlib.h"
 
 /*速度解算相关*/
-#define v_window_N 2//滑窗滤波窗口大小
-//#define v_window_N 20//滑窗滤波窗口大小
-#define v_window_N_Inner 10//滑窗滤波窗口大小
-float M_velVec[v_window_N]={0};//M法速度解算滑窗滤波速度数组
-float M_velVec_Inner[v_window_N_Inner]={0};//M法速度解算滑窗滤波速度数组
+#define V_WINDOW_N 2 // 滑窗滤波窗口大小
+#define V_WINDOW_N_INNER 10 // 滑窗滤波窗口大小
+float M_velVec[V_WINDOW_N] = {0}; // M法速度解算滑窗滤波速度数组
+float M_velVec_Inner[V_WINDOW_N_INNER] = {0}; // M法速度解算滑窗滤波速度数组
 
 volatile float encoder_theta;
 Encoder_t encoder_g;
@@ -137,7 +136,7 @@ void encoderSample(void)//电机电角度标定后，位置加上偏移的角度
 	
 	static uint8_t vel_calc_count = 0;//vel_calc_count为静态局部变量
 	vel_calc_count++;
-	if(vel_calc_count >= vel_calc_period)
+	if(vel_calc_count >= VEL_CALC_PERIOD)
 	{
 		vel_calc_count = 0;
 		vel_loop_flag = 1;
@@ -146,7 +145,7 @@ void encoderSample(void)//电机电角度标定后，位置加上偏移的角度
 	
 	static uint8_t pos_calc_count = 0;
 	pos_calc_count++;
-	if(pos_calc_count >= pos_calc_period)
+	if(pos_calc_count >= POS_CALC_PERIOD)
 	{
 		pos_calc_count = 0;
 		pos_loop_flag = 1;
@@ -164,17 +163,17 @@ static void prvCalcVelocity(void)
 	if(delta_encoder_cnt_M > p_encoder_g->cpr_div_two) delta_encoder_cnt_M -= p_encoder_g->cpr;
 	else if (delta_encoder_cnt_M < -p_encoder_g->cpr_div_two) delta_encoder_cnt_M += p_encoder_g->cpr;
 	
-	p_encoder_g->mech_vel = delta_encoder_cnt_M * PI_TIMES_2 * PWM_FREQUENCY_DEFAULT / p_encoder_g->cpr / (float)vel_calc_period;
+	p_encoder_g->mech_vel = delta_encoder_cnt_M * PI_TIMES_2 * PWM_FREQUENCY_DEFAULT / p_encoder_g->cpr / (float)VEL_CALC_PERIOD;
 
 	/*M法滑窗滤波*/
 	float sum_M = p_encoder_g->mech_vel;
-	for (uint16_t i = 1; i < v_window_N; i++)
+	for (uint16_t i = 1; i < V_WINDOW_N; i++)
 	{
-			M_velVec[v_window_N - i] = M_velVec[v_window_N - i - 1];
-			sum_M += M_velVec[v_window_N - i];
+			M_velVec[V_WINDOW_N - i] = M_velVec[V_WINDOW_N - i - 1];
+			sum_M += M_velVec[V_WINDOW_N - i];
 	}
 	M_velVec[0] = p_encoder_g->mech_vel;
-	p_encoder_g->mech_vel =  sum_M/(float)v_window_N;
+	p_encoder_g->mech_vel =  sum_M/(float)V_WINDOW_N;
 	if((p_encoder_g->mech_vel == 0) && (FSMstate == MOTOR_MODE)) vel_zero_cnt++;
 
 	// 一阶低通滤波
@@ -188,17 +187,17 @@ static void prvCalcVelocity(void)
 	if(delta_encoderInner_cnt_M > p_encoder2_g->cpr_div_two) delta_encoderInner_cnt_M -= p_encoder2_g->cpr;
 	else if (delta_encoderInner_cnt_M < -p_encoder2_g->cpr_div_two) delta_encoderInner_cnt_M += p_encoder2_g->cpr;
 	
-	p_encoder2_g->mech_vel = delta_encoderInner_cnt_M * PI_TIMES_2 * PWM_FREQUENCY_DEFAULT / p_encoder2_g->cpr / (float)vel_calc_period;
+	p_encoder2_g->mech_vel = delta_encoderInner_cnt_M * PI_TIMES_2 * PWM_FREQUENCY_DEFAULT / p_encoder2_g->cpr / (float)VEL_CALC_PERIOD;
 
 	/*M法滑窗滤波*/
 	float sum_M_Inner = p_encoder2_g->mech_vel;
-	for (uint16_t j = 1; j < v_window_N_Inner; j++)
+	for (uint16_t j = 1; j < V_WINDOW_N_INNER; j++)
 	{
-			M_velVec_Inner[v_window_N_Inner - j] = M_velVec_Inner[v_window_N_Inner - j - 1];
-			sum_M_Inner += M_velVec_Inner[v_window_N_Inner - j];
+			M_velVec_Inner[V_WINDOW_N_INNER - j] = M_velVec_Inner[V_WINDOW_N_INNER - j - 1];
+			sum_M_Inner += M_velVec_Inner[V_WINDOW_N_INNER - j];
 	}
 	M_velVec_Inner[0] = p_encoder2_g->mech_vel;
-	p_encoder2_g->mech_vel =  sum_M_Inner/(float)v_window_N_Inner;
+	p_encoder2_g->mech_vel =  sum_M_Inner/(float)V_WINDOW_N_INNER;
 
 	// 一阶低通滤波
 	p_encoder2_g->mech_vel_filt += v_filter_k * (p_encoder2_g->mech_vel - p_encoder2_g->mech_vel_filt);

@@ -261,9 +261,9 @@ void VelocityLoop(void)//速度环 PI运算得到q轴电流给定 p_motor_g->i_d
 	/*速度斜坡规划*/
 	if(p_motor_g->controlMode == FOC_VELOCITY_LOOP)//速度闭环添加规划
 	{
-		float max_step_size = fabsf(FOC_velAccDec * vel_calc_period / PWM_FREQUENCY_DEFAULT);
+		float max_step_size = fabsf(FOC_velAccDec * VEL_CALC_PERIOD / PWM_FREQUENCY_DEFAULT);
 		float full_step = p_velocity_loop_g->targetend - p_velocity_loop_g->target;
-		float step = clamp(full_step, -max_step_size, max_step_size);
+		float step = CLAMP(full_step, -max_step_size, max_step_size);
 		p_velocity_loop_g->target += step;
 	}
 	/*位置闭环下摆臂实验中增加前馈控制，提高速度环响应速度*/
