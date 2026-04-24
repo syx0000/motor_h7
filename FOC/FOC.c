@@ -628,7 +628,7 @@ void delay_us(uint16_t nus)
 //	HAL_TIM_Base_Start(&htim6);
 /*wait for the counter to reach the us input in the parameter*/
 	while (htim6.Instance->CNT < nus);
-	htim6.Instance->CNT &= ~TIM_CR1_CEN;       		// stop the counter
+	htim6.Instance->CR1 &= ~TIM_CR1_CEN;       		// stop the counter
 	
 	// Set timer period for desired delay in microseconds
 //	htim6.Instance->CNT = 0; 
