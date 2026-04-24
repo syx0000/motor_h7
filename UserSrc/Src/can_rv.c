@@ -315,8 +315,8 @@ void pack_reply(uint8_t *tData,float pos, float vel, float torque, uint16_t err1
 */
 	tData[7] = temp_Motor;//电机温度
 	tData[8] = temp_Motor>>8;
-	tData[9] = temp_Motor;//Mos温度
-	tData[10] = temp_Motor>>8;
+	tData[9] = temp_Mos;//Mos温度
+	tData[10] = temp_Mos>>8;
 	
 	if(FSMstate == REST_MODE)
 		state &= 0xFE;
