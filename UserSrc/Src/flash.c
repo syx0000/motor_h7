@@ -79,7 +79,7 @@ void Write_MotorData(void)
 	flash_buffer[28] = 0;
 	flash_buffer[29] = 0;
 	flash_buffer[30] = 0;
-	flash_buffer[31] = 0;
+	flash_buffer[31] = FLASH_MAGIC; // 数据有效性标识
 
     // 2. 初始化Flash（解锁）
     status = Flash_Init();
@@ -125,11 +125,18 @@ void Write_MotorData(void)
     HAL_FLASH_Lock();
 }
 /*Flash参数读取*/
-void Read_MotorData (void) 
+void Read_MotorData (void)
 {
 	for(uint16_t i=0; i<32; i++)
 		flash_buffer[i] = *(uint32_t*)(DATA_FLASH_ADDR + 4*i);
-	
+
+	// 校验magic number，无效则使用默认值
+	if(flash_buffer[31] != FLASH_MAGIC)
+	{
+		printf("Flash data invalid, using defaults\r\n");
+		return;
+	}
+
 	p_encoder_g->cali_finish = flash_buffer[2];
 	p_motor_g->motor_calibrated = flash_buffer[5];
 	if(p_encoder_g->cali_finish == 1)
