@@ -124,7 +124,6 @@ void Motor_Init(void)
 }
 
 
-
 float pos_estimate_counts_ = 0.0f;  //当前估算的位置值，单位[count]  
 float pos_cpr_counts_ = 0.0f;       //当前约束在cpr范围内的位置值，单位[count]
 float current_meas_period = 0.0001;

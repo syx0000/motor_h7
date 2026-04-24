@@ -115,8 +115,6 @@ void init_planner(MotionPlanner* planner, float start_pos, float target, float v
 }
 
 
-
-
 // 获取下一个规划位置（时间步长建议0.001-0.1秒 0.002s）
 bool get_next_position(MotionPlanner* planner, float dt, float* position)
 {
