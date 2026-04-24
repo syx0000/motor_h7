@@ -114,6 +114,8 @@ void encoderSample(void)//电机电角度标定后，位置加上偏移的角度
 
 	// 计算电角度（减去电角度偏移）
 	p_encoder_g->elec_pos = ((float)p_encoder_g->mech_pos * p_encoder_g->one_div_cpr)*(float)p_motor_g->pole_pairs*PI_TIMES_2 - p_encoder_g->elec_offset;
+	p_encoder_g->elec_pos = fmodf(p_encoder_g->elec_pos, PI_TIMES_2);
+	if(p_encoder_g->elec_pos < 0) p_encoder_g->elec_pos += PI_TIMES_2;
 	
 	p_encoder2_g->last_mech_pos = p_encoder2_g->mech_pos;
 	p_encoder2_g->mech_pos = angleInner;
