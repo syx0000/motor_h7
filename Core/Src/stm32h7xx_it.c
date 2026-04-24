@@ -51,8 +51,8 @@ uint32_t Sweep_step_count = 0;
 float Sweep_time_elapsed = 0.0f;
 
 uint8_t IDLE_flag = 0;
-uint32_t angleInner;
-uint32_t angleOutter;
+volatile uint32_t angleInner;
+volatile uint32_t angleOutter;
 float angleInnerFloat;
 float angleOutterFloat;
 
