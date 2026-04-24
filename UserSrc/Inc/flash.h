@@ -8,6 +8,7 @@
 #define DATA_FLASH_SECTOR  FLASH_SECTOR_7
 #define DATA_FLASH_ADDR    0x081E0000 // Bank2的Sector7的起始地址
 extern uint32_t flash_buffer[32]; // 32 * 4 = 128 Bytes
+extern volatile uint8_t flash_write_pending; // ISR设置标志，主循环执行写入
 
 
 HAL_StatusTypeDef Flash_Init(void);

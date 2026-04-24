@@ -508,7 +508,7 @@ void CAN_MsgProcess(uint32_t Identifier, uint8_t *FDCANRxData)
 			(FDCAN1_RX_DATA[4]==0xFF) && (FDCAN1_RX_DATA[5]==0xFF) && (FDCAN1_RX_DATA[6]==0xFF) && (FDCAN1_RX_DATA[7]==0xFC)))
 		{
 			p_encoder2_g->mech_offset = p_encoder2_g->mech_abs;//设置位置零点
-			Write_MotorData();
+			flash_write_pending = 1;
 		}
 		else if(((FDCAN1_RX_DATA[0]==0xFF) && (FDCAN1_RX_DATA[1]==0xFF) && (FDCAN1_RX_DATA[2]==0xFF) && (FDCAN1_RX_DATA[3]==0xFF) && 
 			(FDCAN1_RX_DATA[4]==0xFF) && (FDCAN1_RX_DATA[5]==0xFF) && (FDCAN1_RX_DATA[6]==0xFF) && (FDCAN1_RX_DATA[7]==0xFD)))
@@ -809,7 +809,7 @@ void CAN_MsgProcess(uint32_t Identifier, uint8_t *FDCANRxData)
 					break;
 				}
 				if(bSaveDataFlag == true)
-					Write_MotorData();
+					flash_write_pending = 1;
 				
 				FDCAN1_TxData[0] = 0x60;
 				FDCAN1_TxData[1] = FDCAN1_RX_DATA[1];

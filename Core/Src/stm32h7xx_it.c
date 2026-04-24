@@ -643,7 +643,7 @@ void USART1_IRQHandler(void)
 
 				case 'z':
 					p_encoder2_g->mech_offset = p_encoder2_g->mech_abs;
-					Write_MotorData();
+					flash_write_pending = 1;
 					printf("\n\r  Saved new zero position:  %.4f\n\r\n\r",p_encoder2_g->mech_offset);
 	//				enc_sincos_read_deg(p_my_configure);  //末端角度计算
 	//				p_encoder2_g->mech_offset = p_my_configure->state.hy_rad_multiturn/36000.0f*PI_TIMES_2*GR;//单位：rad/28

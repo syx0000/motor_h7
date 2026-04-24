@@ -6,6 +6,7 @@
 
 // 定义一个32字节的缓冲区
 uint32_t flash_buffer[32]; // 32 * 4 = 128 Bytes
+volatile uint8_t flash_write_pending = 0; // ISR设置标志，主循环执行写入
 
 HAL_StatusTypeDef Flash_Init(void)
 {

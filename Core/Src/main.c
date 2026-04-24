@@ -250,7 +250,14 @@ int main(void)
 			
 			u8_1msFlag = 0;
 		}
-		
+
+		// Flash写入标志检查（主循环执行，避免ISR阻塞）
+		if(flash_write_pending == 1)
+		{
+			flash_write_pending = 0;
+			Write_MotorData();
+		}
+
 		if(stateChange==1)
 		{
 			FSMstate = MOTOR_MODE;
