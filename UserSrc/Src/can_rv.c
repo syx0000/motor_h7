@@ -481,7 +481,8 @@ union RV_TypeConvert2
 void CAN_MsgProcess(uint32_t Identifier, uint8_t *FDCANRxData)
 {
 	bool bSaveDataFlag = false;
-	
+	CAN_timeout = 0; // 收到CAN消息，清零超时计数器
+
 	for(uint8_t i=0;i<64;i++)
 	{
 		FDCAN1_RX_DATA[i] = FDCANRxData[i];
