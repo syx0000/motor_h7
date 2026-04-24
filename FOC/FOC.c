@@ -201,7 +201,7 @@ void InverseClarkTransform(volatile float *current_alpha, volatile float *curren
 
 void ParkTransform(volatile float *current_alpha, volatile float *current_beta, volatile float theta, volatile float *current_d, volatile float *current_q)//Park变换
 {	//αβ→dq
-	theta = prvMod2PI(theta);
+	theta = PrvMod2PI(theta);
 	float cos_theta = arm_cos_f32(theta);
 	float sin_theta = arm_sin_f32(theta);
 	*current_d = cos_theta * *current_alpha + sin_theta * *current_beta;
@@ -210,14 +210,14 @@ void ParkTransform(volatile float *current_alpha, volatile float *current_beta, 
 
 void InverseParkTransform(volatile float *current_d, volatile float *current_q, volatile float theta, volatile float *current_alpha, volatile float *current_beta)//反Park变换
 {	//dq→αβ
-	theta = prvMod2PI(theta);
+	theta = PrvMod2PI(theta);
 	float cos_theta = arm_cos_f32(theta);
 	float sin_theta = arm_sin_f32(theta);
 	*current_alpha = cos_theta * *current_d - sin_theta * *current_q;
 	*current_beta = sin_theta * *current_d + cos_theta * *current_q;
 }
 
-void init_controller_params(ControllerStruct *controller)
+void InitControllerParams(ControllerStruct *controller)
 {
 	controller->v_d  = 0;
 	controller->v_q  = 0;	
@@ -302,7 +302,7 @@ void CurrentLoop()//电流环 CLARK和PARK变换+PI+SVPWM
 	p_motor_g->D_axis_current_filt = (0.4f * p_motor_g->D_axis_current_filt) + (0.6f * p_motor_g->D_axis_current);
 	
 	//电流限制
-	limit_norm(&p_motor_g->i_d_ref, &p_motor_g->i_q_ref,p_motor_g->IMax);
+	LimitNorm(&p_motor_g->i_d_ref, &p_motor_g->i_q_ref,p_motor_g->IMax);
 
 	/// PI Controller ///
 	float i_d_error = p_motor_g->i_d_ref - p_motor_g->D_axis_current;
@@ -336,14 +336,14 @@ void CurrentLoop()//电流环 CLARK和PARK变换+PI+SVPWM
 //	controller.v_d += controller.v_d_ff;
 //	controller.v_q += controller.v_q_ff;
 	//电压限制
-	limit_norm(&controller.v_d, &controller.v_q,1.15f*p_motor_g->vbus);       // Normalize voltage vector to lie within curcle of radius v_bus
+	LimitNorm(&controller.v_d, &controller.v_q,1.15f*p_motor_g->vbus);       // Normalize voltage vector to lie within curcle of radius v_bus
 //	limit_normlization(&controller->v_d, &controller->v_q, OVERMODULATION*controller->v_bus);       // Normalize voltage vector to lie within curcle of radius v_bus
 
 	if (svpwm_on == 1)
 		SVPWM(cos_theta * controller.v_d - sin_theta * controller.v_q, sin_theta * controller.v_d + cos_theta * controller.v_q);
 }
 
-void torque_control(ControllerStruct *controller)
+void TorqueControl(ControllerStruct *controller)
 {
 	controller->dtheta_mech = p_encoder2_g->mech_vel;//输出端速度（rad/s）
 	controller->theta_mech = p_encoder2_g->pos_abs;//输出端位置（rad）
@@ -376,11 +376,11 @@ void PD_FOC_clear(void)
 	else if (FSMstate == HOMING_MODE)  printf("\n\r Entering Homing Mode \n\r");
 }
 
-void enablePWM(void)
+void EnablePWM(void)
 {
 	htim1.Instance->CCER |= 0x0555;//Enable channel output
 }
-void disablePWM(void)
+void DisablePWM(void)
 {
 	htim1.Instance->CCER &= ~0x0555;//Disable channel output
 	__HAL_TIM_SetCompare(&htim1, TIM_CHANNEL_3, 0xffff);
@@ -391,8 +391,8 @@ void disablePWM(void)
 
 /*数学运算*/
 // Same as fmodf but result is positive and y must be positive
-float fmodf_pos(float x, float y) {
-	float res = wrap_pm(x, y);
+float FmodfPos(float x, float y) {
+	float res = WrapPm(x, y);
 	if (res < 0) res += y;
 	return res;
 }
@@ -400,14 +400,14 @@ float fmodf_pos(float x, float y) {
 // Wrap value to range.
 // With default rounding mode (round to nearest),
 // the result will be in range -y/2 to y/2
-float wrap_pm(float x, float y) {
+float WrapPm(float x, float y) {
 
 	float intval = nearbyintf(x / y);//用于将一个浮点数四舍五入到最接近的整数值（float）
 	return x - intval * y;
 }
 
 /* Scales the lenght of vector (x, y) to be <= limit */
-void limit_norm(float *x, float *y, float limit)
+void LimitNorm(float *x, float *y, float limit)
 {
 //    float norm = sqrt(*x * *x + *y * *y);//双精度（避免使用，STM32F446无硬件FPU双精度支持）
 	float norm = sqrtf(*x * *x + *y * *y);//单精度
@@ -419,7 +419,7 @@ void limit_norm(float *x, float *y, float limit)
 }
 
 /* Converts a float to an unsigned int, given range and number of bits */
-uint32_t float_to_uint(float x, float x_min, float x_max, int bits)
+uint32_t FloatToUint(float x, float x_min, float x_max, int bits)
 {
     float span = x_max - x_min;//10
     float offset = x_min;//-5
@@ -427,13 +427,13 @@ uint32_t float_to_uint(float x, float x_min, float x_max, int bits)
 }
 
 /* converts unsigned int to float, given range and number of bits */  
-float uint32_to_float(uint32_t x_int, float x_min, float x_max, int bits)
+float Uint32ToFloat(uint32_t x_int, float x_min, float x_max, int bits)
 {
     float span = x_max - x_min;
     float offset = x_min;
     return ((float)x_int)*span/((float)((1<<bits)-1)) + offset;
 }
-float prvMod2PI(volatile float theta) //限制角度在0-2pi之间
+float PrvMod2PI(volatile float theta) //限制角度在0-2pi之间
 {
 	while (theta < 0.0f)
 		theta += PI_TIMES_2;
@@ -444,7 +444,7 @@ float prvMod2PI(volatile float theta) //限制角度在0-2pi之间
 
 
 // Modulo (as opposed to remainder), per https://stackoverflow.com/a/19288271
-int encoderMod(const int dividend, const int divisor)
+int EncoderMod(const int dividend, const int divisor)
 {
 	int r = dividend % divisor;
 	if (r < 0) r += divisor;
@@ -613,14 +613,14 @@ uint8_t crcTable [256] =
 0xAA,0x3D,0x13,0x84,0x4F,0xD8,0xF6,0x61,
 0xF7,0x60,0x4E,0xD9,0x12,0x85,0xAB,0x3C};
 
-uint8_t calcCRC(uint8_t * buffer, uint8_t length){
+uint8_t CalcCRC(uint8_t * buffer, uint8_t length){
 	uint8_t temp = *buffer++;
 	while (--length){
 	temp = *buffer++ ^ crcTable[temp];
 	}
 	return crcTable[temp];
 }
-void delay_us(uint16_t nus)
+void DelayUs(uint16_t nus)
 {
 
 	htim6.Instance->CNT = 0;   										// set the counter value 0

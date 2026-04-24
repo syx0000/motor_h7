@@ -197,14 +197,14 @@ void (*MeasureInductance)(void);
 /* ------------------------------ Manager Extern ------------------------------ */
 extern const MotorManager_typedef Motor;
 void Motor_Init(void);
-void currentSample(void);
+void CurrentSample(void);
 void Calc_current_rms(void);
-void voltageSample(void);
-void temperatureSample(void);
-void runpll_velocity(void);
+void VoltageSample(void);
+void TemperatureSample(void);
+void RunPllVelocity(void);
 void MotorStop(void);
-void enableADC(void);
-void startJADC(void);
-void deltaFilter(uint8_t errcnt, volatile float phase_current, volatile float *phase_current_filter1, volatile float *phase_current_filter2);
+void EnableADC(void);
+void StartJADC(void);
+void DeltaFilter(uint8_t errcnt, volatile float phase_current, volatile float *phase_current_filter1, volatile float *phase_current_filter2);
 #endif
 

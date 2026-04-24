@@ -7,8 +7,8 @@
 
 extern int32_t offset_lut[128];
 
-void order_phases(void);
-void calibrate(void);
+void OrderPhases(void);
+void Calibrate(void);
 
 void PositionSensor_WriteLUT(int32_t new_lut[128]);
 

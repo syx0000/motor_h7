@@ -45,26 +45,26 @@ void Write_MotorData(void)
 	HAL_StatusTypeDef status;
 
 	// 1. 准备数据
-	flash_buffer[0] = float2uint(p_encoder_g->elec_offset);//电角度偏移
-	flash_buffer[1] = float2uint(p_motor_g->phase_order);//相序
+	flash_buffer[0] = Float2Uint(p_encoder_g->elec_offset);//电角度偏移
+	flash_buffer[1] = Float2Uint(p_motor_g->phase_order);//相序
 	flash_buffer[2] = p_encoder_g->cali_finish;//编码器整定完成标志
-	flash_buffer[3] = float2uint(p_motor_g->phase_resistance);//电阻
-	flash_buffer[4] = float2uint(p_motor_g->phase_inductance);//电感
+	flash_buffer[3] = Float2Uint(p_motor_g->phase_resistance);//电阻
+	flash_buffer[4] = Float2Uint(p_motor_g->phase_inductance);//电感
 	flash_buffer[5] = p_motor_g->motor_calibrated;//电机整定完成标志
 	flash_buffer[6] = 0;//每次写入数据时会清零故障码
-	flash_buffer[7] = float2uint(p_encoder2_g->mech_offset);//输出端零位机械偏移
+	flash_buffer[7] = Float2Uint(p_encoder2_g->mech_offset);//输出端零位机械偏移
 	
-	flash_buffer[8] = float2uint(p_min);//位置下限
-	flash_buffer[9] = float2uint(p_max);//位置上限
-	flash_buffer[10] = float2uint(w_min);//速度下限
-	flash_buffer[11] = float2uint(w_max);//速度上限
-	flash_buffer[12] = float2uint(iq_min);//扭矩下限
-	flash_buffer[13] = float2uint(iq_max);//扭矩上限	
-	flash_buffer[14] = float2uint(KP_MIN);//KP下限
-	flash_buffer[15] = float2uint(KP_MAX);//KP上限
+	flash_buffer[8] = Float2Uint(p_min);//位置下限
+	flash_buffer[9] = Float2Uint(p_max);//位置上限
+	flash_buffer[10] = Float2Uint(w_min);//速度下限
+	flash_buffer[11] = Float2Uint(w_max);//速度上限
+	flash_buffer[12] = Float2Uint(iq_min);//扭矩下限
+	flash_buffer[13] = Float2Uint(iq_max);//扭矩上限	
+	flash_buffer[14] = Float2Uint(KP_MIN);//KP下限
+	flash_buffer[15] = Float2Uint(KP_MAX);//KP上限
 	
-	flash_buffer[16] = float2uint(KD_MIN);//KD下限
-	flash_buffer[17] = float2uint(KD_MAX);//KD上限
+	flash_buffer[16] = Float2Uint(KD_MIN);//KD下限
+	flash_buffer[17] = Float2Uint(KD_MAX);//KD上限
 	flash_buffer[18] = FDCAN_ID;
 	flash_buffer[19] = 0;
 	flash_buffer[20] = 0;
@@ -141,27 +141,27 @@ void Read_MotorData (void)
 	p_motor_g->motor_calibrated = flash_buffer[5];
 	if (p_encoder_g->cali_finish == 1)
 	{
-		p_encoder_g->elec_offset = uint2float(flash_buffer[0]);//电角度偏移
-		p_motor_g->phase_order = uint2float(flash_buffer[1]);//相序
+		p_encoder_g->elec_offset = Uint2Float(flash_buffer[0]);//电角度偏移
+		p_motor_g->phase_order = Uint2Float(flash_buffer[1]);//相序
 	}
 	if (p_motor_g->motor_calibrated == 1)
 	{
-		p_motor_g->phase_resistance = uint2float(flash_buffer[3]);//电阻
-		p_motor_g->phase_inductance = uint2float(flash_buffer[4]);//电感
+		p_motor_g->phase_resistance = Uint2Float(flash_buffer[3]);//电阻
+		p_motor_g->phase_inductance = Uint2Float(flash_buffer[4]);//电感
 	}
 	p_motor_g->lastError = flash_buffer[6];
-	p_encoder2_g->mech_offset = uint2float(flash_buffer[7]);
+	p_encoder2_g->mech_offset = Uint2Float(flash_buffer[7]);
 	
-	p_min = uint2float(flash_buffer[8]);
-	p_max = uint2float(flash_buffer[9]);
-	w_min = uint2float(flash_buffer[10]);
-	w_max = uint2float(flash_buffer[11]);
-	iq_min = uint2float(flash_buffer[12]);
-	iq_max = uint2float(flash_buffer[13]);
-	KP_MIN = uint2float(flash_buffer[14]);
-	KP_MAX = uint2float(flash_buffer[15]);
-	KD_MIN = uint2float(flash_buffer[16]);
-	KD_MAX = uint2float(flash_buffer[17]);
+	p_min = Uint2Float(flash_buffer[8]);
+	p_max = Uint2Float(flash_buffer[9]);
+	w_min = Uint2Float(flash_buffer[10]);
+	w_max = Uint2Float(flash_buffer[11]);
+	iq_min = Uint2Float(flash_buffer[12]);
+	iq_max = Uint2Float(flash_buffer[13]);
+	KP_MIN = Uint2Float(flash_buffer[14]);
+	KP_MAX = Uint2Float(flash_buffer[15]);
+	KD_MIN = Uint2Float(flash_buffer[16]);
+	KD_MAX = Uint2Float(flash_buffer[17]);
 	FDCAN_ID = (uint8_t)flash_buffer[18];
 }
 
@@ -171,7 +171,7 @@ typedef union
 	uint32_t da;
 } UN32;
 
-uint32_t float2uint(float var)
+uint32_t Float2Uint(float var)
 {	
 	UN32 a;
 	
@@ -179,7 +179,7 @@ uint32_t float2uint(float var)
 	return a.da;
 }
 
-float uint2float(uint32_t var)
+float Uint2Float(uint32_t var)
 {
 	UN32 a;
 	

@@ -29,8 +29,8 @@ extern float FOC_velAccDec;
 
 extern volatile uint16_t state_change;
 
-void enter_menu_state(void);
-void enter_setup_state(void);
+void EnterMenuState(void);
+void EnterSetupState(void);
  
 #endif
 

@@ -20,11 +20,11 @@ float a_cur_record = 0.0f,b_cur_record = 0.0f,c_cur_record = 0.0f,DC_bus_record 
 float A_CURRENT = 0.0f,B_CURRENT = 0.0f,C_CURRENT = 0.0f;
 float DC_BUS = 0.0f;
 float TEMPERATURE_MOSFET = 0.0f,TEMPERATURE_MOTOR = 0.0f;
-void errorDiag(void)
+void ErrorDiag(void)
 {
 //	if (p_encoder_g->mech_vel > w_max|p_encoder_g->mech_vel < w_min)
 //	{
-//		disablePWM();
+//		DisablePWM();
 //		Report_OverSpeed = 1;
 //	}
 	
@@ -45,7 +45,7 @@ void errorDiag(void)
 		SWOvercur_cnt++;
 		if (SWOvercur_cnt > 10)
 		{
-			disablePWM();
+			DisablePWM();
 			p_motor_g->Err1 |= MotorErr1_PhaseOverCurrent;
 			p_motor_g->error = SwOverCurrent;
 			p_motor_g->lastError = SwOverCurrent;//记录故障类型
@@ -74,7 +74,7 @@ void errorDiag(void)
 		SWOvervolt_cnt++;
 		if (SWOvervolt_cnt > 3)
 		{
-			disablePWM();
+			DisablePWM();
 			p_motor_g->Err1 |= MotorErr1_OverVolt;
 			p_motor_g->error=OverVolt;
 			p_motor_g->lastError = OverVolt;//记录故障类型
@@ -87,7 +87,7 @@ void errorDiag(void)
 		SWUndervolt_cnt++;
 		if (SWUndervolt_cnt > 3)
 		{
-			disablePWM();
+			DisablePWM();
 			p_motor_g->Err2 |= MotorErr2_LowVotage;
 			p_motor_g->error=UnderVolt;
 			p_motor_g->lastError = UnderVolt;//记录故障类型
@@ -116,7 +116,7 @@ void errorDiag(void)
 		OverTEMP_MOS_cnt++;
 		if (OverTEMP_MOS_cnt > 3)
 		{
-			disablePWM();
+			DisablePWM();
 			p_motor_g->Err1 |= MotorErr1_MosOverT;
 
 			p_motor_g->error = MOS_OverTEMP;
@@ -157,7 +157,7 @@ void errorDiag(void)
 		OverTEMP_MOTOR_cnt++;
 		if (OverTEMP_MOTOR_cnt > 3)
 		{
-			disablePWM();
+			DisablePWM();
 
 			p_motor_g->Err1 |= MotorErr1_MotorOverT;
 
@@ -186,7 +186,7 @@ void errorDiag(void)
 	}
 }
 
-void errorReport(void)
+void ErrorReport(void)
 {
 //	if (Report_SWOvercur||Report_HWOvercur||Report_SWOvervolt||Report_MOS_OverTEMP||Report_MOTOR_OverTEMP)//下电霍尔电流传感器输出低电压会误报软件过流Report_SWOvercur
 	if (Report_HWOvercur||Report_SWOvervolt||Report_MOS_OverTEMP||Report_MOTOR_OverTEMP)//下电霍尔电流传感器输出低电压会误报软件过流Report_SWOvercur

@@ -91,7 +91,7 @@ void Encoder_Init(void)//初始化
 	p_encoder2_g->last_mech_pos = p_encoder2_g->mech_pos;
 }
 
-void encoderSample(void)//电机电角度标定后，位置加上偏移的角度
+void EncoderSample(void)//电机电角度标定后，位置加上偏移的角度
 {
 	p_encoder_g->last_mech_pos = p_encoder_g->mech_pos;
 	p_encoder_g->mech_pos = angleOutter;

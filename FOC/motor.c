@@ -144,20 +144,20 @@ float vel_estimate_ = 0.0f; //当前估算关节输出端转速，单位[rad/s]
 int32_t shadow_count_ = 0;   //编码器累计计数。
 int32_t count_in_cpr_ = 0;   //编码器当前计数值。
 
-void runpll_velocity()
+void RunPllVelocity()
 {
-//	pos_cpr_counts_ = wrap_pm(2, 3);
+//	pos_cpr_counts_ = WrapPm(2, 3);
 	
 	int32_t delta_enc = 0;
 	int32_t pos_abs_latched = p_encoder_g->mech_pos;
 	
 	delta_enc = pos_abs_latched - count_in_cpr_; //LATCH
-	delta_enc = encoderMod(delta_enc,16384);
+	delta_enc = EncoderMod(delta_enc,16384);
 	if (delta_enc > 8192)delta_enc -= 16384;
 	
 	shadow_count_ += delta_enc;
 	count_in_cpr_ += delta_enc;//count_in_cpr_=pos_abs_latched=pos_abs_
-	count_in_cpr_ = encoderMod(count_in_cpr_,16384);
+	count_in_cpr_ = EncoderMod(count_in_cpr_,16384);
 	count_in_cpr_ = pos_abs_latched;
 
 	// run pll (for now pll is in units of encoder counts)
@@ -168,12 +168,12 @@ void runpll_velocity()
 	// discrete phase detector
 	float delta_pos_counts = (float)(shadow_count_ - (int32_t)pos_estimate_counts_);
 	float delta_pos_cpr_counts = (float)(count_in_cpr_ - (int32_t)pos_cpr_counts_);
-	delta_pos_cpr_counts = wrap_pm(delta_pos_cpr_counts, 21);//不能用p_motor_g->pole_pairs？
+	delta_pos_cpr_counts = WrapPm(delta_pos_cpr_counts, 21);//不能用p_motor_g->pole_pairs？
 	// delta_pos_cpr_counts_ += 0.1f * (delta_pos_cpr_counts - delta_pos_cpr_counts_); // for debug
 	// pll feedback
 	pos_estimate_counts_ += current_meas_period * pll_kp_ * delta_pos_counts;
 	pos_cpr_counts_ += current_meas_period * pll_kp_ * delta_pos_cpr_counts;
-	pos_cpr_counts_ = fmodf_pos(pos_cpr_counts_, 16384);//不能用p_encoder_g->cpr？
+	pos_cpr_counts_ = FmodfPos(pos_cpr_counts_, 16384);//不能用p_encoder_g->cpr？
 	vel_estimate_counts_ += current_meas_period * pll_ki_ * delta_pos_cpr_counts;
 //	uint8_t snap_to_zero_vel = false;
 //	if (fabsf(vel_estimate_counts_) < 0.5f * current_meas_period * pll_ki_)
@@ -322,7 +322,7 @@ void CalcCurrentOffset(float *phase_a_offset, float *phase_b_offset, float *phas
 
 	printf("Phase Current Offset:a:%f b:%f c:%f\r\n",p_motor_g->phase_a_current_offset,p_motor_g->phase_b_current_offset,p_motor_g->phase_c_current_offset);
 }
-void currentSample()
+void CurrentSample()
 {
 	//过采样
 //		uint32_t ADC_Value_sum[2] = {0};
@@ -389,12 +389,12 @@ void Calc_current_rms(void)
 	p_motor_g->phase_c_Current_RMS =  sqrt(sumC / SAMPLE_CNT);
 }
 
-void voltageSample()
+void VoltageSample()
 {
 	p_motor_g->vbus = (voltage_coefficient * (float)ADC1->JDR4)*21.0f;
 }
 
-void temperatureSample()
+void TemperatureSample()
 {
 	//电机温度计算
 //	float r1_ntc = RES_DIVIDE_MOTOR*((float)ADC2->JDR2*ADC_supply/ADC_resolution)/(ADC_supply-((float)ADC2->JDR2*ADC_supply/ADC_resolution));//电机绕组端NTC电阻阻值 单位：kΩ
@@ -455,14 +455,14 @@ const MotorManager_typedef Motor =
 //	MeasureFluxAndInertia
 };
 
-void enableADC(void)
+void EnableADC(void)
 {
 	hadc1.Instance->CR |=  ADC_CR_ADEN;
 	hadc2.Instance->CR |=  ADC_CR_ADEN;
 //	hadc3.Instance->CR |=  ADC_CR_ADEN;
 }
 
-void startJADC(void)
+void StartJADC(void)
 {
 //硬件状态不同步：
 //如果ADC尚未使能（ADEN = 0）或未准备就绪（ADRDY = 0），直接触发JADSTART可能导致转换无法启动，或者使ADC进入一个不可预知的状态，调用
@@ -475,7 +475,7 @@ void startJADC(void)
 }
 
 //差值限幅滤波器
-void deltaFilter(uint8_t errcnt, volatile float phase_current, volatile float *phase_current_filter1, volatile float *phase_current_filter2)
+void DeltaFilter(uint8_t errcnt, volatile float phase_current, volatile float *phase_current_filter1, volatile float *phase_current_filter2)
 {
 	float delta = fabsf(phase_current - *phase_current_filter1);
 	if (delta > 0.5) {

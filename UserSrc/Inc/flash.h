@@ -17,8 +17,8 @@ HAL_StatusTypeDef Flash_EraseSector(uint32_t Sector, uint32_t Bank);
 void Write_MotorData(void);
 void Read_MotorData(void);
 
-uint32_t float2uint(float var);
-float uint2float(uint32_t var);
+uint32_t Float2Uint(float var);
+float Uint2Float(uint32_t var);
 
 
 #endif

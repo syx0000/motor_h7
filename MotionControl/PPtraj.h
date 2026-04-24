@@ -20,7 +20,7 @@ typedef struct {
 	float total_time;        // 总运动时间
 	float elapsed_time;      // 已用时间
 } MotionPlanner;
-extern void init_planner(MotionPlanner* planner, float start_pos, float target,  float vmax, float acc, float dec);
+extern void InitPlanner(MotionPlanner* planner, float start_pos, float target,  float vmax, float acc, float dec);
 extern bool get_next_position(MotionPlanner* planner, float dt, float* position);
 extern MotionPlanner *p_planner_s;
 

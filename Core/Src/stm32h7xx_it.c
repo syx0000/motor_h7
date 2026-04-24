@@ -299,16 +299,16 @@ void TIM1_UP_IRQHandler(void)
 	}
 
 	RS485DIR_TX;
-	startJADC();//开始ADC转换 必须保证开始转换在最前面进行(低电阻采样)！
+	StartJADC();//开始ADC转换 必须保证开始转换在最前面进行(低电阻采样)！
 //	ISR_start = DWT_CYCCNT;      // 记录起始计数值
 	HAL_UART_Transmit_DMA(&huart2,USART2_TX_BUF,1);
 //	ISR_end = DWT_CYCCNT;        // 记录结束计数值
 //	ISR_time_us = ((float)(ISR_end - ISR_start))*1000000.0f/MCU_SYSCLK;    // 计算消耗的时间（us）
-	errorDiag();//故障诊断
+	ErrorDiag();//故障诊断
 	
-	encoderSample();//编码器采样
-	voltageSample();//电压采样
-	currentSample();//电流采样
+	EncoderSample();//编码器采样
+	VoltageSample();//电压采样
+	CurrentSample();//电流采样
 
 	
 //	ISR_end = DWT_CYCCNT;        // 记录结束计数值
@@ -339,7 +339,7 @@ void TIM1_UP_IRQHandler(void)
 			case REST_MODE:// Do nothing
 				if (state_change)
 				{
-					enter_menu_state();
+					EnterMenuState();
 				}
 			break;
 			
@@ -373,7 +373,7 @@ void TIM1_UP_IRQHandler(void)
 					Motor_Iq = 0;
 					traj_complete = 0;
 					PD_FOC_clear();
-					enablePWM();
+					EnablePWM();
 					svpwm_on = 1;//打开SVPWM
 					state_change = 0;
 				}
@@ -397,7 +397,7 @@ void TIM1_UP_IRQHandler(void)
 					{
 						//0：PD控制 3：电流环 2：速度环 1：位置环 4：PP模式
 						case MIT_PD:
-							torque_control(&controller);//计算iq_ref（所需的5个参数由CAN通信数据解码得出）
+							TorqueControl(&controller);//计算iq_ref（所需的5个参数由CAN通信数据解码得出）
 							CurrentLoop();//电流环
 						break;
 						case FOC_CURRENT_LOOP:
@@ -493,7 +493,7 @@ void TIM1_UP_IRQHandler(void)
 			case SETUP_MODE:
 				if (state_change)
 				{
-					enter_setup_state();
+					EnterSetupState();
 					state_change = 0;
 				}
 			break;
@@ -514,7 +514,7 @@ void TIM1_UP_IRQHandler(void)
 					p_velocity_loop_g->targetend = 0;/*速度环指令清零*/
 					p_velocity_loop_g->target = 0;/*速度环指令清零*/
 					PD_FOC_clear();
-					enablePWM();
+					EnablePWM();
 					svpwm_on = 1;//打开SVPWM
 					state_change = 0;
 				}
@@ -535,7 +535,7 @@ void TIM1_UP_IRQHandler(void)
 				}
 				if (fabs(p_encoder2_g->mech_offset - p_encoder2_g->mech_abs)<0.05) 
 				{
-					disablePWM();
+					DisablePWM();
 					FSMstate = REST_MODE;
 					state_change = 1;
 				}
@@ -602,28 +602,28 @@ void USART1_IRQHandler(void)
 				case 'c':
 					FSMstate = CALIBRATION_MODE;
 					printf("\n\r e-Encoder");
-					delay_us(10);
+					DelayUs(10);
 					printf("\n\r m-Motor");
-					delay_us(10);
+					DelayUs(10);
 					printf("\n\r h-HALL Amplitude");
-					delay_us(10);
+					DelayUs(10);
 					printf("\n\r a-All");
-					delay_us(10);
+					DelayUs(10);
 				break;
 
 				case 'm':
 					FSMstate = MOTOR_MODE;
 					state_change = 1;
 					printf("\n\r %-6s %-40s %-10s %-10s %-2s\n\r\n\r", "prefix", "parameter", "min", "max", "current value");
-					delay_us(10);
+					DelayUs(10);
 					printf(" %-6s %-40s %-10s %-10s %.1f\n\r", "i", "Motor Current iq(A)", "-50.0", "50.0", Motor_Iq);
-					delay_us(10);
+					DelayUs(10);
 					printf(" %-6s %-40s %-10s %-10s %.1f\n\r", "v", "Module Output Mechanical Angular Velocity(rad/s)", "-20.0", "20.0", Motor_W/GR);
-					delay_us(10);
+					DelayUs(10);
 					printf(" %-6s %-40s %-10s %-10s %.1f\n\r", "p", "Module Output Mechanical Angular(rad)", "-50000.0", "50000.0", Motor_P/GR);
-					delay_us(10);
+					DelayUs(10);
 					printf("\n\r To change a value, type 'prefix''value''ENTER'\n\r i.e. 'v10''ENTER'\n\r\n\r");
-					delay_us(10);
+					DelayUs(10);
 				break;
 
 				case 'e':
@@ -647,7 +647,7 @@ void USART1_IRQHandler(void)
 					printf("\n\r  Saved new zero position:  %.4f\n\r\n\r",p_encoder2_g->mech_offset);
 	//				enc_sincos_read_deg(p_my_configure);  //末端角度计算
 	//				p_encoder2_g->mech_offset = p_my_configure->state.hy_rad_multiturn/36000.0f*PI_TIMES_2*GR;//单位：rad/28
-	//				flash_reg[135] = float2uint(p_encoder2_g->mech_offset);			
+	//				flash_reg[135] = Float2Uint(p_encoder2_g->mech_offset);			
 	//				Flash.Erase();//擦除FLASH	
 	//					
 	//				for (uint16_t i=0; i<NUMBER_PARA; i++)  //保存140个参数
@@ -874,7 +874,7 @@ void USART1_IRQHandler(void)
 						/*位置插补*/
 						if (p_motor_g->controlMode == FOC_POSITION_LOOP_PP)
 						{
-							init_planner(p_planner_s, p_encoder2_g->pos_abs, Motor_P, 8.376f, 2.0f, 2.0f); //目标位置、最大速度、加速度、减速度需要按照需求设置
+							InitPlanner(p_planner_s, p_encoder2_g->pos_abs, Motor_P, 8.376f, 2.0f, 2.0f); //目标位置、最大速度、加速度、减速度需要按照需求设置
 							trajcplt = 1;
 						}
 						printf("%.1f\n\r",Motor_P);
@@ -999,7 +999,7 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
 		angleOutter = USART2_RX_DATA[5] << 16 | USART2_RX_DATA[4] << 8 | USART2_RX_DATA[3];
 	//	angleInnerFloat = angleInner / (float)(1 << 24) * 360;
 	//	angleOutterFloat = angleOutter / (float)(1 << 24) *360;
-		if (USART2_RX_DATA[7] != calcCRC(USART2_RX_DATA,7)) EncoderCnt++;
+		if (USART2_RX_DATA[7] != CalcCRC(USART2_RX_DATA,7)) EncoderCnt++;
 	}
 }
 //void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {

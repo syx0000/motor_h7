@@ -13,10 +13,10 @@ float FOC_velAccDec = 200;//速度规划 加/减速度 单位rad/s/s
 
 volatile uint16_t state_change = 0;
 
-void enter_menu_state(void)
+void EnterMenuState(void)
 {
 	printf("Firmware Version: %s\r", VERSION_NUM);//打印软件版本
-	disablePWM();
+	DisablePWM();
 	p_position_loop_g->target = p_encoder2_g->pos_abs;//当前位置值赋给指令值，以免位置环下刚进入电机模式，电机便会运动到0（p_position_loop_g->target初始化一般为0）			
 	p_motor_g->i_d_ref = 0;/*电流环id指令清零*/
 	p_motor_g->i_q_ref = 0;/*电流环iq指令清零*/
@@ -34,62 +34,62 @@ void enter_menu_state(void)
 	
     printf("\n\r");
     printf(" Commands:\n\r");
-    delay_us(10);
+    DelayUs(10);
     printf(" m - Motor Mode\n\r");
-    delay_us(10);
+    DelayUs(10);
     printf(" c - Calibrate Encoder\n\r");
-    delay_us(10);
+    DelayUs(10);
     printf(" s - Setup\n\r");
-    delay_us(10);
+    DelayUs(10);
 	printf(" h - Homing\n\r");
-    delay_us(10);
+    DelayUs(10);
     printf(" e - Display Encoder\n\r");
-    delay_us(10);
+    DelayUs(10);
     printf(" z - Set Zero Position\n\r");
-    delay_us(10);
+    DelayUs(10);
     printf(" esc - Exit to Menu\n\r");
-    delay_us(10);
+    DelayUs(10);
     state_change = 0;
 }
 
-void enter_setup_state(void)
+void EnterSetupState(void)
 {
 	printf("\n\r Configuration Options \n\r");
-	delay_us(10);
+	DelayUs(10);
 	printf(" %-6s %-31s %-5s %-6s %-2s\n\r\n\r", "prefix", "parameter", "min", "max", "current value");
-	delay_us(10);
+	DelayUs(10);
 	printf(" %-6s %-31s %-5s %-6s %-5i\n\r", "c", "Control Mode", "0", "4", p_motor_g->controlMode);
-	delay_us(10);
+	DelayUs(10);
 	printf(" %-6s %-31s %-5s %-6s %.1f\n\r", "b", "Current Bandwidth (Hz)", "10", "2000", I_BW);
-	delay_us(10);
+	DelayUs(10);
 	printf(" %-6s %-31s %-5s %-6s %-5i\n\r", "i", "CAN ID", "0", "127", CAN_ID);
-	delay_us(10);
+	DelayUs(10);
 	printf(" %-6s %-31s %-5s %-6s %-5i\n\r", "m", "CAN Master ID", "0", "127", CAN_MASTER);
-	delay_us(10);
+	DelayUs(10);
 	printf(" %-6s %-31s %-5s %-6s %.1f\n\r", "o", "Current Software Over(A)", "0.0", "50.0", I_SWOver);
-	delay_us(10);
+	DelayUs(10);
 	printf(" %-6s %-31s %-5s %-6s %.7f\n\r", "P", "Velocity Loop P_Coefficient", "0.0", "1.0", p_velocity_loop_g->kp);
-	delay_us(10);
+	DelayUs(10);
 	printf(" %-6s %-31s %-5s %-6s %.7f\n\r", "I", "Velocity Loop I_Coefficient", "0.0", "1.0", p_velocity_loop_g->ki);
-	delay_us(10);
+	DelayUs(10);
 	printf(" %-6s %-31s %-5s %-6s %.7f\n\r", "M", "Position Loop P_Coefficient", "0.0", "100.0", p_position_loop_g->kp);
-	delay_us(10);
+	DelayUs(10);
 	printf(" %-6s %-31s %-5s %-6s %.7f\n\r", "N", "Position Loop I_Coefficient", "0.0", "1.0", p_position_loop_g->ki);
-	delay_us(10);
+	DelayUs(10);
 	printf(" %-6s %-31s %-5s %-6s %.7f\n\r", "Q", "Current Loop P_Coefficient", "0.0", "1.0", controller.k_d);
-	delay_us(10);
+	DelayUs(10);
 	printf(" %-6s %-31s %-5s %-6s %.7f\n\r", "W", "Current Loop I_Coefficient", "0.0", "1.0", controller.ki_d);
-	delay_us(10);
+	DelayUs(10);
 	printf(" %-6s %-31s %-5s %-6s %.5f\n\r", "A", "Velocity Loop Acc/Dec", "0.0", "5000.0", FOC_velAccDec);
-	delay_us(10);
+	DelayUs(10);
 	printf(" %-6s %-31s %-5s %-6s %d\n\r", "t", "CAN Timeout (cycles)(0 = none)", "0", "100000", CAN_TIMEOUT);
-	delay_us(10);
+	DelayUs(10);
 //	printf(" %-6s %-31s %-5s %-6s %.5f\n\r", "V", "W_interval(rad/s)", "0.0", "5000.0", W_interval);
-//	delay_us(10);
+//	DelayUs(10);
 //	printf(" %-6s %-31s %-5s %-6s %d\n\r", "T", "T_interval(ms)", "0", "100000", T_interval);
-//	delay_us(10);
+//	DelayUs(10);
 	printf("\n\r To reset HW OverCurrent, type 'r''0''ENTER'");
 	printf("\n\r To change a value, type 'prefix''value''ENTER'\n\r i.e. 'b1000''ENTER'\n\r\n\r");
-	delay_us(10);
+	DelayUs(10);
 	state_change = 0;
 }

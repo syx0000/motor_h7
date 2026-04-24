@@ -121,25 +121,25 @@ void ClarkTransform(volatile float *current_a, volatile float *current_b, volati
 void InverseClarkTransform(volatile float *current_alpha, volatile float *current_beta, volatile float *current_a, volatile float *current_b, volatile float *current_c);
 void ParkTransform(volatile float *current_alpha, volatile float *current_beta, volatile float theta, volatile float *current_d, volatile float *current_q);
 void InverseParkTransform(volatile float *current_d, volatile float *current_q, volatile float theta, volatile float *current_alpha, volatile float *current_beta);
-void init_controller_params(ControllerStruct *controller);
+void InitControllerParams(ControllerStruct *controller);
 void Homing(void);
 void PositionLoop(void);
 void VelocityLoop(void);//速度环 PI运算得到q轴电流给定
 void CurrentLoop(void);
 void PD_FOC_clear(void);
-void torque_control(ControllerStruct *controller);
-void enablePWM(void);
-void disablePWM(void);
-void enablePre_drive(void);
-void disablePre_drive(void);
+void TorqueControl(ControllerStruct *controller);
+void EnablePWM(void);
+void DisablePWM(void);
+void EnablePreDrive(void);
+void DisablePreDrive(void);
 
-float fmodf_pos(float x, float y);
-float wrap_pm(float x, float y);
-void limit_norm(float *x, float *y, float limit);
-uint32_t float_to_uint(float x, float x_min, float x_max, int bits);
-float uint32_to_float(uint32_t x_int, float x_min, float x_max, int bits);
-float prvMod2PI(volatile float theta);
-int encoderMod(const int dividend, const int divisor);
+float FmodfPos(float x, float y);
+float WrapPm(float x, float y);
+void LimitNorm(float *x, float *y, float limit);
+uint32_t FloatToUint(float x, float x_min, float x_max, int bits);
+float Uint32ToFloat(uint32_t x_int, float x_min, float x_max, int bits);
+float PrvMod2PI(volatile float theta);
+int EncoderMod(const int dividend, const int divisor);
 float Clamp(volatile float num, volatile float low, volatile float high);
 float Mod(volatile float num, volatile float mod_range_min, volatile float mod_range_max);
 uint16_t UintMod(volatile uint16_t output,volatile uint16_t mod_range_min,volatile uint16_t mod_range_max);
@@ -147,8 +147,8 @@ float IterationLn(volatile float a, int order);
 float Uint2Float(volatile uint8_t *p_raw);
 bool least_square_method(float *data, uint8_t num, float *K);
 bool least_square_method_flux(float *xdata, float *ydata, uint8_t num, float *K);
-void delay_us(uint16_t nus);
-uint8_t calcCRC(uint8_t * buffer, uint8_t length);
+void DelayUs(uint16_t nus);
+uint8_t CalcCRC(uint8_t * buffer, uint8_t length);
 uint8_t DWT_Init(void);
 #define MCU_SYSCLK 480000000.0f		// Frequence of MCU[Hz]
 #define PWM_PERIOD_DEFAULT 24000.0f //180,000,000/PWM_FREQUENCY_DEFAULT

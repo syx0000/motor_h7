@@ -14,7 +14,7 @@
 /* ------------------------------ Includes ------------------------------ */
 #include "main.h"
 /* ------------------------------ Defines ------------------------------ */
-void encoderSample(void);
+void EncoderSample(void);
 void Encoder_Init(void);
 static void prvCalcVelocity(void);
 

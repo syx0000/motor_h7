@@ -292,13 +292,13 @@ void HAL_CAN_RxFifo0MsgPendingCallback(FDCAN_RxHeaderTypeDef *hfdcan1)
 //		}
 }
 
-void pack_reply(uint8_t *tData,float pos, float vel, float torque, uint16_t err1, uint8_t err2, uint8_t warning)
+void PackReply(uint8_t *tData,float pos, float vel, float torque, uint16_t err1, uint8_t err2, uint8_t warning)
 {
 	uint8_t state = 0;
 	
-	uint32_t p_int = float_to_uint(pos, p_min, p_max, 24);
-	uint16_t v_int = float_to_uint(vel/GR, w_min, w_max, 16);
-	uint16_t t_int = float_to_uint(torque, iq_min, iq_max, 16);
+	uint32_t p_int = FloatToUint(pos, p_min, p_max, 24);
+	uint16_t v_int = FloatToUint(vel/GR, w_min, w_max, 16);
+	uint16_t t_int = FloatToUint(torque, iq_min, iq_max, 16);
 	uint16_t temp_Motor = (uint16_t)(TEMPERATURE_MOTOR*10);
 	uint16_t temp_Mos = (uint16_t)(TEMPERATURE_MOSFET*10);
 		
@@ -357,16 +357,16 @@ void Pack_ActiveReport(uint8_t *tData,float pos, float vel, float torque, uint16
 {
 	uint8_t state = 0;
 	
-//	uint32_t p_int = float_to_uint(pos, p_min, p_max, 24);
-//	uint16_t v_int = float_to_uint(vel/GR, w_min, w_max, 16);
-//	uint16_t t_int = float_to_uint(torque, iq_min, iq_max, 16);
+//	uint32_t p_int = FloatToUint(pos, p_min, p_max, 24);
+//	uint16_t v_int = FloatToUint(vel/GR, w_min, w_max, 16);
+//	uint16_t t_int = FloatToUint(torque, iq_min, iq_max, 16);
 //	uint16_t temp_Motor = (uint16_t)(TEMPERATURE_MOTOR*10);
 //	uint16_t temp_Mos = (uint16_t)(TEMPERATURE_MOSFET*10);
 
 	uint16_t t_int = (uint16_t)(p_motor_g->phase_a_Current_RMS*100);//相电流有效值，单位A
 	// 修复溢出：先缩放范围再转换，避免乘法溢出
-	uint16_t v_int = float_to_uint(vel/GR * 10.0f, w_min*10.0f, w_max*10.0f, 16);//速度，单位0.1RPM
-	uint32_t p_int = float_to_uint(pos * 1000.0f, p_min*1000.0f, p_max*1000.0f, 24);//位置，单位0.001°
+	uint16_t v_int = FloatToUint(vel/GR * 10.0f, w_min*10.0f, w_max*10.0f, 16);//速度，单位0.1RPM
+	uint32_t p_int = FloatToUint(pos * 1000.0f, p_min*1000.0f, p_max*1000.0f, 24);//位置，单位0.001°
 	
 	uint16_t temp_Motor = (uint16_t)(TEMPERATURE_MOTOR*10);
 	uint16_t temp_Mos = (uint16_t)(TEMPERATURE_MOSFET*10);
@@ -410,43 +410,43 @@ void Pack_ActiveReport(uint8_t *tData,float pos, float vel, float torque, uint16
 	tData[15] = 0;
 }
 
-void unpack_speed_cmd(uint8_t CAN_RxData[])
+void UnpackSpeedCmd(uint8_t CAN_RxData[])
 {
 	uint16_t v_raw = ((CAN_RxData[FDCAN_ID*3-2]&0xFF)<<8)|(CAN_RxData[FDCAN_ID*3-3]);
-	float temp = uint32_to_float(v_raw, w_min, w_max, 16);
+	float temp = Uint32ToFloat(v_raw, w_min, w_max, 16);
 	Motor_W = temp * GR;//下发的速度指令是输出角速度，电机端指令速度需要乘以减速比
 	
 	p_motor_g->controlMode = FOC_VELOCITY_LOOP;//设置速度模式
 }
 
-void unpack_torque_cmd(uint8_t CAN_RxData[])
+void UnpackTorqueCmd(uint8_t CAN_RxData[])
 {
 	uint16_t t_raw = ((CAN_RxData[FDCAN_ID*3-2]&0xFF)<<8)|(CAN_RxData[FDCAN_ID*3-3]);
-	Motor_Iq = uint32_to_float(t_raw, iq_min, iq_max, 16)/KT_OUT;
+	Motor_Iq = Uint32ToFloat(t_raw, iq_min, iq_max, 16)/KT_OUT;
 	
 	p_motor_g->controlMode = FOC_CURRENT_LOOP;//设置扭矩模式
 }
 
-void unpack_position_cmd(uint8_t CAN_RxData[])
+void UnpackPositionCmd(uint8_t CAN_RxData[])
 {
 	uint32_t p_raw = (CAN_RxData[FDCAN_ID*6-4]<<16)|(CAN_RxData[FDCAN_ID*6-5]<<8)|(CAN_RxData[FDCAN_ID*6-6]);
 	uint16_t v_raw = ((CAN_RxData[FDCAN_ID*6-2])<<8)|(CAN_RxData[FDCAN_ID*6-3]);
 	
-	Motor_P = (uint32_to_float(p_raw, p_min, p_max, 24)) + p_encoder2_g->mech_offset;
+	Motor_P = (Uint32ToFloat(p_raw, p_min, p_max, 24)) + p_encoder2_g->mech_offset;
 	
 	if (p_motor_g->controlMode == FOC_POSITION_LOOP_PP && trajcplt == 0)
 	{
-		init_planner(p_planner_s, p_encoder2_g->pos_abs, Motor_P, 8.376f, 2.0f, 2.0f); //目标位置、最大速度、加速度、减速度需要按照需求设置
+		InitPlanner(p_planner_s, p_encoder2_g->pos_abs, Motor_P, 8.376f, 2.0f, 2.0f); //目标位置、最大速度、加速度、减速度需要按照需求设置
 		trajcplt = 1;
 	}
 
-	p_position_loop_g->output_limit = (uint32_to_float(v_raw, w_min, w_max, 16)) * GR;//位置模式时，速度指令用于限制运行转速
+	p_position_loop_g->output_limit = (Uint32ToFloat(v_raw, w_min, w_max, 16)) * GR;//位置模式时，速度指令用于限制运行转速
 
 	if (bPos_PP_Flag != true)//非位置PP模式
 		p_motor_g->controlMode = FOC_POSITION_LOOP;//设置位置模式
 }
 
-void unpack_MIT_cmd(uint8_t CAN_RxData[])
+void UnpackMitCmd(uint8_t CAN_RxData[])
 {
 	uint32_t p_raw = (CAN_RxData[FDCAN_ID*12-10]<<16)|(CAN_RxData[FDCAN_ID*12-11]<<8)|(CAN_RxData[FDCAN_ID*12-12]);
 	uint16_t v_raw = ((CAN_RxData[FDCAN_ID*12-8])<<8)|(CAN_RxData[FDCAN_ID*12-9]);
@@ -454,11 +454,11 @@ void unpack_MIT_cmd(uint8_t CAN_RxData[])
 	uint16_t kp_raw = (CAN_RxData[FDCAN_ID*12-4]<<8)|(CAN_RxData[FDCAN_ID*12-5]);
 	uint16_t kd_raw = (CAN_RxData[FDCAN_ID*12-2]<<8)|(CAN_RxData[FDCAN_ID*12-3]);
 	
-	controller.p_des = uint32_to_float(p_raw, p_min, p_max, 24);
-	controller.v_des = uint32_to_float(v_raw, w_min, w_max, 16) * GR;
-	controller.t_ff = uint32_to_float(t_raw, iq_min, iq_max, 16);
-	controller.kp = uint32_to_float(kp_raw, KP_MIN, KP_MAX, 16);
-	controller.kd = uint32_to_float(kd_raw, KD_MIN, KD_MAX, 16);
+	controller.p_des = Uint32ToFloat(p_raw, p_min, p_max, 24);
+	controller.v_des = Uint32ToFloat(v_raw, w_min, w_max, 16) * GR;
+	controller.t_ff = Uint32ToFloat(t_raw, iq_min, iq_max, 16);
+	controller.kp = Uint32ToFloat(kp_raw, KP_MIN, KP_MAX, 16);
+	controller.kd = Uint32ToFloat(kd_raw, KD_MIN, KD_MAX, 16);
 	
 	p_motor_g->controlMode = MIT_PD;//设置MIT模式
 }
@@ -523,7 +523,7 @@ void CAN_MsgProcess(uint32_t Identifier, uint8_t *FDCANRxData)
 			p_motor_g->Warning = MotorWarning_Nomal;
 		}
 		
-		pack_reply(FOC_CAN_TxData,p_encoder2_g->pos_abs,p_encoder2_g->mech_vel,p_motor_g->Q_axis_current_filt*KT_OUT,p_motor_g->Err1,p_motor_g->Err2,p_motor_g->Warning);
+		PackReply(FOC_CAN_TxData,p_encoder2_g->pos_abs,p_encoder2_g->mech_vel,p_motor_g->Q_axis_current_filt*KT_OUT,p_motor_g->Err1,p_motor_g->Err2,p_motor_g->Warning);
 		//if (bDynamMode == false)
 			CAN_SendMessage(0x100+FDCAN_ID,FOC_CAN_TxData,12);
 	}
@@ -837,35 +837,35 @@ void CAN_MsgProcess(uint32_t Identifier, uint8_t *FDCANRxData)
 	{
 		case 0x80:{//反馈状态(广播)
 			//CAN_SendMessage(FDCAN_ID+0x100,FDCAN1_TxData,8);
-			pack_reply(FOC_CAN_TxData,p_encoder2_g->pos_abs,p_encoder2_g->mech_vel,p_motor_g->Q_axis_current_filt*KT_OUT,p_motor_g->Err1,p_motor_g->Err2,p_motor_g->Warning);
+			PackReply(FOC_CAN_TxData,p_encoder2_g->pos_abs,p_encoder2_g->mech_vel,p_motor_g->Q_axis_current_filt*KT_OUT,p_motor_g->Err1,p_motor_g->Err2,p_motor_g->Warning);
 			//if (bDynamMode == false)
 				CAN_SendMessage(0x100+FDCAN_ID,FOC_CAN_TxData,12);
 		}
 		break;
 		case 0x200:{//速度模式
-			unpack_speed_cmd(FDCAN1_RX_DATA);
-			pack_reply(FOC_CAN_TxData,p_encoder2_g->pos_abs,p_encoder2_g->mech_vel,p_motor_g->Q_axis_current_filt*KT_OUT,p_motor_g->Err1,p_motor_g->Err2,p_motor_g->Warning);
+			UnpackSpeedCmd(FDCAN1_RX_DATA);
+			PackReply(FOC_CAN_TxData,p_encoder2_g->pos_abs,p_encoder2_g->mech_vel,p_motor_g->Q_axis_current_filt*KT_OUT,p_motor_g->Err1,p_motor_g->Err2,p_motor_g->Warning);
 			//if (bDynamMode == false)
 				CAN_SendMessage(0x100+FDCAN_ID,FOC_CAN_TxData,12);
 		}
 		break;
 		case 0x300:{//扭矩模式
-			unpack_torque_cmd(FDCAN1_RX_DATA);
-			pack_reply(FOC_CAN_TxData,p_encoder2_g->pos_abs,p_encoder2_g->mech_vel,p_motor_g->Q_axis_current_filt*KT_OUT,p_motor_g->Err1,p_motor_g->Err2,p_motor_g->Warning);
+			UnpackTorqueCmd(FDCAN1_RX_DATA);
+			PackReply(FOC_CAN_TxData,p_encoder2_g->pos_abs,p_encoder2_g->mech_vel,p_motor_g->Q_axis_current_filt*KT_OUT,p_motor_g->Err1,p_motor_g->Err2,p_motor_g->Warning);
 			//if (bDynamMode == false)
 				CAN_SendMessage(0x100+FDCAN_ID,FOC_CAN_TxData,12);
 		}
 		break;
 		case 0x400:{//位置模式
-			unpack_position_cmd(FDCAN1_RX_DATA);
-			pack_reply(FOC_CAN_TxData,p_encoder2_g->pos_abs,p_encoder2_g->mech_vel,p_motor_g->Q_axis_current_filt*KT_OUT,p_motor_g->Err1,p_motor_g->Err2,p_motor_g->Warning);
+			UnpackPositionCmd(FDCAN1_RX_DATA);
+			PackReply(FOC_CAN_TxData,p_encoder2_g->pos_abs,p_encoder2_g->mech_vel,p_motor_g->Q_axis_current_filt*KT_OUT,p_motor_g->Err1,p_motor_g->Err2,p_motor_g->Warning);
 			//if (bDynamMode == false)
 				CAN_SendMessage(0x100+FDCAN_ID,FOC_CAN_TxData,12);
 		}
 		break;
 		case 0x500:{//MIT模式
-			unpack_MIT_cmd(FDCAN1_RX_DATA);
-			pack_reply(FOC_CAN_TxData,p_encoder2_g->pos_abs,p_encoder2_g->mech_vel,p_motor_g->Q_axis_current_filt*KT_OUT,p_motor_g->Err1,p_motor_g->Err2,p_motor_g->Warning);
+			UnpackMitCmd(FDCAN1_RX_DATA);
+			PackReply(FOC_CAN_TxData,p_encoder2_g->pos_abs,p_encoder2_g->mech_vel,p_motor_g->Q_axis_current_filt*KT_OUT,p_motor_g->Err1,p_motor_g->Err2,p_motor_g->Warning);
 			//if (bDynamMode == false)
 				CAN_SendMessage(0x100+FDCAN_ID,FOC_CAN_TxData,12);
 		}
@@ -887,9 +887,9 @@ void CAN_MsgProcess(uint32_t Identifier, uint8_t *FDCANRxData)
 /// Formatted as follows.  For each quantity, bit 0 is LSB
 void CAN_pack_reply1(uint8_t *tData, uint8_t err, float p, float v, float i, float T1, float T2)
 {
-	uint16_t p_int = float_to_uint(p, POS_MIN, POS_MAX, 16);
-	uint16_t v_int = float_to_uint(v, SPD_MIN, SPD_MAX, 12);
-	uint16_t i_int = float_to_uint(i, I_MIN, I_MAX, 12);
+	uint16_t p_int = FloatToUint(p, POS_MIN, POS_MAX, 16);
+	uint16_t v_int = FloatToUint(v, SPD_MIN, SPD_MAX, 12);
+	uint16_t i_int = FloatToUint(i, I_MIN, I_MAX, 12);
 	uint8_t T_motor_int = (uint8_t)(T1*2.0f+50.0f);
 	uint8_t T_MOS_int = (uint8_t)(T2*2.0f+50.0f);
 

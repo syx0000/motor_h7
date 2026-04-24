@@ -9,11 +9,11 @@ uint8_t trajcplt = 0;
 
 MotionPlanner planner_s;
 MotionPlanner *p_planner_s = &planner_s;
-void init_planner(MotionPlanner* planner, float start_pos, float target,  float vmax, float acc, float dec);
+void InitPlanner(MotionPlanner* planner, float start_pos, float target,  float vmax, float acc, float dec);
 bool get_next_position(MotionPlanner* planner, float dt, float* position);
 
 // 初始化运动规划器
-void init_planner(MotionPlanner* planner, float start_pos, float target, float vmax, float acc, float dec)//确定位置规划曲线类型（三角形或梯形），确定加速、减速、匀速时间
+void InitPlanner(MotionPlanner* planner, float start_pos, float target, float vmax, float acc, float dec)//确定位置规划曲线类型（三角形或梯形），确定加速、减速、匀速时间
 {
     // 保留当前位置
 									 
@@ -210,11 +210,11 @@ bool get_next_position(MotionPlanner* planner, float dt, float* position)
 /* 使用示例：
 // 正向运动
 MotionPlanner pos_planner;
-init_planner(&pos_planner, 100.0f, 10.0f, 2.0f, 2.0f);
+InitPlanner(&pos_planner, 100.0f, 10.0f, 2.0f, 2.0f);
 
 // 反向运动
 MotionPlanner neg_planner;
-init_planner(&neg_planner, -50.0f, 8.0f, 3.0f, 3.0f);
+InitPlanner(&neg_planner, -50.0f, 8.0f, 3.0f, 3.0f);
 
 float position;
 while (get_next_position(&neg_planner, 0.1f, &position)) {

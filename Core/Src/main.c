@@ -126,7 +126,7 @@ int main(void)
 	HAL_GPIO_WritePin(EN_GATE_GPIO_Port,EN_GATE_Pin,GPIO_PIN_SET);//预驱使能
 	HAL_Delay(100);
 	//1. ADC使能
-	enableADC();
+	EnableADC();
 	//2. TIM1初始化
 //	TIM1->BDTR |= 0x8000;//Enable main output
 	TIM1->BDTR |= 0xC000;//Enable main output and Automatic output enable(AOE)
@@ -157,7 +157,7 @@ int main(void)
 	Read_MotorData();
 
 	//5.三环PI参数初始化
-	init_controller_params(&controller);//初始化控制器参数，包括电流环PI参数 如果阻感参数加载不成功为0，则电流环PI参数也为0，无法使能电机
+	InitControllerParams(&controller);//初始化控制器参数，包括电流环PI参数 如果阻感参数加载不成功为0，则电流环PI参数也为0，无法使能电机
 //	Pid.Init(p_position_loop_g, Position_P, Position_I, 0.0f, 209.4f, 0.0004f, 1.0f);//FOC位置环控制参数初始化
 	Pid.Init(p_position_loop_g, Position_P, Position_I, 0.0f, 150.0f, 0.0004f, 1.0f);//FOC位置环控制参数初始化
 	
@@ -175,7 +175,7 @@ int main(void)
 	
 
 	TIM1->CR1 ^= TIM_CR1_UDIS;//开始产生TIM1更新事件
-	enter_menu_state();
+	EnterMenuState();
 	
 // 1. 初始化发生器
     
@@ -217,7 +217,7 @@ int main(void)
 		if (u8_1msFlag == 1)//1ms时基
 		{
 			Calc_current_rms();
-			temperatureSample();
+			TemperatureSample();
 			
 			static uint8_t cnt=0;
 			if (fabs(p_position_loop_g->target - p_encoder2_g->pos_abs) < 0.015)
@@ -266,11 +266,11 @@ int main(void)
 		}
 		if (stateChange==2)
 		{
-			enablePWM();
+			EnablePWM();
 			ApplyVoltDQToSVPWM(1.5, 0, PI/2.0f);
 			HAL_Delay(1000);
 			stateChange = 0;
-			disablePWM();
+			DisablePWM();
 		}
 
 //		if (HAL_GPIO_ReadPin(K1_GPIO_Port,K1_Pin) == GPIO_PIN_RESET)  /* 霍尔传感器状态获取 */
@@ -300,7 +300,7 @@ int main(void)
 
 		/*验证CRC校验*/
 //				uint8_t data[4] = {0x24,0xB0,0x46,0x40};
-//				USART2_RX_DATA[4] = calcCRC(data,4);
+//				USART2_RX_DATA[4] = CalcCRC(data,4);
 
 			 /*周期询问编码器数据-28.8us*/
 //			 RS485DIR_TX;
@@ -350,11 +350,11 @@ int main(void)
 		if (caliOn_flag == 1)
 		{
 //			CalcCurrentOffset(&p_motor_g->phase_a_current_offset,&p_motor_g->phase_b_current_offset);//计算电流偏置
-			enablePWM();
+			EnablePWM();
 			/*定位到电角度为0*/
 //			ApplyVoltDQToSVPWM(1.5f, 0.0f, 0.0f);
 //			HAL_Delay(2000);
-//			disablePWM();
+//			DisablePWM();
 //			caliOn_flag=0;
 			
 			/*测试硬件过流*/
@@ -367,7 +367,7 @@ int main(void)
 //				HAL_Delay(1);
 //			}
 //			HAL_Delay(99);
-//			disablePWM();
+//			DisablePWM();
 //			caliOn_flag=0;
 //			state_change = 0;
 			
@@ -375,8 +375,8 @@ int main(void)
 			if (p_encoder_g->cali_start == 1)
 			{
 				p_encoder_g->cali_start = 0;
-				calibrate();//整定过程中电流波形周期变化
-//				order_phases();//相序检测
+				Calibrate();//整定过程中电流波形周期变化
+//				OrderPhases();//相序检测
 			}
 			/*电阻电感整定*/
 			if (p_motor_g->cali_start == 1)
@@ -385,7 +385,7 @@ int main(void)
 				Motor.MeasureResistance();
 				Motor.MeasureInductance();
 			}
-			disablePWM();
+			DisablePWM();
 
 			/*校准后Flash参数写入（仅校准成功时）*/
 			if (p_encoder_g->cali_finish == 1 || p_motor_g->motor_calibrated == 1)
@@ -397,7 +397,7 @@ int main(void)
 			caliOn_flag = 0;
 			state_change = 0;
 		}
-		errorReport();
+		ErrorReport();
   }
   /* USER CODE END 3 */
 }
@@ -533,7 +533,7 @@ void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
-  disablePWM(); // 关闭PWM，防止电机失控
+  DisablePWM(); // 关闭PWM，防止电机失控
   __disable_irq();
   while (1)
   {

@@ -13,7 +13,7 @@ uint32_t   raw_b[2688]={0};											//2688=128*p_motor_g->pole_pairs
 //26,26,25,24,24,23,21,21,20,17,16,16,14,11,11,10,7,6,5,4,2,1,1,-1,-2,-1,-2,-3,-2,-2,-2,-2,-1,0,0,1,3,3,3,5,6,6,7,9,9,10,11,12,
 //12,12,14,13,13,14,14,13,13,13,13,11,11,11,9,7,7,5,2,1,0,-3,-6,-7,-9,-12,-14,-15,-18,-21,-22,-23,-26,-28,-29,-31,-33,-33,-34,
 //-35,-36,-35,-35,-36,-35,-34,-34,-33,-30,-29};
-void order_phases()
+void OrderPhases()
 {
 	///Checks phase order, to ensure that positive Q current produces
 	///torque in the positive direction wrt the position sensor.
@@ -38,7 +38,7 @@ void order_phases()
 	{                                                       
 		ApplyVoltDQToSVPWM(v_d, v_q, theta_ref);
 		HAL_Delay(0);
-		encoderSample();//采集最新鲜的编码器位置  在执行该函数时进了TIM1更新中断怎么办？？？函数重入？
+		EncoderSample();//采集最新鲜的编码器位置  在执行该函数时进了TIM1更新中断怎么办？？？函数重入？
 		theta_actual = p_encoder_g->pos_abs;
 		if (theta_ref==0)
 		{
@@ -71,9 +71,9 @@ void order_phases()
 
 /// Measures the electrical angle offset of the position sensor
 /// and (in the future) corrects nonlinearity due to position sensor eccentricity（偏心）
-void calibrate()
+void Calibrate()
 {
-	order_phases();//相序检测
+	OrderPhases();//相序检测
 	HAL_Delay(500);
 	
 //	printf("\n\r Starting calibration procedure\n\r");
@@ -106,7 +106,7 @@ void calibrate()
 			ApplyVoltDQToSVPWM(v_d, v_q, theta_ref);
 			HAL_Delay(1);//2ms
 		}
-		encoderSample();//采集最新鲜的编码器位置
+		EncoderSample();//采集最新鲜的编码器位置
 		theta_actual = p_encoder_g->pos_abs;
 		error_f[i] = theta_actual - theta_ref/(float)p_motor_g->pole_pairs;//实际角度-开环定位角度
 		raw_f[i] = p_encoder_g->mech_pos;//编码器原始值
@@ -123,7 +123,7 @@ void calibrate()
 			ApplyVoltDQToSVPWM(v_d, v_q, theta_ref);
 			HAL_Delay(1);//2ms
 		}
-		encoderSample();//采集最新鲜的编码器位置
+		EncoderSample();//采集最新鲜的编码器位置
 		theta_actual = p_encoder_g->pos_abs;
 		error_b[i] = theta_actual - theta_ref/(float)p_motor_g->pole_pairs;
 		raw_b[i] = p_encoder_g->mech_pos;

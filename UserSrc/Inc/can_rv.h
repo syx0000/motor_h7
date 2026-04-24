@@ -26,15 +26,15 @@ extern float KD_MAX;
 void CAN_SendMessage(uint32_t id, uint8_t *data, uint8_t len);
 void CAN_Config(void);
 
-void pack_reply(uint8_t *tData,float pos,	float vel, float torque, uint16_t err1, uint8_t err2, uint8_t warning);//反馈帧
+void PackReply(uint8_t *tData,float pos,	float vel, float torque, uint16_t err1, uint8_t err2, uint8_t warning);//反馈帧
 void Pack_ActiveReport_Current(uint8_t *tData ,float torque);
 void Pack_ActiveReport(uint8_t *tData,float pos, float vel, float torque, uint16_t err1, uint8_t err2, uint8_t warning);
 //void PD_pack_reply(uint8_t *tData, float p, float v, float t);
 //void unpack_cmd(uint8_t *CAN_RxData, ControllerStruct * controller);
-void unpack_speed_cmd(uint8_t CAN_RxData[]);
-void unpack_torque_cmd(uint8_t CAN_RxData[]);
-void unpack_position_cmd(uint8_t CAN_RxData[]);
-void unpack_MIT_cmd(uint8_t CAN_RxData[]);
+void UnpackSpeedCmd(uint8_t CAN_RxData[]);
+void UnpackTorqueCmd(uint8_t CAN_RxData[]);
+void UnpackPositionCmd(uint8_t CAN_RxData[]);
+void UnpackMitCmd(uint8_t CAN_RxData[]);
 
 void CAN_MsgProcess(uint32_t Identifier, uint8_t *FDCANRxData);
 
