@@ -326,10 +326,10 @@ void CurrentLoop()//电流环 CLARK和PARK变换+PI+SVPWM
 	
 	/*使用给定电角速度计算前馈*/
 	controller.v_d_ff = -p_velocity_loop_g->target*p_motor_g->pole_pairs*p_motor_g->phase_inductance*p_motor_g->i_q_ref;
-	controller.v_q_ff = p_velocity_loop_g->target*p_motor_g->pole_pairs*p_motor_g->phase_inductance*p_motor_g->i_d_ref + 0.005619*p_velocity_loop_g->target*p_motor_g->pole_pairs;
+	controller.v_q_ff = p_velocity_loop_g->target*p_motor_g->pole_pairs*p_motor_g->phase_inductance*p_motor_g->i_d_ref + 0.005619f*p_velocity_loop_g->target*p_motor_g->pole_pairs;
 	/*使用实际电角速度计算前馈*/
 //	controller.v_d_ff = -p_encoder_g->elec_vel*p_motor_g->phase_inductance*p_motor_g->i_q_ref;
-//	controller.v_q_ff = p_encoder_g->elec_vel*p_motor_g->phase_inductance*p_motor_g->i_d_ref + 0.005619*p_velocity_loop_g->target*p_motor_g->pole_pairs;
+//	controller.v_q_ff = p_encoder_g->elec_vel*p_motor_g->phase_inductance*p_motor_g->i_d_ref + 0.005619f*p_velocity_loop_g->target*p_motor_g->pole_pairs;
 	controller.v_d = controller.k_d*i_d_error + controller.d_int;
 	controller.v_q = controller.k_q*i_q_error + controller.q_int;
 	/*转速闭环前馈控制*/

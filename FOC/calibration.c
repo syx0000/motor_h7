@@ -77,11 +77,11 @@ void Calibrate()
 	HAL_Delay(500);
 	
 //	printf("\n\r Starting calibration procedure\n\r");
-	const 	uint32_t n_lut = 128;
-	const 	uint32_t window = 128;
+	// const uint32_t n_lut = 128; // 未使用
+	// const uint32_t window = 128; // 未使用
 	const 	uint32_t n = 128*21;              			// number of positions to be sampled per mechanical rotation.  Multiple of NPP for filtering reasons (see later)
 	const 	uint32_t n2 = 1;                  			// increments between saved samples (for smoothing motion)
-	int32_t lut[128]={0};                      			// 位置线性化表
+	// int32_t lut[128]={0}; // 未使用
 	float 	delta = 2*PI*p_motor_g->pole_pairs/(n*n2);      // change in angle between samples
 
 //	PositionSensor_WriteLUT(lut);//offset_lut清零

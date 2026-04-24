@@ -18,7 +18,7 @@ void Write_MotorData(void);
 void Read_MotorData(void);
 
 uint32_t Float2Uint(float var);
-float Uint2Float(uint32_t var);
+float FlashUint2Float(uint32_t var);
 
 
 #endif

@@ -158,6 +158,6 @@ uint8_t DWT_Init(void);
 #define CURRENT_COMPENSATION_RATIO 1.00f
 #define VEL_CALC_PERIOD 4  // 采集位置和解算速度的周期比值
 #define POS_CALC_PERIOD 4  // 采集位置和进位置环的周期比值
-#define KT_OUT 1.48//3.5f            //KT*GR  模组测试得到
+#define KT_OUT 1.48f // KT*GR 模组测试得到
 #endif
 

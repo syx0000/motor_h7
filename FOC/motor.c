@@ -413,7 +413,7 @@ void TemperatureSample()
 //	增强版
 	static uint8_t errorCount = 0;
 	float delta = fabsf(TEMP_MOTOR - TEMP_MOTOR_filter1);
-	if (delta > 0.5) {
+	if (delta > 0.5f) {
         errorCount++;
         if (errorCount > 99) {  // 连续100次(10ms)超限则认为有效变化
             errorCount = 0;
@@ -424,7 +424,7 @@ void TemperatureSample()
         errorCount = 0;
         TEMP_MOTOR_filter1 = TEMP_MOTOR;
     }
-	TEMP_MOTOR_filter2 = 0.6*TEMP_MOTOR_filter1 + 0.4*TEMP_MOTOR_filter2;//一阶低通
+	TEMP_MOTOR_filter2 = 0.6f*TEMP_MOTOR_filter1 + 0.4f*TEMP_MOTOR_filter2;//一阶低通
 	
 	//MOS温度计算
 	//共约3.5us 使用热敏电阻的Steinhart-Hart方程进行温度计算
@@ -441,7 +441,7 @@ void TemperatureSample()
 	if (r2_ntc < 0.01f) r2_ntc = 0.01f;
 
 	TEMP_MOS = 1.0f / ( (1.0f / (ABSOLUTE_ZERO + 25.0f) ) + (logf(r2_ntc / NOMINAL_RES_MOS) / B_CONST_MOS ) ) - ABSOLUTE_ZERO;//摄氏度
-	TEMP_MOS_filter1 = 0.6*TEMP_MOS + 0.4*TEMP_MOS_filter1;//一阶低通
+	TEMP_MOS_filter1 = 0.6f*TEMP_MOS + 0.4f*TEMP_MOS_filter1;//一阶低通
 }
 
 /* ------------------------------ Manager Declaration ------------------------------ */
@@ -478,7 +478,7 @@ void StartJADC(void)
 void DeltaFilter(uint8_t errcnt, volatile float phase_current, volatile float *phase_current_filter1, volatile float *phase_current_filter2)
 {
 	float delta = fabsf(phase_current - *phase_current_filter1);
-	if (delta > 0.5) {
+	if (delta > 0.5f) {
 				errcnt++;
 				if (errcnt > 1) {  // 连续10次(1ms)超限则认为有效变化
 						errcnt = 0;
@@ -489,5 +489,5 @@ void DeltaFilter(uint8_t errcnt, volatile float phase_current, volatile float *p
 				Current_errorCount = 0;
 				*phase_current_filter1 = phase_current;
 		}
-	*phase_current_filter2 = 0.6*(*phase_current_filter1) + 0.4*(*phase_current_filter2);//一阶低通
+	*phase_current_filter2 = 0.6f*(*phase_current_filter1) + 0.4f*(*phase_current_filter2);//一阶低通
 }

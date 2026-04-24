@@ -133,12 +133,12 @@ void ErrorDiag(void)
 			p_motor_g->Warning |= MotorWarning_MosOverT;
 		}
 	}
-	else if (TEMPERATURE_MOSFET < (TEMP_MOSOver-5.0))
+	else if (TEMPERATURE_MOSFET < (TEMP_MOSOver-5.0f))
 	{
 		OverTEMP_MOS_cnt = 0;
 		if (p_motor_g->error==MOS_OverTEMP) p_motor_g->error=Normal;
 	}
-	else if (TEMPERATURE_MOSFET < (TEMP_MOSWARNING-5.0))
+	else if (TEMPERATURE_MOSFET < (TEMP_MOSWARNING-5.0f))
 	{
 		TempWarning_MOS_cnt = 0;
 	}
@@ -175,12 +175,12 @@ void ErrorDiag(void)
 			p_motor_g->Warning |= MotorWarning_MotorOverT;
 		}
 	}
-	else if (TEMPERATURE_MOTOR < (TEMP_MOTOROver-5.0))
+	else if (TEMPERATURE_MOTOR < (TEMP_MOTOROver-5.0f))
 	{
 		OverTEMP_MOTOR_cnt = 0;
 		if (p_motor_g->error==MOTOR_OverTEMP) p_motor_g->error=Normal;
 	}
-	else if (TEMPERATURE_MOTOR < (TEMP_MOTORWARNING-5.0))
+	else if (TEMPERATURE_MOTOR < (TEMP_MOTORWARNING-5.0f))
 	{
 		TempWarning_MOTOR_cnt = 0;
 	}

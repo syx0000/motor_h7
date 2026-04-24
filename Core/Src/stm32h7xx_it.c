@@ -662,11 +662,13 @@ void USART1_IRQHandler(void)
 		else if (FSMstate == SETUP_MODE)
 		{
 			if (c == 13)//回车
-			{					
+			{
+				// 转换 volatile char* 为 const char* 以兼容 atoi/atof
+				const char* cmd_val_str = (const char*)cmd_val;
 				switch (cmd_id)
 				{
 					case 'c':
-						switch (atoi(cmd_val))
+						switch (atoi(cmd_val_str))
 						{
 							case MIT_PD:
 								p_motor_g->controlMode = MIT_PD;
@@ -693,8 +695,8 @@ void USART1_IRQHandler(void)
 						}
 						break;
 					case 'b':
-						I_BW_set = atof(cmd_val);
-						I_BW = fmaxf(fminf(atof(cmd_val), 2000.0f), 10.0f);
+						I_BW_set = atof(cmd_val_str);
+						I_BW = fmaxf(fminf(atof(cmd_val_str), 2000.0f), 10.0f);
 						controller.ki_d = I_BW*2.0f*PI*p_motor_g->phase_resistance*(1/PWM_FREQUENCY_DEFAULT);//积分参数：电流环带宽*相电阻*电流环周期
 						controller.ki_q = I_BW*2.0f*PI*p_motor_g->phase_resistance*(1/PWM_FREQUENCY_DEFAULT);
 						controller.k_d = I_BW*2.0f*PI*p_motor_g->phase_inductance;//比例参数：电流环带宽*相电感
@@ -705,26 +707,26 @@ void USART1_IRQHandler(void)
 						break;
 					
 					case 'i':
-						CAN_ID = atoi(cmd_val);
+						CAN_ID = atoi(cmd_val_str);
 						printf("CAN_ID set succeed,%d.  Press 'esc' to return to menu or continue to set parameter.\n\r",CAN_ID);
 						break;
 					
 					case 'm':
-						CAN_MASTER = atoi(cmd_val);
+						CAN_MASTER = atoi(cmd_val_str);
 						printf("CAN_MASTER set succeed,%d.  Press 'esc' to return to menu or continue to set parameter.\n\r",CAN_MASTER);
 						break;
 					
 					case 'o':
-						I_SWOver_set=atof(cmd_val);
-						I_SWOver = fmaxf(fminf(atof(cmd_val), 50.0f), 0.0f);
+						I_SWOver_set=atof(cmd_val_str);
+						I_SWOver = fmaxf(fminf(atof(cmd_val_str), 50.0f), 0.0f);
 						if (I_SWOver_set>50.0f) printf("I_SWOver set max %.1f.  Press 'esc' to return to menu or continue to set parameter\n\r",I_SWOver);
 						else if (I_SWOver_set<0.0f) printf("I_SWOver set min %.1f.  Press 'esc' to return to menu or continue to set parameter\n\r",I_SWOver);
 						else printf("I_SWOver set succeed,%.1f.  Press 'esc' to return to menu or continue to set parameter.\n\r",I_SWOver);
 						break;
 									
 					case 'P':
-						Velocity_P_set=atof(cmd_val);
-						Velocity_P = fmaxf(fminf(atof(cmd_val), 1.0f), 0.0f);
+						Velocity_P_set=atof(cmd_val_str);
+						Velocity_P = fmaxf(fminf(atof(cmd_val_str), 1.0f), 0.0f);
 						p_velocity_loop_g->kp = Velocity_P;
 						if (Velocity_P_set>1.0f) printf("Velocity_P set max %.1f.  Press 'esc' to return to menu or continue to set parameter\n\r",Velocity_P);
 						else if (Velocity_P_set<0.0f) printf("Velocity_P set min %.1f.  Press 'esc' to return to menu or continue to set parameter\n\r",Velocity_P);
@@ -732,8 +734,8 @@ void USART1_IRQHandler(void)
 						break;
 									
 					case 'I':
-						Velocity_I_set=atof(cmd_val);
-						Velocity_I = fmaxf(fminf(atof(cmd_val), 1.0f), 0.0f);
+						Velocity_I_set=atof(cmd_val_str);
+						Velocity_I = fmaxf(fminf(atof(cmd_val_str), 1.0f), 0.0f);
 						p_velocity_loop_g->ki = Velocity_I;
 						if (Velocity_I_set>1.0f) printf("Velocity_I set max %.1f.  Press 'esc' to return to menu or continue to set parameter\n\r",Velocity_I);
 						else if (Velocity_I_set<0.0f) printf("Velocity_I set min %.1f.  Press 'esc' to return to menu or continue to set parameter\n\r",Velocity_I);
@@ -741,8 +743,8 @@ void USART1_IRQHandler(void)
 						break;
 										
 					case 'M':
-						Position_P_set=atof(cmd_val);
-						Position_P = fmaxf(fminf(atof(cmd_val), 100.0f), 0.0f);
+						Position_P_set=atof(cmd_val_str);
+						Position_P = fmaxf(fminf(atof(cmd_val_str), 100.0f), 0.0f);
 						p_position_loop_g->kp = Position_P;
 						if (Position_P_set>100.0f) printf("Position_P set max %.1f.  Press 'esc' to return to menu or continue to set parameter\n\r",Position_P);
 						else if (Position_P_set<0.0f) printf("Position_P set min %.1f.  Press 'esc' to return to menu or continue to set parameter\n\r",Position_P);
@@ -750,8 +752,8 @@ void USART1_IRQHandler(void)
 						break;
 									
 					case 'N':
-						Position_I_set=atof(cmd_val);
-						Position_I = fmaxf(fminf(atof(cmd_val), 1.0f), 0.0f);
+						Position_I_set=atof(cmd_val_str);
+						Position_I = fmaxf(fminf(atof(cmd_val_str), 1.0f), 0.0f);
 						p_position_loop_g->ki = Position_I;
 						if (Position_I_set>1.0f) printf("Position_I set max %.1f.  Press 'esc' to return to menu or continue to set parameter\n\r",Position_I);
 						else if (Position_I_set<0.0f) printf("Position_I set min %.1f.  Press 'esc' to return to menu or continue to set parameter\n\r",Position_I);
@@ -759,8 +761,8 @@ void USART1_IRQHandler(void)
 						break;
 					/*电流环PI参数*/
 					case 'Q':
-						Current_P_set=atof(cmd_val);
-						Current_P = fmaxf(fminf(atof(cmd_val), 100.0f), 0.0f);
+						Current_P_set=atof(cmd_val_str);
+						Current_P = fmaxf(fminf(atof(cmd_val_str), 100.0f), 0.0f);
 						controller.k_d = Current_P;
 						controller.k_q = Current_P;
 						if (Current_P_set>100.0f) printf("Current_P set max %.1f.  Press 'esc' to return to menu or continue to set parameter\n\r",Current_P);
@@ -769,8 +771,8 @@ void USART1_IRQHandler(void)
 						break;
 									
 					case 'W':
-						Current_I_set=atof(cmd_val);
-						Current_I = fmaxf(fminf(atof(cmd_val), 1.0f), 0.0f);
+						Current_I_set=atof(cmd_val_str);
+						Current_I = fmaxf(fminf(atof(cmd_val_str), 1.0f), 0.0f);
 						controller.ki_d = Current_I;
 						controller.ki_q = Current_I;
 						if (Current_I_set>1.0f) printf("Current_I set max %.1f.  Press 'esc' to return to menu or continue to set parameter\n\r",Current_I);
@@ -779,17 +781,17 @@ void USART1_IRQHandler(void)
 						break;
 									
 					case 'A':
-						FOC_velAccDec_set=atof(cmd_val);
-						FOC_velAccDec = fmaxf(fminf(atof(cmd_val), 5000.0f), 0.0f);
+						FOC_velAccDec_set=atof(cmd_val_str);
+						FOC_velAccDec = fmaxf(fminf(atof(cmd_val_str), 5000.0f), 0.0f);
 						if (FOC_velAccDec_set>1.0f) printf("FOC_velAccDec set max %.1f.  Press 'esc' to return to menu or continue to set parameter\n\r",FOC_velAccDec);
 						else if (FOC_velAccDec_set<0.0f) printf("FOC_velAccDec set min %.1f.  Press 'esc' to return to menu or continue to set parameter\n\r",FOC_velAccDec);
 						else	printf("FOC_velAccDec set succeed,%.5f.  Press 'esc' to return to menu or continue to set parameter.\n\r",FOC_velAccDec);
 						break;
 					case 't':
-						CAN_TIMEOUT = atoi(cmd_val);
+						CAN_TIMEOUT = atoi(cmd_val_str);
 						break;
 					case 'r':
-						if (atoi(cmd_val)==0&&p_motor_g->error==HwOverCurrent) p_motor_g->error=Normal;
+						if (atoi(cmd_val_str)==0&&p_motor_g->error==HwOverCurrent) p_motor_g->error=Normal;
 						break;							 
 			   
 					default:
@@ -816,19 +818,20 @@ void USART1_IRQHandler(void)
 		{
 			if (c == 13)//回车
 			{
+				const char* cmd_val_str = (const char*)cmd_val;
 				switch (cmd_id)
 				{
 					case 'i':
-	//					Motor_Iq_set=atof(cmd_val);
-						Motor_Iq = fmaxf(fminf(atof(cmd_val), iq_max), iq_min);
+	//					Motor_Iq_set=atof(cmd_val_str);
+						Motor_Iq = fmaxf(fminf(atof(cmd_val_str), iq_max), iq_min);
 	//					if (Motor_Iq_set>iq_max) printf("Motor_Iq set max %.1f.  Press 'esc' to return to menu\n\r",Motor_Iq);
 	//					else if (Motor_Iq_set<iq_min) printf("Motor_Iq set min %.1f.  Press 'esc' to return to menu\n\r",Motor_Iq);
 	//					else	printf("Motor_Iq set succeed,%.1f.  Press 'esc' to return to menu or continue to set parameter.\n\r",Motor_Iq);
 	//					printf("%.1f\n\r",Motor_Iq);
 						break;									
 					case 'v':
-	//					Motor_W_set=atof(cmd_val) * GR;
-						Motor_W = fmaxf(fminf(atof(cmd_val), w_max), w_min) * GR;
+	//					Motor_W_set=atof(cmd_val_str) * GR;
+						Motor_W = fmaxf(fminf(atof(cmd_val_str), w_max), w_min) * GR;
 	//					if (Motor_W_set>w_max) printf("Motor_W set max %.1f.  Press 'esc' to return to menu\n\r",Motor_W/GR);
 	//					else if (Motor_W_set<w_min) printf("Motor_W set min %.1f.  Press 'esc' to return to menu\n\r",Motor_W/GR);
 	//					else	printf("Motor_W set succeed,%.1f.  Press 'esc' to return to menu or continue to set parameter.\n\r",Motor_W/GR);
@@ -836,8 +839,8 @@ void USART1_IRQHandler(void)
 						//之所以不再打印，是因为这个会导致发送速度指令0（速度指令切换...）之后产生大电流，具体原因待评估※！！！！！！！！！！？？？？？？？
 						break;
 	//				case 'p':
-	////				Motor_P_set=atof(cmd_val);
-	//					Motor_P = fmaxf(fminf(atof(cmd_val), p_max), p_min);
+	////				Motor_P_set=atof(cmd_val_str);
+	//					Motor_P = fmaxf(fminf(atof(cmd_val_str), p_max), p_min);
 	//								
 	//					/*位置插补*/
 	////				if (trace_task_complete)
@@ -870,7 +873,7 @@ void USART1_IRQHandler(void)
 	//					printf("%.1f\n\r",Motor_P);
 	//					break;  								
 					case 'p':
-						Motor_P = fmaxf(fminf(atof(cmd_val), p_max), p_min) + p_encoder2_g->mech_offset;//在机械零位的基础上运动
+						Motor_P = fmaxf(fminf(atof(cmd_val_str), p_max), p_min) + p_encoder2_g->mech_offset;//在机械零位的基础上运动
 						/*位置插补*/
 						if (p_motor_g->controlMode == FOC_POSITION_LOOP_PP)
 						{

@@ -35,8 +35,8 @@
 extern float angleInnerFloat;
 extern float angleOutterFloat;
 extern uint8_t VOFA_cnt;
-extern uint32_t angleInner;
-extern uint32_t angleOutter;
+extern volatile uint32_t angleInner;
+extern volatile uint32_t angleOutter;
 
 extern uint32_t Sweep_step_count;
 extern float Sweep_time_elapsed;

@@ -337,8 +337,8 @@ void PackReply(uint8_t *tData,float pos, float vel, float torque, uint16_t err1,
 
 void Pack_ActiveReport_Current(uint8_t *tData ,float torque)
 {
-	uint8_t state = 0;
-	
+	// uint8_t state = 0; // 未使用
+
 	uint32_t I_target = Motor_Iq*1000 + 50000;
 	uint32_t I_real = torque*1000 + 50000;
 		
@@ -532,7 +532,7 @@ void CAN_MsgProcess(uint32_t Identifier, uint8_t *FDCANRxData)
 		uint16_t parameter_U16;
 		uint32_t parameter_U32;
 		uint32_t parameterIndex = FDCAN1_RX_DATA[1]|FDCAN1_RX_DATA[2]<<8;
-		uint32_t parameterLength = FDCAN1_RX_DATA[3];
+		(void)FDCAN1_RX_DATA[3]; // parameterLength 暂未使用
 		switch (FDCAN1_RX_DATA[0])
 		{
 			case 0x40://对象字典读
