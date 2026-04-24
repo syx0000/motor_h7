@@ -111,40 +111,36 @@ void errorDiag(void)
 	indexTEMP_MOS++;
 	if(indexTEMP_MOS >= 3) indexTEMP_MOS = 0;
 	
-	if (TEMPERATURE_MOSFET > TEMP_MOSWARNING)
-	{
-		TempWarning_MOS_cnt++;
-		if(TempWarning_MOS_cnt > 3)
-		{
-			p_motor_g->Warning |= MotorWarning_MosOverT;
-			//p_motor_g->error = MOS_OverTEMP;
-			//p_motor_g->lastError = MOS_OverTEMP;//记录故障类型
-			//temperature_MOS_record = TEMPERATURE_MOSFET;
-			//Report_MOS_OverTEMP = 1;
-		}
-	}
-	else if (TEMPERATURE_MOSFET > TEMP_MOSOver)
+	if (TEMPERATURE_MOSFET > TEMP_MOSOver)
 	{
 		OverTEMP_MOS_cnt++;
 		if(OverTEMP_MOS_cnt > 3)
 		{
 			disablePWM();
 			p_motor_g->Err1 |= MotorErr1_MosOverT;
-			
+
 			p_motor_g->error = MOS_OverTEMP;
 			p_motor_g->lastError = MOS_OverTEMP;//记录故障类型
 			temperature_MOS_record = TEMPERATURE_MOSFET;
 			Report_MOS_OverTEMP = 1;
 		}
 	}
-	else if(TEMPERATURE_MOSFET < (TEMP_MOSWARNING-5.0))
+	else if (TEMPERATURE_MOSFET > TEMP_MOSWARNING)
 	{
-		TempWarning_MOS_cnt = 0;
+		TempWarning_MOS_cnt++;
+		if(TempWarning_MOS_cnt > 3)
+		{
+			p_motor_g->Warning |= MotorWarning_MosOverT;
+		}
 	}
 	else if(TEMPERATURE_MOSFET < (TEMP_MOSOver-5.0))
 	{
 		OverTEMP_MOS_cnt = 0;
 		if(p_motor_g->error==MOS_OverTEMP) p_motor_g->error=Normal;
+	}
+	else if(TEMPERATURE_MOSFET < (TEMP_MOSWARNING-5.0))
+	{
+		TempWarning_MOS_cnt = 0;
 	}
 	
 /*电机过温保护*/
@@ -156,41 +152,37 @@ void errorDiag(void)
 	indexTEMP_MOTOR++;
 	if(indexTEMP_MOTOR >= 3) indexTEMP_MOTOR = 0;
 	
-	if (TEMPERATURE_MOTOR > TEMP_MOTORWARNING)
-	{
-		TempWarning_MOTOR_cnt++;
-		if(TempWarning_MOTOR_cnt > 3)
-		{
-			p_motor_g->Warning |= MotorWarning_MotorOverT;
-			//p_motor_g->error = MOTOR_OverTEMP;
-			//p_motor_g->lastError = MOTOR_OverTEMP;//记录故障类型
-			//temperature_MOTOR_record = TEMPERATURE_MOTOR;
-			//Report_MOTOR_OverTEMP = 1;
-		}
-	}
-	else if (TEMPERATURE_MOTOR > TEMP_MOTOROver)
+	if (TEMPERATURE_MOTOR > TEMP_MOTOROver)
 	{
 		OverTEMP_MOTOR_cnt++;
 		if(OverTEMP_MOTOR_cnt > 3)
 		{
 			disablePWM();
-			
+
 			p_motor_g->Err1 |= MotorErr1_MotorOverT;
-			
+
 			p_motor_g->error = MOTOR_OverTEMP;
 			p_motor_g->lastError = MOTOR_OverTEMP;//记录故障类型
 			temperature_MOTOR_record = TEMPERATURE_MOTOR;
 			Report_MOTOR_OverTEMP = 1;
 		}
 	}
-	else if(TEMPERATURE_MOTOR < (TEMP_MOTORWARNING-5.0))
+	else if (TEMPERATURE_MOTOR > TEMP_MOTORWARNING)
 	{
-		TempWarning_MOTOR_cnt = 0;
+		TempWarning_MOTOR_cnt++;
+		if(TempWarning_MOTOR_cnt > 3)
+		{
+			p_motor_g->Warning |= MotorWarning_MotorOverT;
+		}
 	}
 	else if(TEMPERATURE_MOTOR < (TEMP_MOTOROver-5.0))
 	{
 		OverTEMP_MOTOR_cnt = 0;
 		if(p_motor_g->error==MOTOR_OverTEMP) p_motor_g->error=Normal;
+	}
+	else if(TEMPERATURE_MOTOR < (TEMP_MOTORWARNING-5.0))
+	{
+		TempWarning_MOTOR_cnt = 0;
 	}
 }
 
