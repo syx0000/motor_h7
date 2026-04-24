@@ -312,7 +312,7 @@ void CurrentLoop()//电流环 CLARK和PARK变换+PI+SVPWM
 //	float i_q_error = p_motor_g->i_q_ref - p_motor_g->Q_axis_current_filt;
 	// Integrate Error //
 	controller.d_int += controller.ki_d*i_d_error;
-	controller.q_int += controller.ki_d*i_q_error;
+	controller.q_int += controller.ki_q*i_q_error;
 
 	if(controller.d_int>OVERMODULATION*p_motor_g->vbus)
 		controller.d_int=OVERMODULATION*p_motor_g->vbus;
@@ -331,7 +331,7 @@ void CurrentLoop()//电流环 CLARK和PARK变换+PI+SVPWM
 //	controller.v_d_ff = -p_encoder_g->elec_vel*p_motor_g->phase_inductance*p_motor_g->i_q_ref;
 //	controller.v_q_ff = p_encoder_g->elec_vel*p_motor_g->phase_inductance*p_motor_g->i_d_ref + 0.005619*p_velocity_loop_g->target*p_motor_g->pole_pairs;
 	controller.v_d = controller.k_d*i_d_error + controller.d_int;
-	controller.v_q = controller.k_d*i_q_error + controller.q_int;
+	controller.v_q = controller.k_q*i_q_error + controller.q_int;
 	/*转速闭环前馈控制*/
 //	controller.v_d += controller.v_d_ff;
 //	controller.v_q += controller.v_q_ff;
