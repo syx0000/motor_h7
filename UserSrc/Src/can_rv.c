@@ -452,8 +452,8 @@ void unpack_MIT_cmd(uint8_t CAN_RxData[])
 	uint16_t kd_raw = (CAN_RxData[FDCAN_ID*12-2]<<8)|(CAN_RxData[FDCAN_ID*12-3]);
 	
 	controller.p_des = uint32_to_float(p_raw, p_min, p_max, 24);
-	controller.v_des = uint32_to_float(v_raw, w_min, w_min, 16) * GR;
-	controller.t_ff = uint32_to_float(t_raw, iq_min, iq_min, 16);
+	controller.v_des = uint32_to_float(v_raw, w_min, w_max, 16) * GR;
+	controller.t_ff = uint32_to_float(t_raw, iq_min, iq_max, 16);
 	controller.kp = uint32_to_float(kp_raw, KP_MIN, KP_MAX, 16);
 	controller.kd = uint32_to_float(kd_raw, KD_MIN, KD_MAX, 16);
 	
