@@ -514,12 +514,12 @@ float IterationLn(volatile float a, int order)
   */
 float Uint2Float(volatile uint8_t *p_raw)
 {
-	uint8_t temp[4];
-	temp[0] = *p_raw;
-	temp[1] = *(p_raw + 1);
-	temp[2] = *(p_raw + 2);
-	temp[3] = *(p_raw + 3);
-	return *(float*)temp;
+	union { uint8_t b[4]; float f; } conv;
+	conv.b[0] = *p_raw;
+	conv.b[1] = *(p_raw + 1);
+	conv.b[2] = *(p_raw + 2);
+	conv.b[3] = *(p_raw + 3);
+	return conv.f;
 }
 
 bool least_square_method(float *data, uint8_t num, float *K)
