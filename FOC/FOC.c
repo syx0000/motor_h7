@@ -3,9 +3,9 @@
 #include <math.h>
 #include <stdint.h>
 
-char cmd_val[8] = {0};
-char cmd_id = 0;
-char char_count = 0;
+volatile char cmd_val[8] = {0};
+volatile char cmd_id = 0;
+volatile char char_count = 0;
 
 
 extern volatile uint16_t state_change;
@@ -13,20 +13,20 @@ extern ControllerStruct controller;
 /*位置插补*/
 extern Trajectory_t trajectory_g;
 extern Trajectory_t *p_trajectory_g;
-char is_PPMode = 0;//默认直通
+volatile char is_PPMode = 0;//默认直通
 
-float I_BW_set;
-float I_SWOver_set;
-float Motor_Iq_set;
-float Motor_W_set;
-float Motor_P_set;
-float Velocity_P_set;
-float Velocity_I_set;
-float Position_P_set;
-float Position_I_set;
-float Current_P_set;
-float Current_I_set;
-float FOC_velAccDec_set;
+volatile float I_BW_set;
+volatile float I_SWOver_set;
+volatile float Motor_Iq_set;
+volatile float Motor_W_set;
+volatile float Motor_P_set;
+volatile float Velocity_P_set;
+volatile float Velocity_I_set;
+volatile float Position_P_set;
+volatile float Position_I_set;
+volatile float Current_P_set;
+volatile float Current_I_set;
+volatile float FOC_velAccDec_set;
 
 volatile uint16_t FSMstate = REST_MODE;
 uint8_t caliOn_flag = 0;

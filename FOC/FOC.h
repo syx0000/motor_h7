@@ -2,23 +2,23 @@
 #define __FOC_H
 #include <stdint.h>
 #include "SweepSine.h"
-extern char cmd_val[8];
-extern char cmd_id;
-extern char char_count;
+extern volatile char cmd_val[8];
+extern volatile char cmd_id;
+extern volatile char char_count;
 
-extern float I_BW_set;
-extern float I_SWOver_set;
-extern float Motor_Iq_set;
-extern float Motor_W_set;
-extern float Motor_P_set;
-extern float Velocity_P_set;
-extern float Velocity_I_set;
-extern float Position_P_set;
-extern float Position_I_set;
-extern float Current_P_set;
-extern float Current_I_set;
-extern float FOC_velAccDec_set;
-extern char is_PPMode;
+extern volatile float I_BW_set;
+extern volatile float I_SWOver_set;
+extern volatile float Motor_Iq_set;
+extern volatile float Motor_W_set;
+extern volatile float Motor_P_set;
+extern volatile float Velocity_P_set;
+extern volatile float Velocity_I_set;
+extern volatile float Position_P_set;
+extern volatile float Position_I_set;
+extern volatile float Current_P_set;
+extern volatile float Current_I_set;
+extern volatile float FOC_velAccDec_set;
+extern volatile char is_PPMode;
 #define DWT_CR              *(volatile uint32_t *)0xE0001000
 #define DWT_CYCCNT          *(volatile uint32_t *)0xE0001004
 #define DEM_CR              *(volatile uint32_t *)0xE000EDFC
