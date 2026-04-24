@@ -1,0 +1,267 @@
+<html>
+<body>
+<pre>
+<h1>礦ision Build Log</h1>
+<h2>Tool Versions:</h2>
+IDE-Version: μVision V5.21.1.0
+Copyright (C) 2016 ARM Ltd and ARM Germany GmbH. All rights reserved.
+License Information: 1 syx19950128@outlook.com, 1, LIC=LSNXV-PGLPL-X7QRZ-JA2X1-01QVV-FBP1Q
+ 
+Tool Versions:
+Toolchain:       MDK-ARM Plus  Version: 5.21a
+Toolchain Path:  C:\Keil_v5\ARM\ARMCC\Bin
+C Compiler:      Armcc.exe V5.06 update 3 (build 300)
+Assembler:       Armasm.exe V5.06 update 3 (build 300)
+Linker/Locator:  ArmLink.exe V5.06 update 3 (build 300)
+Library Manager: ArmAr.exe V5.06 update 3 (build 300)
+Hex Converter:   FromElf.exe V5.06 update 3 (build 300)
+CPU DLL:         SARMCM3.DLL V5.21a
+Dialog DLL:      DCM.DLL V1.13.8.0
+Target DLL:      CMSIS_AGDI.dll V1.26.5.0
+Dialog DLL:      TCM.DLL V1.14.14.0
+ 
+<h2>Project:</h2>
+D:\iflytek_works\src\motor_h7\MDK-ARM\FIVE.uvprojx
+Project File Date:  04/05/2026
+
+<h2>Output:</h2>
+*** Using Compiler 'V5.06 update 3 (build 300)', folder: 'C:\Keil_v5\ARM\ARMCC\Bin'
+Build target 'FIVE'
+assembling startup_stm32h743xx.s...
+compiling dma.c...
+../FOC/SweepSine.h(34): warning:  #1-D: last line of file ends without a newline
+  void SweepSine_GetCurrentStatus(SweepSineGenerator* gen, float* output, float* freq, float* time);
+../Core/Src/dma.c: 1 warning, 0 errors
+compiling memorymap.c...
+../FOC/SweepSine.h(34): warning:  #1-D: last line of file ends without a newline
+  void SweepSine_GetCurrentStatus(SweepSineGenerator* gen, float* output, float* freq, float* time);
+../Core/Src/memorymap.c: 1 warning, 0 errors
+compiling tim.c...
+../FOC/SweepSine.h(34): warning:  #1-D: last line of file ends without a newline
+  void SweepSine_GetCurrentStatus(SweepSineGenerator* gen, float* output, float* freq, float* time);
+../Core/Src/tim.c: 1 warning, 0 errors
+compiling adc.c...
+../FOC/SweepSine.h(34): warning:  #1-D: last line of file ends without a newline
+  void SweepSine_GetCurrentStatus(SweepSineGenerator* gen, float* output, float* freq, float* time);
+../Core/Src/adc.c: 1 warning, 0 errors
+compiling main.c...
+../FOC/SweepSine.h(34): warning:  #1-D: last line of file ends without a newline
+  void SweepSine_GetCurrentStatus(SweepSineGenerator* gen, float* output, float* freq, float* time);
+../Core/Src/main.c(247): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  				Pack_ActiveReport(FOC_CAN_TxData,p_encoder2_g->pos_abs,p_encoder2_g->mech_vel,p_motor_g->Q_axis_current_filt*
+T_OUT,p_motor_g->Err1,p_motor_g->Err2,p_motor_g->Warning);
+../Core/Src/main.c: 2 warnings, 0 errors
+compiling stm32h7xx_hal_msp.c...
+../FOC/SweepSine.h(34): warning:  #1-D: last line of file ends without a newline
+  void SweepSine_GetCurrentStatus(SweepSineGenerator* gen, float* output, float* freq, float* time);
+../Core/Src/stm32h7xx_hal_msp.c: 1 warning, 0 errors
+compiling fdcan.c...
+../FOC/SweepSine.h(34): warning:  #1-D: last line of file ends without a newline
+  void SweepSine_GetCurrentStatus(SweepSineGenerator* gen, float* output, float* freq, float* time);
+../Core/Src/fdcan.c: 1 warning, 0 errors
+compiling gpio.c...
+../FOC/SweepSine.h(34): warning:  #1-D: last line of file ends without a newline
+  void SweepSine_GetCurrentStatus(SweepSineGenerator* gen, float* output, float* freq, float* time);
+../Core/Src/gpio.c: 1 warning, 0 errors
+compiling stm32h7xx_it.c...
+../FOC/SweepSine.h(34): warning:  #1-D: last line of file ends without a newline
+  void SweepSine_GetCurrentStatus(SweepSineGenerator* gen, float* output, float* freq, float* time);
+../Core/Src/stm32h7xx_it.c: 1 warning, 0 errors
+compiling stm32h7xx_hal_flash.c...
+compiling stm32h7xx_hal_adc_ex.c...
+compiling usart.c...
+../FOC/SweepSine.h(34): warning:  #1-D: last line of file ends without a newline
+  void SweepSine_GetCurrentStatus(SweepSineGenerator* gen, float* output, float* freq, float* time);
+../Core/Src/usart.c: 1 warning, 0 errors
+compiling stm32h7xx_hal_rcc.c...
+compiling stm32h7xx_hal_rcc_ex.c...
+compiling stm32h7xx_hal_adc.c...
+compiling stm32h7xx_hal_gpio.c...
+compiling stm32h7xx_hal_hsem.c...
+compiling stm32h7xx_hal_mdma.c...
+compiling stm32h7xx_hal_flash_ex.c...
+compiling stm32h7xx_hal.c...
+compiling stm32h7xx_hal_cortex.c...
+compiling stm32h7xx_hal_pwr.c...
+compiling stm32h7xx_hal_dma_ex.c...
+compiling stm32h7xx_hal_exti.c...
+compiling stm32h7xx_hal_pwr_ex.c...
+compiling stm32h7xx_hal_i2c_ex.c...
+compiling SweepSine.c...
+..\FOC\SweepSine.h(34): warning:  #1-D: last line of file ends without a newline
+  void SweepSine_GetCurrentStatus(SweepSineGenerator* gen, float* output, float* freq, float* time);
+..\FOC\SweepSine.c(135): warning:  #1-D: last line of file ends without a newline
+  }
+..\FOC\SweepSine.c: 2 warnings, 0 errors
+compiling arm_cos_f32.c...
+compiling arm_sin_f32.c...
+compiling arm_common_tables.c...
+compiling stm32h7xx_hal_i2c.c...
+compiling stm32h7xx_hal_dma.c...
+compiling stm32h7xx_hal_fdcan.c...
+compiling stm32h7xx_hal_tim.c...
+compiling stm32h7xx_hal_uart_ex.c...
+compiling stm32h7xx_hal_tim_ex.c...
+compiling calibration.c...
+../FOC/SweepSine.h(34): warning:  #1-D: last line of file ends without a newline
+  void SweepSine_GetCurrentStatus(SweepSineGenerator* gen, float* output, float* freq, float* time);
+..\FOC\calibration.c(80): warning:  #177-D: variable "n_lut" was declared but never referenced
+  	const 	uint32_t n_lut = 128;
+..\FOC\calibration.c(81): warning:  #177-D: variable "window" was declared but never referenced
+  	const 	uint32_t window = 128;
+..\FOC\calibration.c(84): warning:  #177-D: variable "lut" was declared but never referenced
+  	int32_t lut[128]={0};                      			// 位?????曰?
+..\FOC\calibration.c: 4 warnings, 0 errors
+compiling system_stm32h7xx.c...
+compiling stm32h7xx_hal_uart.c...
+compiling FOC.c...
+../FOC/SweepSine.h(34): warning:  #1-D: last line of file ends without a newline
+  void SweepSine_GetCurrentStatus(SweepSineGenerator* gen, float* output, float* freq, float* time);
+..\FOC\FOC.c(329): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  	controller.v_q_ff = p_velocity_loop_g->target*p_motor_g->pole_pairs*p_motor_g->phase_inductance*p_motor_g->i_d_ref + 0.005619*p_velocity_loop_g->target*p_motor_g->pole_pairs;
+..\FOC\FOC.c(354): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  	p_motor_g->i_q_ref = torque_ref/
+T_OUT;
+..\FOC\FOC.c: 3 warnings, 0 errors
+compiling motor.c...
+../FOC/SweepSine.h(34): warning:  #1-D: last line of file ends without a newline
+  void SweepSine_GetCurrentStatus(SweepSineGenerator* gen, float* output, float* freq, float* time);
+..\FOC\motor.c(94): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  	float r1_ntc = 10.0f*((float)
+DC1->DR*3.3f/4095.0f)/(3.3-((float)
+DC1->DR*3.3f/4095.0f));//kΩ
+..\FOC\motor.c(98): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  	float r2_ntc = 3.3f*((float)
+DC2->DR*3.3f/4095.0f)/(3.3-((float)
+DC2->DR*3.3f/4095.0f));//kΩ
+..\FOC\motor.c(388): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  	if (delta > 0.5) {
+..\FOC\motor.c(399): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  	TEMP_MOTOR_filter2 = 0.6*TEMP_MOTOR_filter1 + 0.4*TEMP_MOTOR_filter2;//一?椎?通
+..\FOC\motor.c(399): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  	TEMP_MOTOR_filter2 = 0.6*TEMP_MOTOR_filter1 + 0.4*TEMP_MOTOR_filter2;//一?椎?通
+..\FOC\motor.c(410): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  	TEMP_MOS_filter1 = 0.6*TEMP_MOS + 0.4*TEMP_MOS_filter1;//一?椎?通
+..\FOC\motor.c(410): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  	TEMP_MOS_filter1 = 0.6*TEMP_MOS + 0.4*TEMP_MOS_filter1;//一?椎?通
+..\FOC\motor.c(447): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  	if (delta > 0.5) {
+..\FOC\motor.c(458): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  	*phase_current_filter2 = 0.6*(*phase_current_filter1) + 0.4*(*phase_current_filter2);//一?椎?通
+..\FOC\motor.c(458): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  	*phase_current_filter2 = 0.6*(*phase_current_filter1) + 0.4*(*phase_current_filter2);//一?椎?通
+..\FOC\motor.c: 11 warnings, 0 errors
+compiling encoder.c...
+../FOC/SweepSine.h(34): warning:  #1-D: last line of file ends without a newline
+  void SweepSine_GetCurrentStatus(SweepSineGenerator* gen, float* output, float* freq, float* time);
+..\FOC\encoder.c: 1 warning, 0 errors
+compiling encoderRaw.c...
+../FOC/SweepSine.h(34): warning:  #1-D: last line of file ends without a newline
+  void SweepSine_GetCurrentStatus(SweepSineGenerator* gen, float* output, float* freq, float* time);
+..\FOC\encoderRaw.c: 1 warning, 0 errors
+compiling pid.c...
+../FOC/SweepSine.h(34): warning:  #1-D: last line of file ends without a newline
+  void SweepSine_GetCurrentStatus(SweepSineGenerator* gen, float* output, float* freq, float* time);
+..\FOC\pid.c: 1 warning, 0 errors
+compiling uart_printf.c...
+../FOC/SweepSine.h(34): warning:  #1-D: last line of file ends without a newline
+  void SweepSine_GetCurrentStatus(SweepSineGenerator* gen, float* output, float* freq, float* time);
+..\UserSrc\Src\uart_printf.c: 1 warning, 0 errors
+compiling user_config.c...
+../FOC/SweepSine.h(34): warning:  #1-D: last line of file ends without a newline
+  void SweepSine_GetCurrentStatus(SweepSineGenerator* gen, float* output, float* freq, float* time);
+..\UserSrc\Src\user_config.c: 1 warning, 0 errors
+compiling interact.c...
+../FOC/SweepSine.h(34): warning:  #1-D: last line of file ends without a newline
+  void SweepSine_GetCurrentStatus(SweepSineGenerator* gen, float* output, float* freq, float* time);
+..\UserSrc\Src\interact.c: 1 warning, 0 errors
+compiling can_rv.c...
+../FOC/SweepSine.h(34): warning:  #1-D: last line of file ends without a newline
+  void SweepSine_GetCurrentStatus(SweepSineGenerator* gen, float* output, float* freq, float* time);
+..\UserSrc\Src\can_rv.c(338): warning:  #177-D: variable "state" was declared but never referenced
+  	uint8_t state = 0;
+..\UserSrc\Src\can_rv.c(422): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  	Motor_Iq = uint32_to_float(t_raw, iq_min, iq_max, 16)/
+T_OUT;
+..\UserSrc\Src\can_rv.c(522): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  		pack_reply(FOC_CAN_TxData,p_encoder2_g->pos_abs,p_encoder2_g->mech_vel,p_motor_g->Q_axis_current_filt*
+T_OUT,p_motor_g->Err1,p_motor_g->Err2,p_motor_g->Warning);
+..\UserSrc\Src\can_rv.c(531): warning:  #177-D: variable "parameterLength" was declared but never referenced
+  		uint32_t parameterLength = FDCAN1_RX_DATA[3];
+..\UserSrc\Src\can_rv.c(836): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  			pack_reply(FOC_CAN_TxData,p_encoder2_g->pos_abs,p_encoder2_g->mech_vel,p_motor_g->Q_axis_current_filt*
+T_OUT,p_motor_g->Err1,p_motor_g->Err2,p_motor_g->Warning);
+..\UserSrc\Src\can_rv.c(843): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  			pack_reply(FOC_CAN_TxData,p_encoder2_g->pos_abs,p_encoder2_g->mech_vel,p_motor_g->Q_axis_current_filt*
+T_OUT,p_motor_g->Err1,p_motor_g->Err2,p_motor_g->Warning);
+..\UserSrc\Src\can_rv.c(850): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  			pack_reply(FOC_CAN_TxData,p_encoder2_g->pos_abs,p_encoder2_g->mech_vel,p_motor_g->Q_axis_current_filt*
+T_OUT,p_motor_g->Err1,p_motor_g->Err2,p_motor_g->Warning);
+..\UserSrc\Src\can_rv.c(857): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  			pack_reply(FOC_CAN_TxData,p_encoder2_g->pos_abs,p_encoder2_g->mech_vel,p_motor_g->Q_axis_current_filt*
+T_OUT,p_motor_g->Err1,p_motor_g->Err2,p_motor_g->Warning);
+..\UserSrc\Src\can_rv.c(864): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  			pack_reply(FOC_CAN_TxData,p_encoder2_g->pos_abs,p_encoder2_g->mech_vel,p_motor_g->Q_axis_current_filt*
+T_OUT,p_motor_g->Err1,p_motor_g->Err2,p_motor_g->Warning);
+..\UserSrc\Src\can_rv.c(995): warning:  #1-D: last line of file ends without a newline
+  }
+..\UserSrc\Src\can_rv.c: 11 warnings, 0 errors
+compiling uart4_VOFA+.c...
+../FOC/SweepSine.h(34): warning:  #1-D: last line of file ends without a newline
+  void SweepSine_GetCurrentStatus(SweepSineGenerator* gen, float* output, float* freq, float* time);
+..\UserSrc\Src\uart4_VOFA+.c: 1 warning, 0 errors
+compiling trajectory.c...
+../FOC/SweepSine.h(34): warning:  #1-D: last line of file ends without a newline
+  void SweepSine_GetCurrentStatus(SweepSineGenerator* gen, float* output, float* freq, float* time);
+..\MotionControl\trajectory.c: 1 warning, 0 errors
+compiling Diag.c...
+../FOC/SweepSine.h(34): warning:  #1-D: last line of file ends without a newline
+  void SweepSine_GetCurrentStatus(SweepSineGenerator* gen, float* output, float* freq, float* time);
+..\UserSrc\Src\Diag.c(140): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  	else if(TEMPERATURE_MOSFET < (
+EMP_MOSWARNING-5.0))
+..\UserSrc\Src\Diag.c(144): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  	else if(TEMPERATURE_MOSFET < (
+EMP_MOSOver-5.0))
+..\UserSrc\Src\Diag.c(186): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  	else if(TEMPERATURE_MOTOR < (
+EMP_MOTORWARNING-5.0))
+..\UserSrc\Src\Diag.c(190): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  	else if(TEMPERATURE_MOTOR < (
+EMP_MOTOROver-5.0))
+..\UserSrc\Src\Diag.c: 5 warnings, 0 errors
+compiling flash.c...
+../FOC/SweepSine.h(34): warning:  #1-D: last line of file ends without a newline
+  void SweepSine_GetCurrentStatus(SweepSineGenerator* gen, float* output, float* freq, float* time);
+..\UserSrc\Src\flash.c(179): warning:  #1-D: last line of file ends without a newline
+  }
+..\UserSrc\Src\flash.c: 2 warnings, 0 errors
+compiling PPtraj.c...
+../FOC/SweepSine.h(34): warning:  #1-D: last line of file ends without a newline
+  void SweepSine_GetCurrentStatus(SweepSineGenerator* gen, float* output, float* freq, float* time);
+..\MotionControl\PPtraj.c: 1 warning, 0 errors
+linking...
+Program Size: Code=61696 RO-data=5912 RW-data=740 ZI-data=66964  
+FromELF: creating hex file...
+After Build - User command #1: fromelf --bin --output=FIVE.bin FIVE\FIVE.axf
+"FIVE\FIVE.axf" - 0 Error(s), 58 Warning(s).
+
+<h2>Software Packages used:</h2>
+
+Package Vendor: ARM
+                http://www.keil.com/pack/ARM.CMSIS.4.5.0.pack
+                ARM::CMSIS:CORE:4.3.0
+                CMSIS (Cortex Microcontroller Software Interface Standard)
+   * Component: CORE Version: 4.3.0
+
+<h2>Collection of Component include folders:</h2>
+  D:\iflytek_works\src\motor_h7\MDK-ARM\RTE
+  C:\Keil_v5\ARM\PACK\ARM\CMSIS\4.5.0\CMSIS\Include
+
+<h2>Collection of Component Files used:</h2>
+
+   * Component: ARM::CMSIS:CORE:4.3.0
+Build Time Elapsed:  00:02:52
+</pre>
+</body>
+</html>
