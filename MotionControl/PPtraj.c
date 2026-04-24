@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include "main.h"
 #include "PPtraj.h"
-uint8_t trajcplt=0;
+uint8_t trajcplt = 0;
 
 
 MotionPlanner planner_s;

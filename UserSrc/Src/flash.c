@@ -127,7 +127,7 @@ void Write_MotorData(void)
 /*Flash参数读取*/
 void Read_MotorData (void)
 {
-	for (uint16_t i=0; i<32; i++)
+	for (uint16_t i = 0; i<32; i++)
 		flash_buffer[i] = *(uint32_t*)(DATA_FLASH_ADDR + 4*i);
 
 	// 校验magic number，无效则使用默认值

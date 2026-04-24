@@ -52,7 +52,7 @@ void Motor_Init(void)
 	p_motor_g->phase_order = NEGATIVE_PHASE_ORDER;//反相序
 	p_motor_g->pole_pairs = 8;     // @todo flash
 	p_motor_g->IMax = 60.0f * CURRENT_COMPENSATION_RATIO;//电流限制
-	p_motor_g->current_loop_bandwidth = PWM_FREQUENCY_DEFAULT / 10.0f; // @todo flash 10k/10=1k
+	p_motor_g->current_loop_bandwidth = PWM_FREQUENCY_DEFAULT / 10.0f; // @todo flash 10k/10 = 1k
 	p_motor_g->velocity_loop_bandwidth = 100.0f;
 	p_motor_g->direct_current = 0.6f;
 	p_motor_g->flux_current = 0.6f;
@@ -90,7 +90,7 @@ void Motor_Init(void)
 	
 	p_motor_g->lastError = 0;
 
-	// 电机温度初始化（防止ADC=4095除零）
+	// 电机温度初始化（防止ADC = 4095除零）
 	float adc1_voltage = (float)ADC1->DR * 3.3f / 4095.0f;
 	if (adc1_voltage >= 3.29f) // 接近满量程，分母接近0
 	{
@@ -106,7 +106,7 @@ void Motor_Init(void)
 	}
 	TEMP_MOTOR_filter2 = TEMP_MOTOR_filter1;
 
-	// MOS温度初始化（防止ADC=4095除零）
+	// MOS温度初始化（防止ADC = 4095除零）
 	float adc2_voltage = (float)ADC2->DR * 3.3f / 4095.0f;
 	if (adc2_voltage >= 3.29f)
 	{
@@ -204,7 +204,7 @@ static void MeasureResistance(void)
 	
   for (int i = 0; i < 800; i++)
   {
-		d_current_sum += p_motor_g->phase_a_current;//必须是a相电流，因为theta=0时，d轴电压与a相电压相等
+		d_current_sum += p_motor_g->phase_a_current;//必须是a相电流，因为theta = 0时，d轴电压与a相电压相等
     HAL_Delay(1); // wait for some time
   }
   d_current_ave = d_current_sum / 800.0f;
@@ -232,7 +232,7 @@ static void MeasureInductance(void)
 	float volt_d_test = voltage_test, volt_q_test = 0.0f;//1V
 	float K = 0.0f;
   uint8_t sampletime = 200;
-	for (int k = 0; k < measure_induct_num; k++)//measure_induct_num=15
+	for (int k = 0; k < measure_induct_num; k++)//measure_induct_num = 15
 			current_sum[k] = 0.0f;
 	
   for (int i = 0; i < sampletime; i++)
@@ -378,7 +378,7 @@ void Calc_current_rms(void)
 {
     float sumA = 0,sumB = 0,sumC = 0;
     // 1. 平方累加
-    for (int i=0; i<SAMPLE_CNT; i++)
+    for (int i = 0; i<SAMPLE_CNT; i++)
 	{
         sumA += p_motor_g->phase_a_current * p_motor_g->phase_a_current;
 		sumB += p_motor_g->phase_b_current * p_motor_g->phase_b_current;
@@ -466,7 +466,7 @@ void enableADC(void)
 void startJADC(void)
 {
 //硬件状态不同步：
-//如果ADC尚未使能（ADEN=0）或未准备就绪（ADRDY=0），直接触发JADSTART可能导致转换无法启动，或者使ADC进入一个不可预知的状态，调用
+//如果ADC尚未使能（ADEN = 0）或未准备就绪（ADRDY = 0），直接触发JADSTART可能导致转换无法启动，或者使ADC进入一个不可预知的状态，调用
 //函数HAL_ADCEx_InjectedStart可解决该问题，但是处理时间变长了
 	HAL_ADCEx_InjectedStart(&hadc1);//处理顺序：使能ADC -> 等待就绪 -> 启动注入转换（包含完整工作序列）
 	HAL_ADCEx_InjectedStart(&hadc2);

@@ -41,7 +41,7 @@ void ReadEncoderRaw(void)
 // 偶校验计算函数
 uint16_t calc_even_parity(uint16_t data) {
     uint8_t count = 0;
-    for (uint8_t i=0; i<16; i++) {
+    for (uint8_t i = 0; i<16; i++) {
         if (data & (1<<i)) count++;
     }
     return (count % 2) ? 0 : 1;

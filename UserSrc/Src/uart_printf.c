@@ -19,7 +19,7 @@
 /*****************  发送字符串（重新定向） **********************/
 void Usart_SendString(uint8_t *str)
 {
-    unsigned int k=0;
+    unsigned int k = 0;
   do
   {
       HAL_UART_Transmit(&huart1,(uint8_t *)(str + k) ,1,1000);

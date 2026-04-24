@@ -1,16 +1,16 @@
 #include "can_rv.h"
 #include "FOC.h"
 #include "main.h"
-float KP_MIN=0.0f;
-float KP_MAX=500.0f;
-float KD_MIN=0.0f;
-float KD_MAX=5.0f;
-float POS_MIN=-5.0f;//机械角度
-float POS_MAX=5.0f;
-float SPD_MIN=-10.472f;//机械速度
-float SPD_MAX=10.472f;
-float T_MIN=-30.0f;
-float T_MAX=30.0f;
+float KP_MIN = 0.0f;
+float KP_MAX = 500.0f;
+float KD_MIN = 0.0f;
+float KD_MAX = 5.0f;
+float POS_MIN = -5.0f; // 机械角度
+float POS_MAX = 5.0f;
+float SPD_MIN = -10.472f; // 机械速度
+float SPD_MAX = 10.472f;
+float T_MIN = -30.0f;
+float T_MAX = 30.0f;
 
 #define I_MIN -50.0f
 #define I_MAX 50.0f
@@ -483,7 +483,7 @@ void CAN_MsgProcess(uint32_t Identifier, uint8_t *FDCANRxData)
 	bool bSaveDataFlag = false;
 	CAN_timeout = 0; // 收到CAN消息，清零超时计数器
 
-	for (uint8_t i=0;i<64;i++)
+	for (uint8_t i = 0;i<64;i++)
 	{
 		FDCAN1_RX_DATA[i] = FDCANRxData[i];
 		FDCANRxData[i] = 0;

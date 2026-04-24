@@ -33,10 +33,10 @@ int32_t delta_time_CNT_M = 0;
 volatile int32_t delta_encoder_cnt_M = 0;
 volatile int32_t delta_encoderInner_cnt_M = 0;
 
-float test_H1=0;
-float test_H2=0;
-float test_H3=0;
-float test_H4=0;
+float test_H1 = 0;
+float test_H2 = 0;
+float test_H3 = 0;
+float test_H4 = 0;
 uint8_t vel_zero_cnt = 0;
 void Encoder_Init(void)//初始化
 {

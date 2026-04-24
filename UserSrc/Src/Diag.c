@@ -6,13 +6,13 @@
 #define TEMP_MOTORWARNING	90.0f
 #define TEMP_MOTOROver		100.0f//单位：℃
 
-uint8_t Report_SWOvercur=0;
-uint8_t Report_HWOvercur=0;
-uint8_t Report_SWUndervolt=0;
-uint8_t Report_SWOvervolt=0;
-uint8_t Report_MOS_OverTEMP=0;
-uint8_t Report_MOTOR_OverTEMP=0;
-uint8_t Report_OverSpeed=0;
+uint8_t Report_SWOvercur = 0;
+uint8_t Report_HWOvercur = 0;
+uint8_t Report_SWUndervolt = 0;
+uint8_t Report_SWOvervolt = 0;
+uint8_t Report_MOS_OverTEMP = 0;
+uint8_t Report_MOTOR_OverTEMP = 0;
+uint8_t Report_OverSpeed = 0;
 
 
 float a_cur[3] = {0.0f},b_cur[3] = {0.0f},c_cur[3] = {0.0f},DC_bus[3] = {0.0f},temperature_MOS[3] = {0.0f},temperature_MOTOR[3] = {0.0f};
@@ -194,7 +194,7 @@ void errorReport(void)
 //		HAL_GPIO_WritePin(LED3_GPIO_Port,LED3_Pin,GPIO_PIN_RESET);//红灯
 //		flash_reg[134] = p_motor_g->lastError;
 //		Flash.Erase();//擦除FLASH
-//		for (uint16_t i=0; i<NUMBER_PARA; i++)  //保存140个参数
+//		for (uint16_t i = 0; i<NUMBER_PARA; i++)  //保存140个参数
 //		{
 //			FLASH_ProgramWord(PARAM_FLASH_SECTOR+4*i, flash_reg[i]);
 //		}

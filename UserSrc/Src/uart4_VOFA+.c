@@ -90,10 +90,10 @@ void LoadData()
 //	VOFA_data[0] = (float)p_encoder_g->mech_pos;
 //	VOFA_data[1] = p_encoder_g->mech_vel;
 	
-	for(uint16_t i=0;i<CH_COUNT;i++)
+	for(uint16_t i = 0;i<CH_COUNT;i++)
 	{
 		temp.b = VOFA_data[i];
-		for(uint16_t j=0;j<4;j++) VOFA_dma_tx_buf[4*i+j]=temp.a[j];
+		for(uint16_t j = 0;j<4;j++) VOFA_dma_tx_buf[4*i+j]=temp.a[j];
 	}
 	
 	/*帧尾*/
