@@ -432,7 +432,7 @@ void UnpackPositionCmd(uint8_t CAN_RxData[])
 	uint32_t p_raw = (CAN_RxData[FDCAN_ID*6-4]<<16)|(CAN_RxData[FDCAN_ID*6-5]<<8)|(CAN_RxData[FDCAN_ID*6-6]);
 	uint16_t v_raw = ((CAN_RxData[FDCAN_ID*6-2])<<8)|(CAN_RxData[FDCAN_ID*6-3]);
 	
-	Motor_P = (Uint32ToFloat(p_raw, p_min, p_max, 24)) + p_encoder2_g->mech_offset;
+	Motor_P = Uint32ToFloat(p_raw, p_min, p_max, 24);
 	
 	if (p_motor_g->controlMode == FOC_POSITION_LOOP_PP && trajcplt == 0)
 	{

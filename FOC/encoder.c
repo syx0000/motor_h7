@@ -133,7 +133,9 @@ void EncoderSample(void)//电机电角度标定后，位置加上偏移的角度
 	}
 	// 计算上电后的绝对位置（含电子圈数）
 	p_encoder2_g->pos_abs = PI_TIMES_2 * ((float)p_encoder2_g->rotations + (float)p_encoder2_g->mech_pos * p_encoder2_g->one_div_cpr);
-	
+	// 从源头减去机械零位偏移，使 pos_abs 直接表示相对于零点的位置
+	p_encoder2_g->pos_abs -= p_encoder2_g->mech_offset;
+
 	static uint8_t vel_calc_count = 0;//vel_calc_count为静态局部变量
 	vel_calc_count++;
 	if (vel_calc_count >= VEL_CALC_PERIOD)
@@ -180,7 +182,6 @@ static void prvCalcVelocity(void)
 	p_encoder_g->mech_vel_filt += v_filter_k * (p_encoder_g->mech_vel - p_encoder_g->mech_vel_filt);
 	p_encoder_g->elec_vel = p_encoder_g->mech_vel * (float)p_motor_g->pole_pairs;
 	p_encoder_g->mech_pos_several_times_before = p_encoder_g->mech_pos;
-	
 	
 	
 	delta_encoderInner_cnt_M = p_encoder2_g->mech_pos-p_encoder2_g->mech_pos_several_times_before;

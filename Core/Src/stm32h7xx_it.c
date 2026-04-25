@@ -528,12 +528,12 @@ void TIM1_UP_IRQHandler(void)
 						}
 						if (pos_loop_flag==1)//两次速度环运行一次位置环 5k-2.5k
 						{
-							p_position_loop_g->target = p_encoder2_g->mech_offset;
+							p_position_loop_g->target = 0.0f;
 							pos_loop_flag = 0;
 							Homing();
 						}
 				}
-				if (fabs(p_encoder2_g->mech_offset - p_encoder2_g->mech_abs)<0.05) 
+				if (fabs(p_encoder2_g->pos_abs) < 0.05f) 
 				{
 					DisablePWM();
 					FSMstate = REST_MODE;
@@ -873,7 +873,7 @@ void USART1_IRQHandler(void)
 	//					printf("%.1f\n\r",Motor_P);
 	//					break;  								
 					case 'p':
-						Motor_P = fmaxf(fminf(atof(cmd_val_str), p_max), p_min) + p_encoder2_g->mech_offset;//在机械零位的基础上运动
+						Motor_P = fmaxf(fminf(atof(cmd_val_str), p_max), p_min);
 						/*位置插补*/
 						if (p_motor_g->controlMode == FOC_POSITION_LOOP_PP)
 						{
