@@ -23,6 +23,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "stm32h7xx_hal_fdcan.h"
+#include "adc.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -298,272 +299,17 @@ void TIM1_UP_IRQHandler(void)
 		u8_1msFlag = 1;
 	}
 
-	StartJADC();//开始ADC转换 必须保证开始转换在最前面进行(低电阻采样)！
-//	ISR_start = DWT_CYCCNT;      // 记录起始计数值
-	// UART TX 已移至 TIM1_CC_IRQHandler 预触发
-//	ISR_end = DWT_CYCCNT;        // 记录结束计数值
-//	ISR_time_us = ((float)(ISR_end - ISR_start))*1000000.0f/MCU_SYSCLK;    // 计算消耗的时间（us）
+	StartJADC();//ADC2 温度采样（ADC1 由 TRGO 硬件触发）
+
 	ErrorDiag();//故障诊断
-	
+
 	EncoderSample();//编码器采样
-	VoltageSample();//电压采样
-	CurrentSample();//电流采样
 
-	
-//	ISR_end = DWT_CYCCNT;        // 记录结束计数值
-//	ISR_time_us = ((float)(ISR_end - ISR_start))*1000000.0f/MCU_SYSCLK;    // 计算消耗的时间（us）
-	if (TIM1->SR & TIM_SR_UIF )//Update interrupt flag为1
-	{
-//		static uint16_t IRQ_count;
-////		static uint16_t IRQ_count2;
-//		IRQ_count++;
-////		IRQ_count2++;
-//		if (IRQ_count==5000)
-//		{
-//			HAL_GPIO_TogglePin(LED_RUN_GPIO_Port,LED_RUN_Pin);
-//			IRQ_count=0;
-//		}
-//		if (IRQ_count2==1)
-//		{
-//			RS485DIR_TX;
-//			HAL_UART_Transmit_DMA(&huart2,USART2_TX_BUF,1);
-//			IRQ_count2=0;
-//		}
-		
-	
-		float PP_position;  //PP修改版临时位置变量
-		/// Check state machine state, and run the appropriate function
-		switch (FSMstate)
-		{
-			case REST_MODE:// Do nothing
-				if (state_change)
-				{
-					EnterMenuState();
-				}
-			break;
-			
-			case CALIBRATION_MODE:// Run encoder calibration procedure
-				if (state_change)
-				{
-					if (p_motor_g->cali_start == 1||p_encoder_g->cali_start == 1)//电机参数辨识或者编码器整定
-						caliOn_flag = 1;
-					
-					state_change = 0;
-				}
-			break;
+	TIM1->SR = 0x0; // reset the status register
+/* USER CODE END TIM1_UP_IRQn 0 */
+	HAL_TIM_IRQHandler(&htim1);
+/* USER CODE BEGIN TIM1_UP_IRQn 1 */
 
-			case MOTOR_MODE:// Run torque control
-				if (state_change)//如果是第一次进电机模式（首次进入意味着刚切换到电机模式，还未发送运动指令）
-				{
-					if (p_encoder_g->cali_finish != 1)//未校准，拒绝进入MOTOR_MODE
-					{
-						FSMstate = REST_MODE;
-						state_change = 0;
-						break;
-					}
-//					p_position_loop_g->target = p_encoder_g->pos_abs;//当前位置值赋给指令值，以免位置环下刚进入电机模式，电机便会运动到0（p_position_loop_g->target初始化一般为0）			
-					p_position_loop_g->target = p_encoder2_g->pos_abs;
-					p_motor_g->i_d_ref = 0;/*电流环id指令清零*/
-					p_motor_g->i_q_ref = 0;/*电流环iq指令清零*/
-					p_velocity_loop_g->targetend = 0;/*速度环指令清零*/
-					p_velocity_loop_g->target = 0;/*速度环指令清零*/
-					Motor_P = p_encoder2_g->pos_abs;
-					Motor_W = 0;
-					Motor_Iq = 0;
-					traj_complete = 0;
-					PD_FOC_clear();
-					EnablePWM();
-					svpwm_on = 1;//打开SVPWM
-					state_change = 0;
-				}
-				else
-				{
-					CAN_timeout++ ;
-					if ((CAN_timeout > CAN_TIMEOUT) && (CAN_TIMEOUT > 0))
-					{
-						p_position_loop_g->target = p_encoder2_g->pos_abs;//当前位置值赋给指令值，以免位置环下刚进入电机模式，电机便会运动到0（p_position_loop_g->target初始化一般为0）			
-						p_motor_g->i_d_ref = 0;/*电流环id指令清零*/
-						p_motor_g->i_q_ref = 0;/*电流环iq指令清零*/
-						p_velocity_loop_g->targetend = 0;/*速度环指令清零*/
-						p_velocity_loop_g->target = 0;/*速度环指令清零*/
-						Motor_P = p_encoder2_g->pos_abs;
-						Motor_W = 0;
-						Motor_Iq = 0;
-						traj_complete = 0;
-						PD_FOC_clear();
-					}
-					switch (p_motor_g->controlMode)
-					{
-						//0：PD控制 3：电流环 2：速度环 1：位置环 4：PP模式
-						case MIT_PD:
-							TorqueControl(&controller);//计算iq_ref（所需的5个参数由CAN通信数据解码得出）
-							CurrentLoop();//电流环
-						break;
-						case FOC_CURRENT_LOOP:
-							if (SweepSineStart == 1)
-							{
-								p_motor_g->i_d_ref = SweepSine_Update_ISR(&id_sweep_gen);
-								p_motor_g->i_q_ref = 0.0f; 
-//								p_motor_g->i_d_ref = 0.0f;
-//								p_motor_g->i_q_ref = SweepSine_Update_ISR(&id_sweep_gen); 
-								
-//								// 计算当前相位增量并积分
-//								float phase_increment = 2.0f * PI * frequency * 0.0001f;
-//								static float current_phase = 0.0f; 
-//								current_phase += phase_increment;
-//								// 保持相位在0~2π范围内
-//								if (current_phase > 2.0f * PI) current_phase -= 2.0f * PI;
-//								p_motor_g->i_d_ref = 0.0f;
-//								p_motor_g->i_q_ref = amplitude * sinf(current_phase);
-
-							}
-							else
-							{
-//								p_motor_g->i_d_ref = Motor_Iq;
-//								p_motor_g->i_q_ref = 0.0f; 
-								p_motor_g->i_d_ref = 0.0f;
-								p_motor_g->i_q_ref = Motor_Iq;
-							}
-							CurrentLoop();
-						break;
-						case FOC_VELOCITY_LOOP:
-							if (vel_loop_flag==1)//vel_calc_period次电流环运行一次速度环
-							{
-								p_velocity_loop_g->targetend = Motor_W;
-								vel_loop_flag = 0;
-								VelocityLoop();
-							}
-							CurrentLoop();
-						break;
-						case FOC_POSITION_LOOP:
-							if (pos_loop_flag==1)//pos_calc_period次速度环运行一次位置环
-							{
-								pos_loop_flag = 0;
-								
-								p_position_loop_g->target = Motor_P;
-								PositionLoop();
-								
-							}
-							if (vel_loop_flag==1)//vel_calc_period次电流环运行一次速度环
-							{
-								vel_loop_flag = 0;
-								VelocityLoop();
-							}
-							CurrentLoop();
-						break;
-						case FOC_POSITION_LOOP_PP:
-							if (pos_loop_flag==1)//pos_calc_period次速度环运行一次位置环
-							{
-								if (trajcplt)
-								{
-									trajectory_tim_count++;		//NUM_STEPS次取一次位置插值 5次为2ms规划一次
-									if (trajectory_tim_count > NUM_STEPS - 1)
-									{//只要小于规划次数，就一直赋值给目标位置
-										trajectory_tim_count = 0;
-										if (get_next_position(p_planner_s, STEP_PANNEL, &PP_position))
-										{
-											p_position_loop_g->target = PP_position;
-											trace_task_complete = 0x00;
-										}
-										else
-										{
-											trajcplt = 0;
-											trace_task_complete = 0x01;
-											printf("[OK] Planner Successful\r\n");
-										}
-									}
-								}
-								PositionLoop();
-								pos_loop_flag = 0;
-							}
-							if (vel_loop_flag==1)//vel_calc_period次电流环运行一次速度环
-							{
-								vel_loop_flag = 0;
-								VelocityLoop();
-							}
-							CurrentLoop();
-						break;
-						default:
-						break;
-					}
-				}
-			break;
-						
-			case SETUP_MODE:
-				if (state_change)
-				{
-					EnterSetupState();
-					state_change = 0;
-				}
-			break;
-						
-			case ENCODER_MODE:
-				if (state_change)
-				{
-//					printf("Ouput-end Mechanical Angle:  %frad   Motor-end Mechanical Angle:  %frad   Electrical Angle:  %frad    Raw:  %dcnt\n\r",p_my_configure->state.hy_rad_multiturn/36000.0f*PI_TIMES_2, p_encoder_g->pos_abs, Mod(p_encoder_g->elec_pos,0.0f,PI_TIMES_2), encoder1_raw);
-					state_change = 0;
-				}
-			break;
-				
-			case HOMING_MODE:
-				if (state_change)
-				{
-					p_motor_g->i_d_ref = 0;/*电流环id指令清零*/
-					p_motor_g->i_q_ref = 0;/*电流环iq指令清零*/
-					p_velocity_loop_g->targetend = 0;/*速度环指令清零*/
-					p_velocity_loop_g->target = 0;/*速度环指令清零*/
-					PD_FOC_clear();
-					EnablePWM();
-					svpwm_on = 1;//打开SVPWM
-					state_change = 0;
-				}
-				else
-				{
-						CurrentLoop();
-						if (vel_loop_flag==1)//两次电流环运行一次速度环 10k-5k
-						{
-							vel_loop_flag = 0;
-							VelocityLoop();
-						}
-						if (pos_loop_flag==1)//两次速度环运行一次位置环 5k-2.5k
-						{
-							p_position_loop_g->target = 0.0f;
-							pos_loop_flag = 0;
-							Homing();
-						}
-				}
-				if (fabs(p_encoder2_g->pos_abs) < 0.05f) 
-				{
-					DisablePWM();
-					FSMstate = REST_MODE;
-					state_change = 1;
-				}
-			break;
-			
-			default: 
-			break;
-		}
-		/* USER CODE END TIM1_UP_IRQn 0 */
-		HAL_TIM_IRQHandler(&htim1);
-		/* USER CODE BEGIN TIM1_UP_IRQn 1 */
-
-		/*VOFA+发送数据 使用DMA，三个变量约2.2us*/
-//		VOFA_cnt++;
-//		if (VOFA_cnt==VOFA_Period&&VOFA_On)//发送三个变量总线用时约170us，所以两个周期发送一次 这里需要注意的一点，如果发送间隔小于实际发送所有变量所需时间时，可能会导致转速环下转速跳变...
-//		{
-//			LoadData();
-//	//		ISR_start = DWT_CYCCNT;      // 记录起始计数值
-//			HAL_UART_Transmit_DMA(&huart6,VOFA_dma_tx_buf,4*CH_COUNT+4);
-//	//		ISR_end = DWT_CYCCNT;        // 记录结束计数值
-//	//		ISR_time_us = ((float)(ISR_end - ISR_start))*1000000.0f/MCU_SYSCLK;    // 计算消耗的时间（us）
-//			VOFA_cnt=0;
-//		}
-		
-		TIM1->SR = 0x0; // reset the status register
-	}
-	ISR_end = DWT_CYCCNT;        // 记录结束计数值
-	ISR_time_us = ((float)(ISR_end - ISR_start))*1000000.0f/MCU_SYSCLK;    // 计算消耗的时间（us）
-	HAL_GPIO_WritePin(LED_RUN_GPIO_Port,LED_RUN_Pin,GPIO_PIN_RESET);
 /* USER CODE END TIM1_UP_IRQn 1 */
 }
 
@@ -590,6 +336,222 @@ void TIM1_CC_IRQHandler(void)
 		}
 	}
   /* USER CODE END TIM1_CC_IRQn 0 */
+}
+
+/**
+  * @brief This function handles ADC1, ADC2 and ADC3 global interrupts.
+  */
+void ADC_IRQHandler(void)
+{
+  /* USER CODE BEGIN ADC_IRQn 0 */
+	if (__HAL_ADC_GET_FLAG(&hadc1, ADC_FLAG_JEOS))
+	{
+		__HAL_ADC_CLEAR_FLAG(&hadc1, ADC_FLAG_JEOS);
+
+		CurrentSample();
+		VoltageSample();
+
+		ADC1->CR |= ADC_CR_JADSTART;
+
+		if (TIM1->SR & TIM_SR_UIF)
+		{
+			float PP_position;
+			switch (FSMstate)
+			{
+				case REST_MODE:
+					if (state_change)
+					{
+						EnterMenuState();
+					}
+				break;
+
+				case CALIBRATION_MODE:
+					if (state_change)
+					{
+						if (p_motor_g->cali_start == 1 || p_encoder_g->cali_start == 1)
+							caliOn_flag = 1;
+						state_change = 0;
+					}
+				break;
+
+				case MOTOR_MODE:
+					if (state_change)
+					{
+						if (p_encoder_g->cali_finish != 1)
+						{
+							FSMstate = REST_MODE;
+							state_change = 0;
+							break;
+						}
+						p_position_loop_g->target = p_encoder2_g->pos_abs;
+						p_motor_g->i_d_ref = 0;
+						p_motor_g->i_q_ref = 0;
+						p_velocity_loop_g->targetend = 0;
+						p_velocity_loop_g->target = 0;
+						Motor_P = p_encoder2_g->pos_abs;
+						Motor_W = 0;
+						Motor_Iq = 0;
+						traj_complete = 0;
+						PD_FOC_clear();
+						EnablePWM();
+						svpwm_on = 1;
+						state_change = 0;
+					}
+					else
+					{
+						CAN_timeout++;
+						if ((CAN_timeout > CAN_TIMEOUT) && (CAN_TIMEOUT > 0))
+						{
+							p_position_loop_g->target = p_encoder2_g->pos_abs;
+							p_motor_g->i_d_ref = 0;
+							p_motor_g->i_q_ref = 0;
+							p_velocity_loop_g->targetend = 0;
+							p_velocity_loop_g->target = 0;
+							Motor_P = p_encoder2_g->pos_abs;
+							Motor_W = 0;
+							Motor_Iq = 0;
+							traj_complete = 0;
+							PD_FOC_clear();
+						}
+						switch (p_motor_g->controlMode)
+						{
+							case MIT_PD:
+								TorqueControl(&controller);
+								CurrentLoop();
+							break;
+							case FOC_CURRENT_LOOP:
+								if (SweepSineStart == 1)
+								{
+									p_motor_g->i_d_ref = SweepSine_Update_ISR(&id_sweep_gen);
+									p_motor_g->i_q_ref = 0.0f;
+								}
+								else
+								{
+									p_motor_g->i_d_ref = 0.0f;
+									p_motor_g->i_q_ref = Motor_Iq;
+								}
+								CurrentLoop();
+							break;
+							case FOC_VELOCITY_LOOP:
+								if (vel_loop_flag == 1)
+								{
+									p_velocity_loop_g->targetend = Motor_W;
+									vel_loop_flag = 0;
+									VelocityLoop();
+								}
+								CurrentLoop();
+							break;
+							case FOC_POSITION_LOOP:
+								if (pos_loop_flag == 1)
+								{
+									pos_loop_flag = 0;
+									p_position_loop_g->target = Motor_P;
+									PositionLoop();
+								}
+								if (vel_loop_flag == 1)
+								{
+									vel_loop_flag = 0;
+									VelocityLoop();
+								}
+								CurrentLoop();
+							break;
+							case FOC_POSITION_LOOP_PP:
+								if (pos_loop_flag == 1)
+								{
+									if (trajcplt)
+									{
+										trajectory_tim_count++;
+										if (trajectory_tim_count > NUM_STEPS - 1)
+										{
+											trajectory_tim_count = 0;
+											if (get_next_position(p_planner_s, STEP_PANNEL, &PP_position))
+											{
+												p_position_loop_g->target = PP_position;
+												trace_task_complete = 0x00;
+											}
+											else
+											{
+												trajcplt = 0;
+												trace_task_complete = 0x01;
+												printf("[OK] Planner Successful\r\n");
+											}
+										}
+									}
+									PositionLoop();
+									pos_loop_flag = 0;
+								}
+								if (vel_loop_flag == 1)
+								{
+									vel_loop_flag = 0;
+									VelocityLoop();
+								}
+								CurrentLoop();
+							break;
+							default:
+							break;
+						}
+					}
+				break;
+				case SETUP_MODE:
+					if (state_change)
+					{
+						EnterSetupState();
+						state_change = 0;
+					}
+				break;
+
+				case ENCODER_MODE:
+					if (state_change)
+					{
+						state_change = 0;
+					}
+				break;
+
+				case HOMING_MODE:
+					if (state_change)
+					{
+						p_motor_g->i_d_ref = 0;
+						p_motor_g->i_q_ref = 0;
+						p_velocity_loop_g->targetend = 0;
+						p_velocity_loop_g->target = 0;
+						PD_FOC_clear();
+						EnablePWM();
+						svpwm_on = 1;
+						state_change = 0;
+					}
+					else
+					{
+						CurrentLoop();
+						if (vel_loop_flag == 1)
+						{
+							vel_loop_flag = 0;
+							VelocityLoop();
+						}
+						if (pos_loop_flag == 1)
+						{
+							p_position_loop_g->target = 0.0f;
+							pos_loop_flag = 0;
+							Homing();
+						}
+					}
+					if (fabs(p_encoder2_g->pos_abs) < 0.05f)
+					{
+						DisablePWM();
+						FSMstate = REST_MODE;
+						state_change = 1;
+					}
+				break;
+
+				default:
+				break;
+			}
+		}
+
+		ISR_end = DWT_CYCCNT;
+		ISR_time_us = ((float)(ISR_end - ISR_start)) * 1000000.0f / MCU_SYSCLK;
+		HAL_GPIO_WritePin(LED_RUN_GPIO_Port, LED_RUN_Pin, GPIO_PIN_RESET);
+	}
+  /* USER CODE END ADC_IRQn 0 */
 }
 
 /**

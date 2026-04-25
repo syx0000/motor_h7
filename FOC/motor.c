@@ -464,14 +464,9 @@ void EnableADC(void)
 
 void StartJADC(void)
 {
-//硬件状态不同步：
-//如果ADC尚未使能（ADEN = 0）或未准备就绪（ADRDY = 0），直接触发JADSTART可能导致转换无法启动，或者使ADC进入一个不可预知的状态，调用
-//函数HAL_ADCEx_InjectedStart可解决该问题，但是处理时间变长了
-	HAL_ADCEx_InjectedStart(&hadc1);//处理顺序：使能ADC -> 等待就绪 -> 启动注入转换（包含完整工作序列）
+	// ADC1 现在由 TIM1 TRGO 硬件触发，无需软件启动
+	// 只保留 ADC2（温度采样）
 	HAL_ADCEx_InjectedStart(&hadc2);
-//	hadc1.Instance->CR  |= ADC_CR_JADSTART;
-//	hadc2.Instance->CR  |= ADC_CR_JADSTART;
-//	hadc3.Instance->CR  |= ADC_CR_JADSTART;
 }
 
 //差值限幅滤波器

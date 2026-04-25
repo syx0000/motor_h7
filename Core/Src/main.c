@@ -126,6 +126,8 @@ int main(void)
 	HAL_Delay(100);
 	//1. ADC使能
 	EnableADC();
+	// 启动 ADC1 注入转换并使能 JEOS 中断
+	HAL_ADCEx_InjectedStart_IT(&hadc1);
 	//2. TIM1初始化
 //	TIM1->BDTR |= 0x8000;//Enable main output
 	TIM1->BDTR |= 0xC000;//Enable main output and Automatic output enable(AOE)
