@@ -48,6 +48,7 @@ void Encoder_Init(void)//初始化
 	p_encoder_g->rotations = 0;
 	p_encoder_g->last_mech_pos = 0;
 	p_encoder_g->elec_pos = 0.0f;
+	p_encoder_g->elec_pos_comp = 0.0f;
 	p_encoder_g->elec_vel = 0.0f;
 	p_encoder_g->elec_offset = 1.719367;//1.090150
 	p_encoder_g->mech_offset = 336.764;
@@ -115,7 +116,12 @@ void EncoderSample(void)//电机电角度标定后，位置加上偏移的角度
 	p_encoder_g->elec_pos = ((float)p_encoder_g->mech_pos * p_encoder_g->one_div_cpr)*(float)p_motor_g->pole_pairs*PI_TIMES_2 - p_encoder_g->elec_offset;
 	p_encoder_g->elec_pos = fmodf(p_encoder_g->elec_pos, PI_TIMES_2);
 	if (p_encoder_g->elec_pos < 0) p_encoder_g->elec_pos += PI_TIMES_2;
-	
+
+	// 电角度延迟补偿（残余延迟 ~8µs）
+	p_encoder_g->elec_pos_comp = p_encoder_g->elec_pos + p_encoder_g->elec_vel * 8e-6f;
+	p_encoder_g->elec_pos_comp = fmodf(p_encoder_g->elec_pos_comp, PI_TIMES_2);
+	if (p_encoder_g->elec_pos_comp < 0) p_encoder_g->elec_pos_comp += PI_TIMES_2;
+
 	p_encoder2_g->last_mech_pos = p_encoder2_g->mech_pos;
 	p_encoder2_g->mech_pos = angleInner;
 	p_encoder2_g->mech_abs = PI_TIMES_2 * (float)p_encoder2_g->mech_pos * p_encoder2_g->one_div_cpr;

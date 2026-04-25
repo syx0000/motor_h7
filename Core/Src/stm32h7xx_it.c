@@ -298,10 +298,9 @@ void TIM1_UP_IRQHandler(void)
 		u8_1msFlag = 1;
 	}
 
-	RS485DIR_TX;
 	StartJADC();//开始ADC转换 必须保证开始转换在最前面进行(低电阻采样)！
 //	ISR_start = DWT_CYCCNT;      // 记录起始计数值
-	HAL_UART_Transmit_DMA(&huart2,USART2_TX_BUF,1);
+	// UART TX 已移至 TIM1_CC_IRQHandler 预触发
 //	ISR_end = DWT_CYCCNT;        // 记录结束计数值
 //	ISR_time_us = ((float)(ISR_end - ISR_start))*1000000.0f/MCU_SYSCLK;    // 计算消耗的时间（us）
 	ErrorDiag();//故障诊断
@@ -566,6 +565,31 @@ void TIM1_UP_IRQHandler(void)
 	ISR_time_us = ((float)(ISR_end - ISR_start))*1000000.0f/MCU_SYSCLK;    // 计算消耗的时间（us）
 	HAL_GPIO_WritePin(LED_RUN_GPIO_Port,LED_RUN_Pin,GPIO_PIN_RESET);
 /* USER CODE END TIM1_UP_IRQn 1 */
+}
+
+/**
+  * @brief This function handles TIM1 capture compare interrupt.
+  */
+void TIM1_CC_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM1_CC_IRQn 0 */
+	// 检查 CC4 中断标志
+	if (__HAL_TIM_GET_FLAG(&htim1, TIM_FLAG_CC4) != RESET)
+	{
+		if (__HAL_TIM_GET_IT_SOURCE(&htim1, TIM_IT_CC4) != RESET)
+		{
+			__HAL_TIM_CLEAR_IT(&htim1, TIM_IT_CC4);
+
+			// 仅在下降沿触发（DIR=1 表示向下计数）
+			if (TIM1->CR1 & TIM_CR1_DIR)
+			{
+				// 预触发：发送编码器请求（~45µs before UP event）
+				RS485DIR_TX;
+				HAL_UART_Transmit_DMA(&huart2, USART2_TX_BUF, 1);
+			}
+		}
+	}
+  /* USER CODE END TIM1_CC_IRQn 0 */
 }
 
 /**

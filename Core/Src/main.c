@@ -130,6 +130,7 @@ int main(void)
 //	TIM1->BDTR |= 0x8000;//Enable main output
 	TIM1->BDTR |= 0xC000;//Enable main output and Automatic output enable(AOE)
 	TIM1->DIER |= TIM_DIER_UIE;           // enable update interrupt
+	TIM1->DIER |= TIM_DIER_CC4IE;         // enable CC4 interrupt for encoder pre-trigger
 	TIM1->CR1  |= TIM_CR1_UDIS;						//先不产生更新事件
 	TIM1->CR1  |= 0x0001;//Enable Counter
 	//3. TIM6初始化

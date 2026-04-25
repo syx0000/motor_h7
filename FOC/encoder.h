@@ -39,6 +39,7 @@ typedef struct _Encoder_t
 	
 	//pos
 	volatile float elec_pos;
+	volatile float elec_pos_comp;  // 延迟补偿后的电角度
 	volatile float pos_abs;	//absolute position in rad
 //	volatile float pos_abs_norotations;	
 	volatile float mechPosition;	//输出端absolute position in rad

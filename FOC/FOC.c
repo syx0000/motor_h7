@@ -292,8 +292,8 @@ void CurrentLoop()//电流环 CLARK和PARK变换+PI+SVPWM
 //	static const float voltage_lim_ratio = SQRT3 * PWM_PERIOD_DEFAULT / (PWM_PERIOD_DEFAULT - sample_time);//给电流采样时间！！！
 	ClarkTransform(&p_motor_g->phase_a_current, &p_motor_g->phase_b_current, &p_motor_g->phase_c_current, &p_motor_g->alpha_axis_current, &p_motor_g->beta_axis_current);
 	float sin_theta, cos_theta;
-	sin_theta = arm_sin_f32(p_encoder_g->elec_pos);
-	cos_theta = arm_cos_f32(p_encoder_g->elec_pos);
+	sin_theta = arm_sin_f32(p_encoder_g->elec_pos_comp);
+	cos_theta = arm_cos_f32(p_encoder_g->elec_pos_comp);
 	/*计算dq轴电流*/
 	p_motor_g->D_axis_current = cos_theta * p_motor_g->alpha_axis_current + sin_theta * p_motor_g->beta_axis_current;
 	p_motor_g->Q_axis_current = -sin_theta * p_motor_g->alpha_axis_current + cos_theta * p_motor_g->beta_axis_current;

@@ -114,7 +114,16 @@ void MX_TIM1_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN TIM1_Init 2 */
-
+  // 配置 CH4 用于预触发编码器请求（45µs before UP event）
+  TIM_OC_InitTypeDef sConfigOC_CH4 = {0};
+  sConfigOC_CH4.OCMode = TIM_OCMODE_TIMING;  // 仅用于比较，不输出
+  sConfigOC_CH4.Pulse = 10800;  // 45µs before UP (at 240MHz)
+  sConfigOC_CH4.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC_CH4.OCFastMode = TIM_OCFAST_DISABLE;
+  if (HAL_TIM_OC_ConfigChannel(&htim1, &sConfigOC_CH4, TIM_CHANNEL_4) != HAL_OK)
+  {
+    Error_Handler();
+  }
   /* USER CODE END TIM1_Init 2 */
   HAL_TIM_MspPostInit(&htim1);
 
@@ -220,7 +229,8 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef* tim_baseHandle)
     HAL_NVIC_SetPriority(TIM1_UP_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(TIM1_UP_IRQn);
   /* USER CODE BEGIN TIM1_MspInit 1 */
-
+    HAL_NVIC_SetPriority(TIM1_CC_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(TIM1_CC_IRQn);
   /* USER CODE END TIM1_MspInit 1 */
   }
   else if(tim_baseHandle->Instance==TIM2)
