@@ -324,52 +324,33 @@ void CalcCurrentOffset(float *phase_a_offset, float *phase_b_offset, float *phas
 }
 void CurrentSample()
 {
-	//过采样
-//		uint32_t ADC_Value_sum[2] = {0};
-//		/* 在采样值数组中分别取出每个通道的采样值并求和 */
-//		for (uint8_t i = 0;i < ADC2_CHANNELS_WINDOW;i ++)
-//		{
-//			ADC_Value_sum[0] +=  ADC_Cur_vbus_Value[i*ADC2_CHANNELS+0];
-//			ADC_Value_sum[1] +=  ADC_Cur_vbus_Value[i*ADC2_CHANNELS+1];
-//		}
-//		float CurrentA_Raw = (float)(ADC_xValue_sum[0]>>ADC2_CHANNELS_WINDOW_movebit) - p_motor_g->phase_a_current_offset;
-//		float CurrentB_Raw = (float)(ADC_Value_sum[1]>>ADC2_CHANNELS_WINDOW_movebit) - p_motor_g->phase_b_current_offset;
-		
-		float CurrentA_Raw = (float)ADC1->JDR2 - p_motor_g->phase_a_current_offset;
-		float CurrentB_Raw = (float)ADC1->JDR1 - p_motor_g->phase_b_current_offset;
-		float CurrentC_Raw = (float)ADC1->JDR3 - p_motor_g->phase_c_current_offset;
-		if (p_motor_g->phase_order == POSITIVE_PHASE_ORDER)
-		{
-//			p_motor_g->phase_b_current = (p_motor_g->volt2amp_rate * CurrentB_Raw)/10.0f/0.005f;
-//			p_motor_g->phase_a_current = (p_motor_g->volt2amp_rate * CurrentA_Raw)/10.0f/0.005f;
-			p_motor_g->phase_b_current = (p_motor_g->volt2amp_rate * CurrentB_Raw)/10.0f/sample_resistance;
-			p_motor_g->phase_c_current = (p_motor_g->volt2amp_rate * CurrentC_Raw)/10.0f/sample_resistance;
-		}
-		else
-		{
-//			p_motor_g->phase_b_current = (p_motor_g->volt2amp_rate * CurrentA_Raw)/10.0f/0.005f;
-//			p_motor_g->phase_a_current = (p_motor_g->volt2amp_rate * CurrentB_Raw)/10.0f/0.005f;
-			p_motor_g->phase_b_current = (p_motor_g->volt2amp_rate * CurrentC_Raw)/10.0f/sample_resistance;
-			p_motor_g->phase_c_current = (p_motor_g->volt2amp_rate * CurrentB_Raw)/10.0f/sample_resistance;
-		}
-//		p_motor_g->phase_c_current = -p_motor_g->phase_a_current - p_motor_g->phase_b_current;
-//		p_motor_g->phase_c_current_actual = (p_motor_g->volt2amp_rate * CurrentC_Raw)/10.0f/0.005f;
-		p_motor_g->phase_a_current = -p_motor_g->phase_c_current - p_motor_g->phase_b_current;
-		p_motor_g->phase_a_current_actual = (p_motor_g->volt2amp_rate * CurrentA_Raw)/10.0f/sample_resistance;
-		
-/*一阶低通滤波*/
-//		p_motor_g->phase_a_current_filt = 0.2*p_motor_g->phase_a_current_filt + 0.8*p_motor_g->phase_a_current;
-//		p_motor_g->phase_b_current_filt = 0.2*p_motor_g->phase_b_current_filt + 0.8*p_motor_g->phase_b_current;
-//		p_motor_g->phase_c_current_filt = -p_motor_g->phase_b_current_filt - p_motor_g->phase_a_current_filt;
-//		p_motor_g->phase_c_current_filt = 0.8*p_motor_g->phase_c_current_filt + 0.2*p_motor_g->phase_c_current;
-//		p_motor_g->phase_b_current_filt = 0.8*p_motor_g->phase_b_current_filt + 0.2*p_motor_g->phase_b_current;
-//		p_motor_g->phase_a_current_filt = -p_motor_g->phase_b_current_filt - p_motor_g->phase_c_current_filt;
-		
-		if (measure_time)//整定电感时用到
-		{
-			current_a[measure_induct_num - measure_time] = p_motor_g->phase_a_current;
-			measure_time--;
-		}
+	// 读取 ADC1 和 ADC2 注入通道结果（Dual Mode 两相采样）
+	float CurrentB_Raw = (float)ADC2->JDR1 - p_motor_g->phase_b_current_offset;  // CUR_B
+	float CurrentC_Raw = (float)ADC1->JDR1 - p_motor_g->phase_c_current_offset;  // CUR_C
+
+	// 计算电流值（与原逻辑一致：使用 B 和 C，计算 A）
+	if (p_motor_g->phase_order == POSITIVE_PHASE_ORDER)
+	{
+		p_motor_g->phase_b_current = (p_motor_g->volt2amp_rate * CurrentB_Raw) / 10.0f / sample_resistance;
+		p_motor_g->phase_c_current = (p_motor_g->volt2amp_rate * CurrentC_Raw) / 10.0f / sample_resistance;
+	}
+	else
+	{
+		p_motor_g->phase_b_current = (p_motor_g->volt2amp_rate * CurrentC_Raw) / 10.0f / sample_resistance;
+		p_motor_g->phase_c_current = (p_motor_g->volt2amp_rate * CurrentB_Raw) / 10.0f / sample_resistance;
+	}
+
+	// 第三相通过基尔霍夫电流定律计算（Ia + Ib + Ic = 0）
+	p_motor_g->phase_a_current = -(p_motor_g->phase_b_current + p_motor_g->phase_c_current);
+
+	// 保留 B 相实际采样值用于调试
+	p_motor_g->phase_a_current_actual = (p_motor_g->volt2amp_rate * CurrentB_Raw) / 10.0f / sample_resistance;
+
+	if (measure_time)  // 整定电感时用到
+	{
+		current_a[measure_induct_num - measure_time] = p_motor_g->phase_a_current;
+		measure_time--;
+	}
 }
 
 #define SAMPLE_CNT 1000
@@ -391,57 +372,52 @@ void Calc_current_rms(void)
 
 void VoltageSample()
 {
-	p_motor_g->vbus = (voltage_coefficient * (float)ADC1->JDR4)*21.0f;
+	// 从 ADC3 规则通道读取（在主循环里已采样）
+	p_motor_g->vbus = (voltage_coefficient * (float)adc3_vdc_value) * 21.0f;
 }
 
 void TemperatureSample()
 {
-	//电机温度计算
-//	float r1_ntc = RES_DIVIDE_MOTOR*((float)ADC2->JDR2*ADC_supply/ADC_resolution)/(ADC_supply-((float)ADC2->JDR2*ADC_supply/ADC_resolution));//电机绕组端NTC电阻阻值 单位：kΩ
-//	float r1_ntc = RES_DIVIDE_MOTOR*((float)ADC1->DR*ADC_supply/ADC_resolution)/(ADC_supply-((float)ADC1->DR*ADC_supply/ADC_resolution));//电机绕组端NTC电阻阻值 单位：kΩ
-	float adc_jdr2 = (float)ADC2->JDR2 / ADC_resolution;
+	// 从 ADC3 规则通道读取（在主循环里已采样）
+
+	// 电机温度计算
+	float adc_temp_motor = (float)adc3_temp_motor_value / ADC_resolution;
 	float r1_ntc;
-	if (adc_jdr2 >= 0.97f) // 更保守的阈值，防止除零
+	if (adc_temp_motor >= 0.97f)  // 防止除零
 		r1_ntc = 999.0f;
 	else
-		r1_ntc = RES_DIVIDE_MOTOR * (adc_jdr2 / (1.0f - adc_jdr2));
-	if (r1_ntc < 0.01f) r1_ntc = 0.01f; // 防止log(0)
-	TEMP_MOTOR = 1.0f / ( (1.0f / (ABSOLUTE_ZERO + 25.0f) ) + (logf(r1_ntc / NOMINAL_RES_MOTOR) / B_CONST_MOTOR ) ) - ABSOLUTE_ZERO;//单位：摄氏度
-//	计算绝对差值
-//  float delta = fabsf(TEMP_MOTOR - TEMP_MOTOR_filter1);
-//  TEMP_MOTOR_filter1 = ((delta > 1) ? TEMP_MOTOR_filter1 : TEMP_MOTOR);//100us升不了1℃吧？
-//	增强版
+		r1_ntc = RES_DIVIDE_MOTOR * (adc_temp_motor / (1.0f - adc_temp_motor));
+	if (r1_ntc < 0.01f) r1_ntc = 0.01f;  // 防止 log(0)
+
+	TEMP_MOTOR = 1.0f / ((1.0f / (ABSOLUTE_ZERO + 25.0f)) + (logf(r1_ntc / NOMINAL_RES_MOTOR) / B_CONST_MOTOR)) - ABSOLUTE_ZERO;
+
+	// 增强版滤波
 	static uint8_t errorCount = 0;
 	float delta = fabsf(TEMP_MOTOR - TEMP_MOTOR_filter1);
 	if (delta > 0.5f) {
-        errorCount++;
-        if (errorCount > 99) {  // 连续100次(10ms)超限则认为有效变化
-            errorCount = 0;
-            TEMP_MOTOR_filter1 = TEMP_MOTOR;
-        }
-    } 
-    else {
-        errorCount = 0;
-        TEMP_MOTOR_filter1 = TEMP_MOTOR;
-    }
-	TEMP_MOTOR_filter2 = 0.6f*TEMP_MOTOR_filter1 + 0.4f*TEMP_MOTOR_filter2;//一阶低通
-	
-	//MOS温度计算
-	//共约3.5us 使用热敏电阻的Steinhart-Hart方程进行温度计算
-//	float r2_ntc = 3.3f*3.3f/((float)ADC2->DR*3.3f/4095.0f)-3.3;//kΩ
-//	float r2_ntc = RES_DIVIDE_MOS*((float)ADC2->JDR1*ADC_supply/ADC_resolution)/(ADC_supply-((float)ADC2->JDR1*ADC_supply/ADC_resolution));//kΩ
-//	float r2_ntc = RES_DIVIDE_MOS*((float)ADC2->DR*ADC_supply/ADC_resolution)/(ADC_supply-((float)ADC2->DR*ADC_supply/ADC_resolution));//kΩ
-	
-	float adc_jdr1 = (float)ADC2->JDR1 / ADC_resolution;
+		errorCount++;
+		if (errorCount > 99) {  // 连续 100 次(10ms)超限则认为有效变化
+			errorCount = 0;
+			TEMP_MOTOR_filter1 = TEMP_MOTOR;
+		}
+	}
+	else {
+		errorCount = 0;
+		TEMP_MOTOR_filter1 = TEMP_MOTOR;
+	}
+	TEMP_MOTOR_filter2 = 0.6f * TEMP_MOTOR_filter1 + 0.4f * TEMP_MOTOR_filter2;  // 一阶低通
+
+	// MOS 温度计算
+	float adc_temp_mos = (float)adc3_temp_mos_value / ADC_resolution;
 	float r2_ntc;
-	if (adc_jdr1 >= 0.97f) // 更保守的阈值，防止除零
+	if (adc_temp_mos >= 0.97f)  // 防止除零
 		r2_ntc = 999.0f;
 	else
-		r2_ntc = RES_DIVIDE_MOS * (adc_jdr1 / (1.0f - adc_jdr1));
+		r2_ntc = RES_DIVIDE_MOS * (adc_temp_mos / (1.0f - adc_temp_mos));
 	if (r2_ntc < 0.01f) r2_ntc = 0.01f;
 
-	TEMP_MOS = 1.0f / ( (1.0f / (ABSOLUTE_ZERO + 25.0f) ) + (logf(r2_ntc / NOMINAL_RES_MOS) / B_CONST_MOS ) ) - ABSOLUTE_ZERO;//摄氏度
-	TEMP_MOS_filter1 = 0.6f*TEMP_MOS + 0.4f*TEMP_MOS_filter1;//一阶低通
+	TEMP_MOS = 1.0f / ((1.0f / (ABSOLUTE_ZERO + 25.0f)) + (logf(r2_ntc / NOMINAL_RES_MOS) / B_CONST_MOS)) - ABSOLUTE_ZERO;
+	TEMP_MOS_filter1 = 0.6f * TEMP_MOS + 0.4f * TEMP_MOS_filter1;  // 一阶低通
 }
 
 /* ------------------------------ Manager Declaration ------------------------------ */
@@ -462,12 +438,7 @@ void EnableADC(void)
 //	hadc3.Instance->CR |=  ADC_CR_ADEN;
 }
 
-void StartJADC(void)
-{
-	// ADC1 现在由 TIM1 TRGO 硬件触发，无需软件启动
-	// 只保留 ADC2（温度采样）
-	HAL_ADCEx_InjectedStart(&hadc2);
-}
+// StartJADC 已删除：ADC1 由 TIM1 TRGO 硬件触发，ADC2 为 dual mode slave，温度由 ADC3 规则通道采样
 
 //差值限幅滤波器
 void DeltaFilter(uint8_t errcnt, volatile float phase_current, volatile float *phase_current_filter1, volatile float *phase_current_filter2)

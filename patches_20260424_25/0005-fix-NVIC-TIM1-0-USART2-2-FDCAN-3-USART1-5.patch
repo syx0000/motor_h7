@@ -1,0 +1,57 @@
+---
+ Core/Src/fdcan.c | 2 +-
+ Core/Src/tim.c   | 2 +-
+ Core/Src/usart.c | 4 ++--
+ 3 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/Core/Src/fdcan.c b/Core/Src/fdcan.c
+index bf747ea..ba9d667 100644
+--- a/Core/Src/fdcan.c
++++ b/Core/Src/fdcan.c
+@@ -122,7 +122,7 @@ void HAL_FDCAN_MspInit(FDCAN_HandleTypeDef* fdcanHandle)
+     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+ 
+     /* FDCAN1 interrupt Init */
+-    HAL_NVIC_SetPriority(FDCAN1_IT0_IRQn, 1, 0);
++    HAL_NVIC_SetPriority(FDCAN1_IT0_IRQn, 3, 0);
+     HAL_NVIC_EnableIRQ(FDCAN1_IT0_IRQn);
+   /* USER CODE BEGIN FDCAN1_MspInit 1 */
+ 
+diff --git a/Core/Src/tim.c b/Core/Src/tim.c
+index 00c4e5e..bd24e3a 100644
+--- a/Core/Src/tim.c
++++ b/Core/Src/tim.c
+@@ -217,7 +217,7 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef* tim_baseHandle)
+     HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
+ 
+     /* TIM1 interrupt Init */
+-    HAL_NVIC_SetPriority(TIM1_UP_IRQn, 1, 0);
++    HAL_NVIC_SetPriority(TIM1_UP_IRQn, 0, 0);
+     HAL_NVIC_EnableIRQ(TIM1_UP_IRQn);
+   /* USER CODE BEGIN TIM1_MspInit 1 */
+ 
+diff --git a/Core/Src/usart.c b/Core/Src/usart.c
+index a210cca..b10b454 100644
+--- a/Core/Src/usart.c
++++ b/Core/Src/usart.c
+@@ -266,7 +266,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
+     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+ 
+     /* USART1 interrupt Init */
+-    HAL_NVIC_SetPriority(USART1_IRQn, 1, 0);
++    HAL_NVIC_SetPriority(USART1_IRQn, 5, 0);
+     HAL_NVIC_EnableIRQ(USART1_IRQn);
+   /* USER CODE BEGIN USART1_MspInit 1 */
+ 
+@@ -340,7 +340,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
+     __HAL_LINKDMA(uartHandle,hdmatx,hdma_usart2_tx);
+ 
+     /* USART2 interrupt Init */
+-    HAL_NVIC_SetPriority(USART2_IRQn, 0, 0);
++    HAL_NVIC_SetPriority(USART2_IRQn, 2, 0);
+     HAL_NVIC_EnableIRQ(USART2_IRQn);
+   /* USER CODE BEGIN USART2_MspInit 1 */
+ 
+-- 
+2.45.2.windows.1
+

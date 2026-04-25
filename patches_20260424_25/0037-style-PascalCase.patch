@@ -1,0 +1,1294 @@
+---
+ Core/Src/main.c         | 30 ++++++++---------
+ Core/Src/stm32h7xx_it.c | 46 +++++++++++++-------------
+ FOC/FOC.c               | 36 ++++++++++-----------
+ FOC/FOC.h               | 32 +++++++++---------
+ FOC/calibration.c       | 12 +++----
+ FOC/calibration.h       |  4 +--
+ FOC/encoder.c           |  2 +-
+ FOC/encoder.h           |  2 +-
+ FOC/motor.c             | 24 +++++++-------
+ FOC/motor.h             | 14 ++++----
+ MotionControl/PPtraj.c  |  8 ++---
+ MotionControl/PPtraj.h  |  2 +-
+ UserSrc/Inc/Diag.h      |  4 +--
+ UserSrc/Inc/can_rv.h    | 10 +++---
+ UserSrc/Inc/flash.h     |  4 +--
+ UserSrc/Inc/interact.h  |  4 +--
+ UserSrc/Src/Diag.c      | 16 ++++-----
+ UserSrc/Src/can_rv.c    | 72 ++++++++++++++++++++---------------------
+ UserSrc/Src/flash.c     | 64 ++++++++++++++++++------------------
+ UserSrc/Src/interact.c  | 58 ++++++++++++++++-----------------
+ 20 files changed, 222 insertions(+), 222 deletions(-)
+
+diff --git a/Core/Src/main.c b/Core/Src/main.c
+index 968b8cb..c381942 100644
+--- a/Core/Src/main.c
++++ b/Core/Src/main.c
+@@ -126,7 +126,7 @@ int main(void)
+ 	HAL_GPIO_WritePin(EN_GATE_GPIO_Port,EN_GATE_Pin,GPIO_PIN_SET);//预驱使能
+ 	HAL_Delay(100);
+ 	//1. ADC使能
+-	enableADC();
++	EnableADC();
+ 	//2. TIM1初始化
+ //	TIM1->BDTR |= 0x8000;//Enable main output
+ 	TIM1->BDTR |= 0xC000;//Enable main output and Automatic output enable(AOE)
+@@ -157,7 +157,7 @@ int main(void)
+ 	Read_MotorData();
+ 
+ 	//5.三环PI参数初始化
+-	init_controller_params(&controller);//初始化控制器参数，包括电流环PI参数 如果阻感参数加载不成功为0，则电流环PI参数也为0，无法使能电机
++	InitControllerParams(&controller);//初始化控制器参数，包括电流环PI参数 如果阻感参数加载不成功为0，则电流环PI参数也为0，无法使能电机
+ //	Pid.Init(p_position_loop_g, Position_P, Position_I, 0.0f, 209.4f, 0.0004f, 1.0f);//FOC位置环控制参数初始化
+ 	Pid.Init(p_position_loop_g, Position_P, Position_I, 0.0f, 150.0f, 0.0004f, 1.0f);//FOC位置环控制参数初始化
+ 	
+@@ -175,7 +175,7 @@ int main(void)
+ 	
+ 
+ 	TIM1->CR1 ^= TIM_CR1_UDIS;//开始产生TIM1更新事件
+-	enter_menu_state();
++	EnterMenuState();
+ 	
+ // 1. 初始化发生器
+     
+@@ -217,7 +217,7 @@ int main(void)
+ 		if (u8_1msFlag == 1)//1ms时基
+ 		{
+ 			Calc_current_rms();
+-			temperatureSample();
++			TemperatureSample();
+ 			
+ 			static uint8_t cnt=0;
+ 			if (fabs(p_position_loop_g->target - p_encoder2_g->pos_abs) < 0.015)
+@@ -266,11 +266,11 @@ int main(void)
+ 		}
+ 		if (stateChange==2)
+ 		{
+-			enablePWM();
++			EnablePWM();
+ 			ApplyVoltDQToSVPWM(1.5, 0, PI/2.0f);
+ 			HAL_Delay(1000);
+ 			stateChange = 0;
+-			disablePWM();
++			DisablePWM();
+ 		}
+ 
+ //		if (HAL_GPIO_ReadPin(K1_GPIO_Port,K1_Pin) == GPIO_PIN_RESET)  /* 霍尔传感器状态获取 */
+@@ -300,7 +300,7 @@ int main(void)
+ 
+ 		/*验证CRC校验*/
+ //				uint8_t data[4] = {0x24,0xB0,0x46,0x40};
+-//				USART2_RX_DATA[4] = calcCRC(data,4);
++//				USART2_RX_DATA[4] = CalcCRC(data,4);
+ 
+ 			 /*周期询问编码器数据-28.8us*/
+ //			 RS485DIR_TX;
+@@ -350,11 +350,11 @@ int main(void)
+ 		if (caliOn_flag == 1)
+ 		{
+ //			CalcCurrentOffset(&p_motor_g->phase_a_current_offset,&p_motor_g->phase_b_current_offset);//计算电流偏置
+-			enablePWM();
++			EnablePWM();
+ 			/*定位到电角度为0*/
+ //			ApplyVoltDQToSVPWM(1.5f, 0.0f, 0.0f);
+ //			HAL_Delay(2000);
+-//			disablePWM();
++//			DisablePWM();
+ //			caliOn_flag=0;
+ 			
+ 			/*测试硬件过流*/
+@@ -367,7 +367,7 @@ int main(void)
+ //				HAL_Delay(1);
+ //			}
+ //			HAL_Delay(99);
+-//			disablePWM();
++//			DisablePWM();
+ //			caliOn_flag=0;
+ //			state_change = 0;
+ 			
+@@ -375,8 +375,8 @@ int main(void)
+ 			if (p_encoder_g->cali_start == 1)
+ 			{
+ 				p_encoder_g->cali_start = 0;
+-				calibrate();//整定过程中电流波形周期变化
+-//				order_phases();//相序检测
++				Calibrate();//整定过程中电流波形周期变化
++//				OrderPhases();//相序检测
+ 			}
+ 			/*电阻电感整定*/
+ 			if (p_motor_g->cali_start == 1)
+@@ -385,7 +385,7 @@ int main(void)
+ 				Motor.MeasureResistance();
+ 				Motor.MeasureInductance();
+ 			}
+-			disablePWM();
++			DisablePWM();
+ 
+ 			/*校准后Flash参数写入（仅校准成功时）*/
+ 			if (p_encoder_g->cali_finish == 1 || p_motor_g->motor_calibrated == 1)
+@@ -397,7 +397,7 @@ int main(void)
+ 			caliOn_flag = 0;
+ 			state_change = 0;
+ 		}
+-		errorReport();
++		ErrorReport();
+   }
+   /* USER CODE END 3 */
+ }
+@@ -533,7 +533,7 @@ void Error_Handler(void)
+ {
+   /* USER CODE BEGIN Error_Handler_Debug */
+   /* User can add his own implementation to report the HAL error return state */
+-  disablePWM(); // 关闭PWM，防止电机失控
++  DisablePWM(); // 关闭PWM，防止电机失控
+   __disable_irq();
+   while (1)
+   {
+diff --git a/Core/Src/stm32h7xx_it.c b/Core/Src/stm32h7xx_it.c
+index 44b080e..af65b80 100644
+--- a/Core/Src/stm32h7xx_it.c
++++ b/Core/Src/stm32h7xx_it.c
+@@ -299,16 +299,16 @@ void TIM1_UP_IRQHandler(void)
+ 	}
+ 
+ 	RS485DIR_TX;
+-	startJADC();//开始ADC转换 必须保证开始转换在最前面进行(低电阻采样)！
++	StartJADC();//开始ADC转换 必须保证开始转换在最前面进行(低电阻采样)！
+ //	ISR_start = DWT_CYCCNT;      // 记录起始计数值
+ 	HAL_UART_Transmit_DMA(&huart2,USART2_TX_BUF,1);
+ //	ISR_end = DWT_CYCCNT;        // 记录结束计数值
+ //	ISR_time_us = ((float)(ISR_end - ISR_start))*1000000.0f/MCU_SYSCLK;    // 计算消耗的时间（us）
+-	errorDiag();//故障诊断
++	ErrorDiag();//故障诊断
+ 	
+-	encoderSample();//编码器采样
+-	voltageSample();//电压采样
+-	currentSample();//电流采样
++	EncoderSample();//编码器采样
++	VoltageSample();//电压采样
++	CurrentSample();//电流采样
+ 
+ 	
+ //	ISR_end = DWT_CYCCNT;        // 记录结束计数值
+@@ -339,7 +339,7 @@ void TIM1_UP_IRQHandler(void)
+ 			case REST_MODE:// Do nothing
+ 				if (state_change)
+ 				{
+-					enter_menu_state();
++					EnterMenuState();
+ 				}
+ 			break;
+ 			
+@@ -373,7 +373,7 @@ void TIM1_UP_IRQHandler(void)
+ 					Motor_Iq = 0;
+ 					traj_complete = 0;
+ 					PD_FOC_clear();
+-					enablePWM();
++					EnablePWM();
+ 					svpwm_on = 1;//打开SVPWM
+ 					state_change = 0;
+ 				}
+@@ -397,7 +397,7 @@ void TIM1_UP_IRQHandler(void)
+ 					{
+ 						//0：PD控制 3：电流环 2：速度环 1：位置环 4：PP模式
+ 						case MIT_PD:
+-							torque_control(&controller);//计算iq_ref（所需的5个参数由CAN通信数据解码得出）
++							TorqueControl(&controller);//计算iq_ref（所需的5个参数由CAN通信数据解码得出）
+ 							CurrentLoop();//电流环
+ 						break;
+ 						case FOC_CURRENT_LOOP:
+@@ -493,7 +493,7 @@ void TIM1_UP_IRQHandler(void)
+ 			case SETUP_MODE:
+ 				if (state_change)
+ 				{
+-					enter_setup_state();
++					EnterSetupState();
+ 					state_change = 0;
+ 				}
+ 			break;
+@@ -514,7 +514,7 @@ void TIM1_UP_IRQHandler(void)
+ 					p_velocity_loop_g->targetend = 0;/*速度环指令清零*/
+ 					p_velocity_loop_g->target = 0;/*速度环指令清零*/
+ 					PD_FOC_clear();
+-					enablePWM();
++					EnablePWM();
+ 					svpwm_on = 1;//打开SVPWM
+ 					state_change = 0;
+ 				}
+@@ -535,7 +535,7 @@ void TIM1_UP_IRQHandler(void)
+ 				}
+ 				if (fabs(p_encoder2_g->mech_offset - p_encoder2_g->mech_abs)<0.05) 
+ 				{
+-					disablePWM();
++					DisablePWM();
+ 					FSMstate = REST_MODE;
+ 					state_change = 1;
+ 				}
+@@ -602,28 +602,28 @@ void USART1_IRQHandler(void)
+ 				case 'c':
+ 					FSMstate = CALIBRATION_MODE;
+ 					printf("\n\r e-Encoder");
+-					delay_us(10);
++					DelayUs(10);
+ 					printf("\n\r m-Motor");
+-					delay_us(10);
++					DelayUs(10);
+ 					printf("\n\r h-HALL Amplitude");
+-					delay_us(10);
++					DelayUs(10);
+ 					printf("\n\r a-All");
+-					delay_us(10);
++					DelayUs(10);
+ 				break;
+ 
+ 				case 'm':
+ 					FSMstate = MOTOR_MODE;
+ 					state_change = 1;
+ 					printf("\n\r %-6s %-40s %-10s %-10s %-2s\n\r\n\r", "prefix", "parameter", "min", "max", "current value");
+-					delay_us(10);
++					DelayUs(10);
+ 					printf(" %-6s %-40s %-10s %-10s %.1f\n\r", "i", "Motor Current iq(A)", "-50.0", "50.0", Motor_Iq);
+-					delay_us(10);
++					DelayUs(10);
+ 					printf(" %-6s %-40s %-10s %-10s %.1f\n\r", "v", "Module Output Mechanical Angular Velocity(rad/s)", "-20.0", "20.0", Motor_W/GR);
+-					delay_us(10);
++					DelayUs(10);
+ 					printf(" %-6s %-40s %-10s %-10s %.1f\n\r", "p", "Module Output Mechanical Angular(rad)", "-50000.0", "50000.0", Motor_P/GR);
+-					delay_us(10);
++					DelayUs(10);
+ 					printf("\n\r To change a value, type 'prefix''value''ENTER'\n\r i.e. 'v10''ENTER'\n\r\n\r");
+-					delay_us(10);
++					DelayUs(10);
+ 				break;
+ 
+ 				case 'e':
+@@ -647,7 +647,7 @@ void USART1_IRQHandler(void)
+ 					printf("\n\r  Saved new zero position:  %.4f\n\r\n\r",p_encoder2_g->mech_offset);
+ 	//				enc_sincos_read_deg(p_my_configure);  //末端角度计算
+ 	//				p_encoder2_g->mech_offset = p_my_configure->state.hy_rad_multiturn/36000.0f*PI_TIMES_2*GR;//单位：rad/28
+-	//				flash_reg[135] = float2uint(p_encoder2_g->mech_offset);			
++	//				flash_reg[135] = Float2Uint(p_encoder2_g->mech_offset);			
+ 	//				Flash.Erase();//擦除FLASH	
+ 	//					
+ 	//				for (uint16_t i=0; i<NUMBER_PARA; i++)  //保存140个参数
+@@ -874,7 +874,7 @@ void USART1_IRQHandler(void)
+ 						/*位置插补*/
+ 						if (p_motor_g->controlMode == FOC_POSITION_LOOP_PP)
+ 						{
+-							init_planner(p_planner_s, p_encoder2_g->pos_abs, Motor_P, 8.376f, 2.0f, 2.0f); //目标位置、最大速度、加速度、减速度需要按照需求设置
++							InitPlanner(p_planner_s, p_encoder2_g->pos_abs, Motor_P, 8.376f, 2.0f, 2.0f); //目标位置、最大速度、加速度、减速度需要按照需求设置
+ 							trajcplt = 1;
+ 						}
+ 						printf("%.1f\n\r",Motor_P);
+@@ -999,7 +999,7 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
+ 		angleOutter = USART2_RX_DATA[5] << 16 | USART2_RX_DATA[4] << 8 | USART2_RX_DATA[3];
+ 	//	angleInnerFloat = angleInner / (float)(1 << 24) * 360;
+ 	//	angleOutterFloat = angleOutter / (float)(1 << 24) *360;
+-		if (USART2_RX_DATA[7] != calcCRC(USART2_RX_DATA,7)) EncoderCnt++;
++		if (USART2_RX_DATA[7] != CalcCRC(USART2_RX_DATA,7)) EncoderCnt++;
+ 	}
+ }
+ //void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
+diff --git a/FOC/FOC.c b/FOC/FOC.c
+index 2695848..47f2f6d 100644
+--- a/FOC/FOC.c
++++ b/FOC/FOC.c
+@@ -201,7 +201,7 @@ void InverseClarkTransform(volatile float *current_alpha, volatile float *curren
+ 
+ void ParkTransform(volatile float *current_alpha, volatile float *current_beta, volatile float theta, volatile float *current_d, volatile float *current_q)//Park变换
+ {	//αβ→dq
+-	theta = prvMod2PI(theta);
++	theta = PrvMod2PI(theta);
+ 	float cos_theta = arm_cos_f32(theta);
+ 	float sin_theta = arm_sin_f32(theta);
+ 	*current_d = cos_theta * *current_alpha + sin_theta * *current_beta;
+@@ -210,14 +210,14 @@ void ParkTransform(volatile float *current_alpha, volatile float *current_beta,
+ 
+ void InverseParkTransform(volatile float *current_d, volatile float *current_q, volatile float theta, volatile float *current_alpha, volatile float *current_beta)//反Park变换
+ {	//dq→αβ
+-	theta = prvMod2PI(theta);
++	theta = PrvMod2PI(theta);
+ 	float cos_theta = arm_cos_f32(theta);
+ 	float sin_theta = arm_sin_f32(theta);
+ 	*current_alpha = cos_theta * *current_d - sin_theta * *current_q;
+ 	*current_beta = sin_theta * *current_d + cos_theta * *current_q;
+ }
+ 
+-void init_controller_params(ControllerStruct *controller)
++void InitControllerParams(ControllerStruct *controller)
+ {
+ 	controller->v_d  = 0;
+ 	controller->v_q  = 0;	
+@@ -302,7 +302,7 @@ void CurrentLoop()//电流环 CLARK和PARK变换+PI+SVPWM
+ 	p_motor_g->D_axis_current_filt = (0.4f * p_motor_g->D_axis_current_filt) + (0.6f * p_motor_g->D_axis_current);
+ 	
+ 	//电流限制
+-	limit_norm(&p_motor_g->i_d_ref, &p_motor_g->i_q_ref,p_motor_g->IMax);
++	LimitNorm(&p_motor_g->i_d_ref, &p_motor_g->i_q_ref,p_motor_g->IMax);
+ 
+ 	/// PI Controller ///
+ 	float i_d_error = p_motor_g->i_d_ref - p_motor_g->D_axis_current;
+@@ -336,14 +336,14 @@ void CurrentLoop()//电流环 CLARK和PARK变换+PI+SVPWM
+ //	controller.v_d += controller.v_d_ff;
+ //	controller.v_q += controller.v_q_ff;
+ 	//电压限制
+-	limit_norm(&controller.v_d, &controller.v_q,1.15f*p_motor_g->vbus);       // Normalize voltage vector to lie within curcle of radius v_bus
++	LimitNorm(&controller.v_d, &controller.v_q,1.15f*p_motor_g->vbus);       // Normalize voltage vector to lie within curcle of radius v_bus
+ //	limit_normlization(&controller->v_d, &controller->v_q, OVERMODULATION*controller->v_bus);       // Normalize voltage vector to lie within curcle of radius v_bus
+ 
+ 	if (svpwm_on == 1)
+ 		SVPWM(cos_theta * controller.v_d - sin_theta * controller.v_q, sin_theta * controller.v_d + cos_theta * controller.v_q);
+ }
+ 
+-void torque_control(ControllerStruct *controller)
++void TorqueControl(ControllerStruct *controller)
+ {
+ 	controller->dtheta_mech = p_encoder2_g->mech_vel;//输出端速度（rad/s）
+ 	controller->theta_mech = p_encoder2_g->pos_abs;//输出端位置（rad）
+@@ -376,11 +376,11 @@ void PD_FOC_clear(void)
+ 	else if (FSMstate == HOMING_MODE)  printf("\n\r Entering Homing Mode \n\r");
+ }
+ 
+-void enablePWM(void)
++void EnablePWM(void)
+ {
+ 	htim1.Instance->CCER |= 0x0555;//Enable channel output
+ }
+-void disablePWM(void)
++void DisablePWM(void)
+ {
+ 	htim1.Instance->CCER &= ~0x0555;//Disable channel output
+ 	__HAL_TIM_SetCompare(&htim1, TIM_CHANNEL_3, 0xffff);
+@@ -391,8 +391,8 @@ void disablePWM(void)
+ 
+ /*数学运算*/
+ // Same as fmodf but result is positive and y must be positive
+-float fmodf_pos(float x, float y) {
+-	float res = wrap_pm(x, y);
++float FmodfPos(float x, float y) {
++	float res = WrapPm(x, y);
+ 	if (res < 0) res += y;
+ 	return res;
+ }
+@@ -400,14 +400,14 @@ float fmodf_pos(float x, float y) {
+ // Wrap value to range.
+ // With default rounding mode (round to nearest),
+ // the result will be in range -y/2 to y/2
+-float wrap_pm(float x, float y) {
++float WrapPm(float x, float y) {
+ 
+ 	float intval = nearbyintf(x / y);//用于将一个浮点数四舍五入到最接近的整数值（float）
+ 	return x - intval * y;
+ }
+ 
+ /* Scales the lenght of vector (x, y) to be <= limit */
+-void limit_norm(float *x, float *y, float limit)
++void LimitNorm(float *x, float *y, float limit)
+ {
+ //    float norm = sqrt(*x * *x + *y * *y);//双精度（避免使用，STM32F446无硬件FPU双精度支持）
+ 	float norm = sqrtf(*x * *x + *y * *y);//单精度
+@@ -419,7 +419,7 @@ void limit_norm(float *x, float *y, float limit)
+ }
+ 
+ /* Converts a float to an unsigned int, given range and number of bits */
+-uint32_t float_to_uint(float x, float x_min, float x_max, int bits)
++uint32_t FloatToUint(float x, float x_min, float x_max, int bits)
+ {
+     float span = x_max - x_min;//10
+     float offset = x_min;//-5
+@@ -427,13 +427,13 @@ uint32_t float_to_uint(float x, float x_min, float x_max, int bits)
+ }
+ 
+ /* converts unsigned int to float, given range and number of bits */  
+-float uint32_to_float(uint32_t x_int, float x_min, float x_max, int bits)
++float Uint32ToFloat(uint32_t x_int, float x_min, float x_max, int bits)
+ {
+     float span = x_max - x_min;
+     float offset = x_min;
+     return ((float)x_int)*span/((float)((1<<bits)-1)) + offset;
+ }
+-float prvMod2PI(volatile float theta) //限制角度在0-2pi之间
++float PrvMod2PI(volatile float theta) //限制角度在0-2pi之间
+ {
+ 	while (theta < 0.0f)
+ 		theta += PI_TIMES_2;
+@@ -444,7 +444,7 @@ float prvMod2PI(volatile float theta) //限制角度在0-2pi之间
+ 
+ 
+ // Modulo (as opposed to remainder), per https://stackoverflow.com/a/19288271
+-int encoderMod(const int dividend, const int divisor)
++int EncoderMod(const int dividend, const int divisor)
+ {
+ 	int r = dividend % divisor;
+ 	if (r < 0) r += divisor;
+@@ -613,14 +613,14 @@ uint8_t crcTable [256] =
+ 0xAA,0x3D,0x13,0x84,0x4F,0xD8,0xF6,0x61,
+ 0xF7,0x60,0x4E,0xD9,0x12,0x85,0xAB,0x3C};
+ 
+-uint8_t calcCRC(uint8_t * buffer, uint8_t length){
++uint8_t CalcCRC(uint8_t * buffer, uint8_t length){
+ 	uint8_t temp = *buffer++;
+ 	while (--length){
+ 	temp = *buffer++ ^ crcTable[temp];
+ 	}
+ 	return crcTable[temp];
+ }
+-void delay_us(uint16_t nus)
++void DelayUs(uint16_t nus)
+ {
+ 
+ 	htim6.Instance->CNT = 0;   										// set the counter value 0
+diff --git a/FOC/FOC.h b/FOC/FOC.h
+index 8a7dce6..4d7fb80 100644
+--- a/FOC/FOC.h
++++ b/FOC/FOC.h
+@@ -121,25 +121,25 @@ void ClarkTransform(volatile float *current_a, volatile float *current_b, volati
+ void InverseClarkTransform(volatile float *current_alpha, volatile float *current_beta, volatile float *current_a, volatile float *current_b, volatile float *current_c);
+ void ParkTransform(volatile float *current_alpha, volatile float *current_beta, volatile float theta, volatile float *current_d, volatile float *current_q);
+ void InverseParkTransform(volatile float *current_d, volatile float *current_q, volatile float theta, volatile float *current_alpha, volatile float *current_beta);
+-void init_controller_params(ControllerStruct *controller);
++void InitControllerParams(ControllerStruct *controller);
+ void Homing(void);
+ void PositionLoop(void);
+ void VelocityLoop(void);//速度环 PI运算得到q轴电流给定
+ void CurrentLoop(void);
+ void PD_FOC_clear(void);
+-void torque_control(ControllerStruct *controller);
+-void enablePWM(void);
+-void disablePWM(void);
+-void enablePre_drive(void);
+-void disablePre_drive(void);
+-
+-float fmodf_pos(float x, float y);
+-float wrap_pm(float x, float y);
+-void limit_norm(float *x, float *y, float limit);
+-uint32_t float_to_uint(float x, float x_min, float x_max, int bits);
+-float uint32_to_float(uint32_t x_int, float x_min, float x_max, int bits);
+-float prvMod2PI(volatile float theta);
+-int encoderMod(const int dividend, const int divisor);
++void TorqueControl(ControllerStruct *controller);
++void EnablePWM(void);
++void DisablePWM(void);
++void EnablePreDrive(void);
++void DisablePreDrive(void);
++
++float FmodfPos(float x, float y);
++float WrapPm(float x, float y);
++void LimitNorm(float *x, float *y, float limit);
++uint32_t FloatToUint(float x, float x_min, float x_max, int bits);
++float Uint32ToFloat(uint32_t x_int, float x_min, float x_max, int bits);
++float PrvMod2PI(volatile float theta);
++int EncoderMod(const int dividend, const int divisor);
+ float Clamp(volatile float num, volatile float low, volatile float high);
+ float Mod(volatile float num, volatile float mod_range_min, volatile float mod_range_max);
+ uint16_t UintMod(volatile uint16_t output,volatile uint16_t mod_range_min,volatile uint16_t mod_range_max);
+@@ -147,8 +147,8 @@ float IterationLn(volatile float a, int order);
+ float Uint2Float(volatile uint8_t *p_raw);
+ bool least_square_method(float *data, uint8_t num, float *K);
+ bool least_square_method_flux(float *xdata, float *ydata, uint8_t num, float *K);
+-void delay_us(uint16_t nus);
+-uint8_t calcCRC(uint8_t * buffer, uint8_t length);
++void DelayUs(uint16_t nus);
++uint8_t CalcCRC(uint8_t * buffer, uint8_t length);
+ uint8_t DWT_Init(void);
+ #define MCU_SYSCLK 480000000.0f		// Frequence of MCU[Hz]
+ #define PWM_PERIOD_DEFAULT 24000.0f //180,000,000/PWM_FREQUENCY_DEFAULT
+diff --git a/FOC/calibration.c b/FOC/calibration.c
+index 23ee7f7..125117b 100644
+--- a/FOC/calibration.c
++++ b/FOC/calibration.c
+@@ -13,7 +13,7 @@ uint32_t   raw_b[2688]={0};											//2688=128*p_motor_g->pole_pairs
+ //26,26,25,24,24,23,21,21,20,17,16,16,14,11,11,10,7,6,5,4,2,1,1,-1,-2,-1,-2,-3,-2,-2,-2,-2,-1,0,0,1,3,3,3,5,6,6,7,9,9,10,11,12,
+ //12,12,14,13,13,14,14,13,13,13,13,11,11,11,9,7,7,5,2,1,0,-3,-6,-7,-9,-12,-14,-15,-18,-21,-22,-23,-26,-28,-29,-31,-33,-33,-34,
+ //-35,-36,-35,-35,-36,-35,-34,-34,-33,-30,-29};
+-void order_phases()
++void OrderPhases()
+ {
+ 	///Checks phase order, to ensure that positive Q current produces
+ 	///torque in the positive direction wrt the position sensor.
+@@ -38,7 +38,7 @@ void order_phases()
+ 	{                                                       
+ 		ApplyVoltDQToSVPWM(v_d, v_q, theta_ref);
+ 		HAL_Delay(0);
+-		encoderSample();//采集最新鲜的编码器位置  在执行该函数时进了TIM1更新中断怎么办？？？函数重入？
++		EncoderSample();//采集最新鲜的编码器位置  在执行该函数时进了TIM1更新中断怎么办？？？函数重入？
+ 		theta_actual = p_encoder_g->pos_abs;
+ 		if (theta_ref==0)
+ 		{
+@@ -71,9 +71,9 @@ void order_phases()
+ 
+ /// Measures the electrical angle offset of the position sensor
+ /// and (in the future) corrects nonlinearity due to position sensor eccentricity（偏心）
+-void calibrate()
++void Calibrate()
+ {
+-	order_phases();//相序检测
++	OrderPhases();//相序检测
+ 	HAL_Delay(500);
+ 	
+ //	printf("\n\r Starting calibration procedure\n\r");
+@@ -106,7 +106,7 @@ void calibrate()
+ 			ApplyVoltDQToSVPWM(v_d, v_q, theta_ref);
+ 			HAL_Delay(1);//2ms
+ 		}
+-		encoderSample();//采集最新鲜的编码器位置
++		EncoderSample();//采集最新鲜的编码器位置
+ 		theta_actual = p_encoder_g->pos_abs;
+ 		error_f[i] = theta_actual - theta_ref/(float)p_motor_g->pole_pairs;//实际角度-开环定位角度
+ 		raw_f[i] = p_encoder_g->mech_pos;//编码器原始值
+@@ -123,7 +123,7 @@ void calibrate()
+ 			ApplyVoltDQToSVPWM(v_d, v_q, theta_ref);
+ 			HAL_Delay(1);//2ms
+ 		}
+-		encoderSample();//采集最新鲜的编码器位置
++		EncoderSample();//采集最新鲜的编码器位置
+ 		theta_actual = p_encoder_g->pos_abs;
+ 		error_b[i] = theta_actual - theta_ref/(float)p_motor_g->pole_pairs;
+ 		raw_b[i] = p_encoder_g->mech_pos;
+diff --git a/FOC/calibration.h b/FOC/calibration.h
+index 51df5c4..a92762c 100644
+--- a/FOC/calibration.h
++++ b/FOC/calibration.h
+@@ -7,8 +7,8 @@
+ 
+ extern int32_t offset_lut[128];
+ 
+-void order_phases(void);
+-void calibrate(void);
++void OrderPhases(void);
++void Calibrate(void);
+ 
+ void PositionSensor_WriteLUT(int32_t new_lut[128]);
+ 
+diff --git a/FOC/encoder.c b/FOC/encoder.c
+index 1005ff0..979d090 100644
+--- a/FOC/encoder.c
++++ b/FOC/encoder.c
+@@ -91,7 +91,7 @@ void Encoder_Init(void)//初始化
+ 	p_encoder2_g->last_mech_pos = p_encoder2_g->mech_pos;
+ }
+ 
+-void encoderSample(void)//电机电角度标定后，位置加上偏移的角度
++void EncoderSample(void)//电机电角度标定后，位置加上偏移的角度
+ {
+ 	p_encoder_g->last_mech_pos = p_encoder_g->mech_pos;
+ 	p_encoder_g->mech_pos = angleOutter;
+diff --git a/FOC/encoder.h b/FOC/encoder.h
+index 4aa9d60..d1792c5 100644
+--- a/FOC/encoder.h
++++ b/FOC/encoder.h
+@@ -14,7 +14,7 @@
+ /* ------------------------------ Includes ------------------------------ */
+ #include "main.h"
+ /* ------------------------------ Defines ------------------------------ */
+-void encoderSample(void);
++void EncoderSample(void);
+ void Encoder_Init(void);
+ static void prvCalcVelocity(void);
+ 
+diff --git a/FOC/motor.c b/FOC/motor.c
+index 84f9cd2..d7679b4 100644
+--- a/FOC/motor.c
++++ b/FOC/motor.c
+@@ -144,20 +144,20 @@ float vel_estimate_ = 0.0f; //当前估算关节输出端转速，单位[rad/s]
+ int32_t shadow_count_ = 0;   //编码器累计计数。
+ int32_t count_in_cpr_ = 0;   //编码器当前计数值。
+ 
+-void runpll_velocity()
++void RunPllVelocity()
+ {
+-//	pos_cpr_counts_ = wrap_pm(2, 3);
++//	pos_cpr_counts_ = WrapPm(2, 3);
+ 	
+ 	int32_t delta_enc = 0;
+ 	int32_t pos_abs_latched = p_encoder_g->mech_pos;
+ 	
+ 	delta_enc = pos_abs_latched - count_in_cpr_; //LATCH
+-	delta_enc = encoderMod(delta_enc,16384);
++	delta_enc = EncoderMod(delta_enc,16384);
+ 	if (delta_enc > 8192)delta_enc -= 16384;
+ 	
+ 	shadow_count_ += delta_enc;
+ 	count_in_cpr_ += delta_enc;//count_in_cpr_=pos_abs_latched=pos_abs_
+-	count_in_cpr_ = encoderMod(count_in_cpr_,16384);
++	count_in_cpr_ = EncoderMod(count_in_cpr_,16384);
+ 	count_in_cpr_ = pos_abs_latched;
+ 
+ 	// run pll (for now pll is in units of encoder counts)
+@@ -168,12 +168,12 @@ void runpll_velocity()
+ 	// discrete phase detector
+ 	float delta_pos_counts = (float)(shadow_count_ - (int32_t)pos_estimate_counts_);
+ 	float delta_pos_cpr_counts = (float)(count_in_cpr_ - (int32_t)pos_cpr_counts_);
+-	delta_pos_cpr_counts = wrap_pm(delta_pos_cpr_counts, 21);//不能用p_motor_g->pole_pairs？
++	delta_pos_cpr_counts = WrapPm(delta_pos_cpr_counts, 21);//不能用p_motor_g->pole_pairs？
+ 	// delta_pos_cpr_counts_ += 0.1f * (delta_pos_cpr_counts - delta_pos_cpr_counts_); // for debug
+ 	// pll feedback
+ 	pos_estimate_counts_ += current_meas_period * pll_kp_ * delta_pos_counts;
+ 	pos_cpr_counts_ += current_meas_period * pll_kp_ * delta_pos_cpr_counts;
+-	pos_cpr_counts_ = fmodf_pos(pos_cpr_counts_, 16384);//不能用p_encoder_g->cpr？
++	pos_cpr_counts_ = FmodfPos(pos_cpr_counts_, 16384);//不能用p_encoder_g->cpr？
+ 	vel_estimate_counts_ += current_meas_period * pll_ki_ * delta_pos_cpr_counts;
+ //	uint8_t snap_to_zero_vel = false;
+ //	if (fabsf(vel_estimate_counts_) < 0.5f * current_meas_period * pll_ki_)
+@@ -322,7 +322,7 @@ void CalcCurrentOffset(float *phase_a_offset, float *phase_b_offset, float *phas
+ 
+ 	printf("Phase Current Offset:a:%f b:%f c:%f\r\n",p_motor_g->phase_a_current_offset,p_motor_g->phase_b_current_offset,p_motor_g->phase_c_current_offset);
+ }
+-void currentSample()
++void CurrentSample()
+ {
+ 	//过采样
+ //		uint32_t ADC_Value_sum[2] = {0};
+@@ -389,12 +389,12 @@ void Calc_current_rms(void)
+ 	p_motor_g->phase_c_Current_RMS =  sqrt(sumC / SAMPLE_CNT);
+ }
+ 
+-void voltageSample()
++void VoltageSample()
+ {
+ 	p_motor_g->vbus = (voltage_coefficient * (float)ADC1->JDR4)*21.0f;
+ }
+ 
+-void temperatureSample()
++void TemperatureSample()
+ {
+ 	//电机温度计算
+ //	float r1_ntc = RES_DIVIDE_MOTOR*((float)ADC2->JDR2*ADC_supply/ADC_resolution)/(ADC_supply-((float)ADC2->JDR2*ADC_supply/ADC_resolution));//电机绕组端NTC电阻阻值 单位：kΩ
+@@ -455,14 +455,14 @@ const MotorManager_typedef Motor =
+ //	MeasureFluxAndInertia
+ };
+ 
+-void enableADC(void)
++void EnableADC(void)
+ {
+ 	hadc1.Instance->CR |=  ADC_CR_ADEN;
+ 	hadc2.Instance->CR |=  ADC_CR_ADEN;
+ //	hadc3.Instance->CR |=  ADC_CR_ADEN;
+ }
+ 
+-void startJADC(void)
++void StartJADC(void)
+ {
+ //硬件状态不同步：
+ //如果ADC尚未使能（ADEN = 0）或未准备就绪（ADRDY = 0），直接触发JADSTART可能导致转换无法启动，或者使ADC进入一个不可预知的状态，调用
+@@ -475,7 +475,7 @@ void startJADC(void)
+ }
+ 
+ //差值限幅滤波器
+-void deltaFilter(uint8_t errcnt, volatile float phase_current, volatile float *phase_current_filter1, volatile float *phase_current_filter2)
++void DeltaFilter(uint8_t errcnt, volatile float phase_current, volatile float *phase_current_filter1, volatile float *phase_current_filter2)
+ {
+ 	float delta = fabsf(phase_current - *phase_current_filter1);
+ 	if (delta > 0.5) {
+diff --git a/FOC/motor.h b/FOC/motor.h
+index 8286d1d..ef869c2 100644
+--- a/FOC/motor.h
++++ b/FOC/motor.h
+@@ -197,14 +197,14 @@ void (*MeasureInductance)(void);
+ /* ------------------------------ Manager Extern ------------------------------ */
+ extern const MotorManager_typedef Motor;
+ void Motor_Init(void);
+-void currentSample(void);
++void CurrentSample(void);
+ void Calc_current_rms(void);
+-void voltageSample(void);
+-void temperatureSample(void);
+-void runpll_velocity(void);
++void VoltageSample(void);
++void TemperatureSample(void);
++void RunPllVelocity(void);
+ void MotorStop(void);
+-void enableADC(void);
+-void startJADC(void);
+-void deltaFilter(uint8_t errcnt, volatile float phase_current, volatile float *phase_current_filter1, volatile float *phase_current_filter2);
++void EnableADC(void);
++void StartJADC(void);
++void DeltaFilter(uint8_t errcnt, volatile float phase_current, volatile float *phase_current_filter1, volatile float *phase_current_filter2);
+ #endif
+ 
+diff --git a/MotionControl/PPtraj.c b/MotionControl/PPtraj.c
+index 41e29cc..8dc627d 100644
+--- a/MotionControl/PPtraj.c
++++ b/MotionControl/PPtraj.c
+@@ -9,11 +9,11 @@ uint8_t trajcplt = 0;
+ 
+ MotionPlanner planner_s;
+ MotionPlanner *p_planner_s = &planner_s;
+-void init_planner(MotionPlanner* planner, float start_pos, float target,  float vmax, float acc, float dec);
++void InitPlanner(MotionPlanner* planner, float start_pos, float target,  float vmax, float acc, float dec);
+ bool get_next_position(MotionPlanner* planner, float dt, float* position);
+ 
+ // 初始化运动规划器
+-void init_planner(MotionPlanner* planner, float start_pos, float target, float vmax, float acc, float dec)//确定位置规划曲线类型（三角形或梯形），确定加速、减速、匀速时间
++void InitPlanner(MotionPlanner* planner, float start_pos, float target, float vmax, float acc, float dec)//确定位置规划曲线类型（三角形或梯形），确定加速、减速、匀速时间
+ {
+     // 保留当前位置
+ 									 
+@@ -210,11 +210,11 @@ bool get_next_position(MotionPlanner* planner, float dt, float* position)
+ /* 使用示例：
+ // 正向运动
+ MotionPlanner pos_planner;
+-init_planner(&pos_planner, 100.0f, 10.0f, 2.0f, 2.0f);
++InitPlanner(&pos_planner, 100.0f, 10.0f, 2.0f, 2.0f);
+ 
+ // 反向运动
+ MotionPlanner neg_planner;
+-init_planner(&neg_planner, -50.0f, 8.0f, 3.0f, 3.0f);
++InitPlanner(&neg_planner, -50.0f, 8.0f, 3.0f, 3.0f);
+ 
+ float position;
+ while (get_next_position(&neg_planner, 0.1f, &position)) {
+diff --git a/MotionControl/PPtraj.h b/MotionControl/PPtraj.h
+index ff4890e..5feacab 100644
+--- a/MotionControl/PPtraj.h
++++ b/MotionControl/PPtraj.h
+@@ -20,7 +20,7 @@ typedef struct {
+ 	float total_time;        // 总运动时间
+ 	float elapsed_time;      // 已用时间
+ } MotionPlanner;
+-extern void init_planner(MotionPlanner* planner, float start_pos, float target,  float vmax, float acc, float dec);
++extern void InitPlanner(MotionPlanner* planner, float start_pos, float target,  float vmax, float acc, float dec);
+ extern bool get_next_position(MotionPlanner* planner, float dt, float* position);
+ extern MotionPlanner *p_planner_s;
+ 
+diff --git a/UserSrc/Inc/Diag.h b/UserSrc/Inc/Diag.h
+index 5089751..ff79976 100644
+--- a/UserSrc/Inc/Diag.h
++++ b/UserSrc/Inc/Diag.h
+@@ -6,8 +6,8 @@ extern float a_cur[3],b_cur[3],c_cur[3],DC_bus[3],temperature_MOS[3],temperature
+ extern float a_cur_record,b_cur_record,c_cur_record,DC_bus_record,temperature_MOS_record,temperature_MOTOR_record;
+ extern uint8_t Report_HWOvercur;
+ extern float TEMPERATURE_MOSFET,TEMPERATURE_MOTOR;
+-void errorDiag(void);
+-void errorReport(void);
++void ErrorDiag(void);
++void ErrorReport(void);
+ 
+ #endif
+ 
+diff --git a/UserSrc/Inc/can_rv.h b/UserSrc/Inc/can_rv.h
+index 06880fe..b66df53 100644
+--- a/UserSrc/Inc/can_rv.h
++++ b/UserSrc/Inc/can_rv.h
+@@ -26,15 +26,15 @@ extern float KD_MAX;
+ void CAN_SendMessage(uint32_t id, uint8_t *data, uint8_t len);
+ void CAN_Config(void);
+ 
+-void pack_reply(uint8_t *tData,float pos,	float vel, float torque, uint16_t err1, uint8_t err2, uint8_t warning);//反馈帧
++void PackReply(uint8_t *tData,float pos,	float vel, float torque, uint16_t err1, uint8_t err2, uint8_t warning);//反馈帧
+ void Pack_ActiveReport_Current(uint8_t *tData ,float torque);
+ void Pack_ActiveReport(uint8_t *tData,float pos, float vel, float torque, uint16_t err1, uint8_t err2, uint8_t warning);
+ //void PD_pack_reply(uint8_t *tData, float p, float v, float t);
+ //void unpack_cmd(uint8_t *CAN_RxData, ControllerStruct * controller);
+-void unpack_speed_cmd(uint8_t CAN_RxData[]);
+-void unpack_torque_cmd(uint8_t CAN_RxData[]);
+-void unpack_position_cmd(uint8_t CAN_RxData[]);
+-void unpack_MIT_cmd(uint8_t CAN_RxData[]);
++void UnpackSpeedCmd(uint8_t CAN_RxData[]);
++void UnpackTorqueCmd(uint8_t CAN_RxData[]);
++void UnpackPositionCmd(uint8_t CAN_RxData[]);
++void UnpackMitCmd(uint8_t CAN_RxData[]);
+ 
+ void CAN_MsgProcess(uint32_t Identifier, uint8_t *FDCANRxData);
+ 
+diff --git a/UserSrc/Inc/flash.h b/UserSrc/Inc/flash.h
+index 6a817cb..6792f8b 100644
+--- a/UserSrc/Inc/flash.h
++++ b/UserSrc/Inc/flash.h
+@@ -17,8 +17,8 @@ HAL_StatusTypeDef Flash_EraseSector(uint32_t Sector, uint32_t Bank);
+ void Write_MotorData(void);
+ void Read_MotorData(void);
+ 
+-uint32_t float2uint(float var);
+-float uint2float(uint32_t var);
++uint32_t Float2Uint(float var);
++float Uint2Float(uint32_t var);
+ 
+ 
+ #endif
+diff --git a/UserSrc/Inc/interact.h b/UserSrc/Inc/interact.h
+index 67600d0..331a2e9 100644
+--- a/UserSrc/Inc/interact.h
++++ b/UserSrc/Inc/interact.h
+@@ -29,8 +29,8 @@ extern float FOC_velAccDec;
+ 
+ extern volatile uint16_t state_change;
+ 
+-void enter_menu_state(void);
+-void enter_setup_state(void);
++void EnterMenuState(void);
++void EnterSetupState(void);
+  
+ #endif
+ 
+diff --git a/UserSrc/Src/Diag.c b/UserSrc/Src/Diag.c
+index d83d644..03a9cc2 100644
+--- a/UserSrc/Src/Diag.c
++++ b/UserSrc/Src/Diag.c
+@@ -20,11 +20,11 @@ float a_cur_record = 0.0f,b_cur_record = 0.0f,c_cur_record = 0.0f,DC_bus_record
+ float A_CURRENT = 0.0f,B_CURRENT = 0.0f,C_CURRENT = 0.0f;
+ float DC_BUS = 0.0f;
+ float TEMPERATURE_MOSFET = 0.0f,TEMPERATURE_MOTOR = 0.0f;
+-void errorDiag(void)
++void ErrorDiag(void)
+ {
+ //	if (p_encoder_g->mech_vel > w_max|p_encoder_g->mech_vel < w_min)
+ //	{
+-//		disablePWM();
++//		DisablePWM();
+ //		Report_OverSpeed = 1;
+ //	}
+ 	
+@@ -45,7 +45,7 @@ void errorDiag(void)
+ 		SWOvercur_cnt++;
+ 		if (SWOvercur_cnt > 10)
+ 		{
+-			disablePWM();
++			DisablePWM();
+ 			p_motor_g->Err1 |= MotorErr1_PhaseOverCurrent;
+ 			p_motor_g->error = SwOverCurrent;
+ 			p_motor_g->lastError = SwOverCurrent;//记录故障类型
+@@ -74,7 +74,7 @@ void errorDiag(void)
+ 		SWOvervolt_cnt++;
+ 		if (SWOvervolt_cnt > 3)
+ 		{
+-			disablePWM();
++			DisablePWM();
+ 			p_motor_g->Err1 |= MotorErr1_OverVolt;
+ 			p_motor_g->error=OverVolt;
+ 			p_motor_g->lastError = OverVolt;//记录故障类型
+@@ -87,7 +87,7 @@ void errorDiag(void)
+ 		SWUndervolt_cnt++;
+ 		if (SWUndervolt_cnt > 3)
+ 		{
+-			disablePWM();
++			DisablePWM();
+ 			p_motor_g->Err2 |= MotorErr2_LowVotage;
+ 			p_motor_g->error=UnderVolt;
+ 			p_motor_g->lastError = UnderVolt;//记录故障类型
+@@ -116,7 +116,7 @@ void errorDiag(void)
+ 		OverTEMP_MOS_cnt++;
+ 		if (OverTEMP_MOS_cnt > 3)
+ 		{
+-			disablePWM();
++			DisablePWM();
+ 			p_motor_g->Err1 |= MotorErr1_MosOverT;
+ 
+ 			p_motor_g->error = MOS_OverTEMP;
+@@ -157,7 +157,7 @@ void errorDiag(void)
+ 		OverTEMP_MOTOR_cnt++;
+ 		if (OverTEMP_MOTOR_cnt > 3)
+ 		{
+-			disablePWM();
++			DisablePWM();
+ 
+ 			p_motor_g->Err1 |= MotorErr1_MotorOverT;
+ 
+@@ -186,7 +186,7 @@ void errorDiag(void)
+ 	}
+ }
+ 
+-void errorReport(void)
++void ErrorReport(void)
+ {
+ //	if (Report_SWOvercur||Report_HWOvercur||Report_SWOvervolt||Report_MOS_OverTEMP||Report_MOTOR_OverTEMP)//下电霍尔电流传感器输出低电压会误报软件过流Report_SWOvercur
+ 	if (Report_HWOvercur||Report_SWOvervolt||Report_MOS_OverTEMP||Report_MOTOR_OverTEMP)//下电霍尔电流传感器输出低电压会误报软件过流Report_SWOvercur
+diff --git a/UserSrc/Src/can_rv.c b/UserSrc/Src/can_rv.c
+index ceae87e..dd38834 100644
+--- a/UserSrc/Src/can_rv.c
++++ b/UserSrc/Src/can_rv.c
+@@ -292,13 +292,13 @@ void HAL_CAN_RxFifo0MsgPendingCallback(FDCAN_RxHeaderTypeDef *hfdcan1)
+ //		}
+ }
+ 
+-void pack_reply(uint8_t *tData,float pos, float vel, float torque, uint16_t err1, uint8_t err2, uint8_t warning)
++void PackReply(uint8_t *tData,float pos, float vel, float torque, uint16_t err1, uint8_t err2, uint8_t warning)
+ {
+ 	uint8_t state = 0;
+ 	
+-	uint32_t p_int = float_to_uint(pos, p_min, p_max, 24);
+-	uint16_t v_int = float_to_uint(vel/GR, w_min, w_max, 16);
+-	uint16_t t_int = float_to_uint(torque, iq_min, iq_max, 16);
++	uint32_t p_int = FloatToUint(pos, p_min, p_max, 24);
++	uint16_t v_int = FloatToUint(vel/GR, w_min, w_max, 16);
++	uint16_t t_int = FloatToUint(torque, iq_min, iq_max, 16);
+ 	uint16_t temp_Motor = (uint16_t)(TEMPERATURE_MOTOR*10);
+ 	uint16_t temp_Mos = (uint16_t)(TEMPERATURE_MOSFET*10);
+ 		
+@@ -357,16 +357,16 @@ void Pack_ActiveReport(uint8_t *tData,float pos, float vel, float torque, uint16
+ {
+ 	uint8_t state = 0;
+ 	
+-//	uint32_t p_int = float_to_uint(pos, p_min, p_max, 24);
+-//	uint16_t v_int = float_to_uint(vel/GR, w_min, w_max, 16);
+-//	uint16_t t_int = float_to_uint(torque, iq_min, iq_max, 16);
++//	uint32_t p_int = FloatToUint(pos, p_min, p_max, 24);
++//	uint16_t v_int = FloatToUint(vel/GR, w_min, w_max, 16);
++//	uint16_t t_int = FloatToUint(torque, iq_min, iq_max, 16);
+ //	uint16_t temp_Motor = (uint16_t)(TEMPERATURE_MOTOR*10);
+ //	uint16_t temp_Mos = (uint16_t)(TEMPERATURE_MOSFET*10);
+ 
+ 	uint16_t t_int = (uint16_t)(p_motor_g->phase_a_Current_RMS*100);//相电流有效值，单位A
+ 	// 修复溢出：先缩放范围再转换，避免乘法溢出
+-	uint16_t v_int = float_to_uint(vel/GR * 10.0f, w_min*10.0f, w_max*10.0f, 16);//速度，单位0.1RPM
+-	uint32_t p_int = float_to_uint(pos * 1000.0f, p_min*1000.0f, p_max*1000.0f, 24);//位置，单位0.001°
++	uint16_t v_int = FloatToUint(vel/GR * 10.0f, w_min*10.0f, w_max*10.0f, 16);//速度，单位0.1RPM
++	uint32_t p_int = FloatToUint(pos * 1000.0f, p_min*1000.0f, p_max*1000.0f, 24);//位置，单位0.001°
+ 	
+ 	uint16_t temp_Motor = (uint16_t)(TEMPERATURE_MOTOR*10);
+ 	uint16_t temp_Mos = (uint16_t)(TEMPERATURE_MOSFET*10);
+@@ -410,43 +410,43 @@ void Pack_ActiveReport(uint8_t *tData,float pos, float vel, float torque, uint16
+ 	tData[15] = 0;
+ }
+ 
+-void unpack_speed_cmd(uint8_t CAN_RxData[])
++void UnpackSpeedCmd(uint8_t CAN_RxData[])
+ {
+ 	uint16_t v_raw = ((CAN_RxData[FDCAN_ID*3-2]&0xFF)<<8)|(CAN_RxData[FDCAN_ID*3-3]);
+-	float temp = uint32_to_float(v_raw, w_min, w_max, 16);
++	float temp = Uint32ToFloat(v_raw, w_min, w_max, 16);
+ 	Motor_W = temp * GR;//下发的速度指令是输出角速度，电机端指令速度需要乘以减速比
+ 	
+ 	p_motor_g->controlMode = FOC_VELOCITY_LOOP;//设置速度模式
+ }
+ 
+-void unpack_torque_cmd(uint8_t CAN_RxData[])
++void UnpackTorqueCmd(uint8_t CAN_RxData[])
+ {
+ 	uint16_t t_raw = ((CAN_RxData[FDCAN_ID*3-2]&0xFF)<<8)|(CAN_RxData[FDCAN_ID*3-3]);
+-	Motor_Iq = uint32_to_float(t_raw, iq_min, iq_max, 16)/KT_OUT;
++	Motor_Iq = Uint32ToFloat(t_raw, iq_min, iq_max, 16)/KT_OUT;
+ 	
+ 	p_motor_g->controlMode = FOC_CURRENT_LOOP;//设置扭矩模式
+ }
+ 
+-void unpack_position_cmd(uint8_t CAN_RxData[])
++void UnpackPositionCmd(uint8_t CAN_RxData[])
+ {
+ 	uint32_t p_raw = (CAN_RxData[FDCAN_ID*6-4]<<16)|(CAN_RxData[FDCAN_ID*6-5]<<8)|(CAN_RxData[FDCAN_ID*6-6]);
+ 	uint16_t v_raw = ((CAN_RxData[FDCAN_ID*6-2])<<8)|(CAN_RxData[FDCAN_ID*6-3]);
+ 	
+-	Motor_P = (uint32_to_float(p_raw, p_min, p_max, 24)) + p_encoder2_g->mech_offset;
++	Motor_P = (Uint32ToFloat(p_raw, p_min, p_max, 24)) + p_encoder2_g->mech_offset;
+ 	
+ 	if (p_motor_g->controlMode == FOC_POSITION_LOOP_PP && trajcplt == 0)
+ 	{
+-		init_planner(p_planner_s, p_encoder2_g->pos_abs, Motor_P, 8.376f, 2.0f, 2.0f); //目标位置、最大速度、加速度、减速度需要按照需求设置
++		InitPlanner(p_planner_s, p_encoder2_g->pos_abs, Motor_P, 8.376f, 2.0f, 2.0f); //目标位置、最大速度、加速度、减速度需要按照需求设置
+ 		trajcplt = 1;
+ 	}
+ 
+-	p_position_loop_g->output_limit = (uint32_to_float(v_raw, w_min, w_max, 16)) * GR;//位置模式时，速度指令用于限制运行转速
++	p_position_loop_g->output_limit = (Uint32ToFloat(v_raw, w_min, w_max, 16)) * GR;//位置模式时，速度指令用于限制运行转速
+ 
+ 	if (bPos_PP_Flag != true)//非位置PP模式
+ 		p_motor_g->controlMode = FOC_POSITION_LOOP;//设置位置模式
+ }
+ 
+-void unpack_MIT_cmd(uint8_t CAN_RxData[])
++void UnpackMitCmd(uint8_t CAN_RxData[])
+ {
+ 	uint32_t p_raw = (CAN_RxData[FDCAN_ID*12-10]<<16)|(CAN_RxData[FDCAN_ID*12-11]<<8)|(CAN_RxData[FDCAN_ID*12-12]);
+ 	uint16_t v_raw = ((CAN_RxData[FDCAN_ID*12-8])<<8)|(CAN_RxData[FDCAN_ID*12-9]);
+@@ -454,11 +454,11 @@ void unpack_MIT_cmd(uint8_t CAN_RxData[])
+ 	uint16_t kp_raw = (CAN_RxData[FDCAN_ID*12-4]<<8)|(CAN_RxData[FDCAN_ID*12-5]);
+ 	uint16_t kd_raw = (CAN_RxData[FDCAN_ID*12-2]<<8)|(CAN_RxData[FDCAN_ID*12-3]);
+ 	
+-	controller.p_des = uint32_to_float(p_raw, p_min, p_max, 24);
+-	controller.v_des = uint32_to_float(v_raw, w_min, w_max, 16) * GR;
+-	controller.t_ff = uint32_to_float(t_raw, iq_min, iq_max, 16);
+-	controller.kp = uint32_to_float(kp_raw, KP_MIN, KP_MAX, 16);
+-	controller.kd = uint32_to_float(kd_raw, KD_MIN, KD_MAX, 16);
++	controller.p_des = Uint32ToFloat(p_raw, p_min, p_max, 24);
++	controller.v_des = Uint32ToFloat(v_raw, w_min, w_max, 16) * GR;
++	controller.t_ff = Uint32ToFloat(t_raw, iq_min, iq_max, 16);
++	controller.kp = Uint32ToFloat(kp_raw, KP_MIN, KP_MAX, 16);
++	controller.kd = Uint32ToFloat(kd_raw, KD_MIN, KD_MAX, 16);
+ 	
+ 	p_motor_g->controlMode = MIT_PD;//设置MIT模式
+ }
+@@ -523,7 +523,7 @@ void CAN_MsgProcess(uint32_t Identifier, uint8_t *FDCANRxData)
+ 			p_motor_g->Warning = MotorWarning_Nomal;
+ 		}
+ 		
+-		pack_reply(FOC_CAN_TxData,p_encoder2_g->pos_abs,p_encoder2_g->mech_vel,p_motor_g->Q_axis_current_filt*KT_OUT,p_motor_g->Err1,p_motor_g->Err2,p_motor_g->Warning);
++		PackReply(FOC_CAN_TxData,p_encoder2_g->pos_abs,p_encoder2_g->mech_vel,p_motor_g->Q_axis_current_filt*KT_OUT,p_motor_g->Err1,p_motor_g->Err2,p_motor_g->Warning);
+ 		//if (bDynamMode == false)
+ 			CAN_SendMessage(0x100+FDCAN_ID,FOC_CAN_TxData,12);
+ 	}
+@@ -837,35 +837,35 @@ void CAN_MsgProcess(uint32_t Identifier, uint8_t *FDCANRxData)
+ 	{
+ 		case 0x80:{//反馈状态(广播)
+ 			//CAN_SendMessage(FDCAN_ID+0x100,FDCAN1_TxData,8);
+-			pack_reply(FOC_CAN_TxData,p_encoder2_g->pos_abs,p_encoder2_g->mech_vel,p_motor_g->Q_axis_current_filt*KT_OUT,p_motor_g->Err1,p_motor_g->Err2,p_motor_g->Warning);
++			PackReply(FOC_CAN_TxData,p_encoder2_g->pos_abs,p_encoder2_g->mech_vel,p_motor_g->Q_axis_current_filt*KT_OUT,p_motor_g->Err1,p_motor_g->Err2,p_motor_g->Warning);
+ 			//if (bDynamMode == false)
+ 				CAN_SendMessage(0x100+FDCAN_ID,FOC_CAN_TxData,12);
+ 		}
+ 		break;
+ 		case 0x200:{//速度模式
+-			unpack_speed_cmd(FDCAN1_RX_DATA);
+-			pack_reply(FOC_CAN_TxData,p_encoder2_g->pos_abs,p_encoder2_g->mech_vel,p_motor_g->Q_axis_current_filt*KT_OUT,p_motor_g->Err1,p_motor_g->Err2,p_motor_g->Warning);
++			UnpackSpeedCmd(FDCAN1_RX_DATA);
++			PackReply(FOC_CAN_TxData,p_encoder2_g->pos_abs,p_encoder2_g->mech_vel,p_motor_g->Q_axis_current_filt*KT_OUT,p_motor_g->Err1,p_motor_g->Err2,p_motor_g->Warning);
+ 			//if (bDynamMode == false)
+ 				CAN_SendMessage(0x100+FDCAN_ID,FOC_CAN_TxData,12);
+ 		}
+ 		break;
+ 		case 0x300:{//扭矩模式
+-			unpack_torque_cmd(FDCAN1_RX_DATA);
+-			pack_reply(FOC_CAN_TxData,p_encoder2_g->pos_abs,p_encoder2_g->mech_vel,p_motor_g->Q_axis_current_filt*KT_OUT,p_motor_g->Err1,p_motor_g->Err2,p_motor_g->Warning);
++			UnpackTorqueCmd(FDCAN1_RX_DATA);
++			PackReply(FOC_CAN_TxData,p_encoder2_g->pos_abs,p_encoder2_g->mech_vel,p_motor_g->Q_axis_current_filt*KT_OUT,p_motor_g->Err1,p_motor_g->Err2,p_motor_g->Warning);
+ 			//if (bDynamMode == false)
+ 				CAN_SendMessage(0x100+FDCAN_ID,FOC_CAN_TxData,12);
+ 		}
+ 		break;
+ 		case 0x400:{//位置模式
+-			unpack_position_cmd(FDCAN1_RX_DATA);
+-			pack_reply(FOC_CAN_TxData,p_encoder2_g->pos_abs,p_encoder2_g->mech_vel,p_motor_g->Q_axis_current_filt*KT_OUT,p_motor_g->Err1,p_motor_g->Err2,p_motor_g->Warning);
++			UnpackPositionCmd(FDCAN1_RX_DATA);
++			PackReply(FOC_CAN_TxData,p_encoder2_g->pos_abs,p_encoder2_g->mech_vel,p_motor_g->Q_axis_current_filt*KT_OUT,p_motor_g->Err1,p_motor_g->Err2,p_motor_g->Warning);
+ 			//if (bDynamMode == false)
+ 				CAN_SendMessage(0x100+FDCAN_ID,FOC_CAN_TxData,12);
+ 		}
+ 		break;
+ 		case 0x500:{//MIT模式
+-			unpack_MIT_cmd(FDCAN1_RX_DATA);
+-			pack_reply(FOC_CAN_TxData,p_encoder2_g->pos_abs,p_encoder2_g->mech_vel,p_motor_g->Q_axis_current_filt*KT_OUT,p_motor_g->Err1,p_motor_g->Err2,p_motor_g->Warning);
++			UnpackMitCmd(FDCAN1_RX_DATA);
++			PackReply(FOC_CAN_TxData,p_encoder2_g->pos_abs,p_encoder2_g->mech_vel,p_motor_g->Q_axis_current_filt*KT_OUT,p_motor_g->Err1,p_motor_g->Err2,p_motor_g->Warning);
+ 			//if (bDynamMode == false)
+ 				CAN_SendMessage(0x100+FDCAN_ID,FOC_CAN_TxData,12);
+ 		}
+@@ -887,9 +887,9 @@ void CAN_MsgProcess(uint32_t Identifier, uint8_t *FDCANRxData)
+ /// Formatted as follows.  For each quantity, bit 0 is LSB
+ void CAN_pack_reply1(uint8_t *tData, uint8_t err, float p, float v, float i, float T1, float T2)
+ {
+-	uint16_t p_int = float_to_uint(p, POS_MIN, POS_MAX, 16);
+-	uint16_t v_int = float_to_uint(v, SPD_MIN, SPD_MAX, 12);
+-	uint16_t i_int = float_to_uint(i, I_MIN, I_MAX, 12);
++	uint16_t p_int = FloatToUint(p, POS_MIN, POS_MAX, 16);
++	uint16_t v_int = FloatToUint(v, SPD_MIN, SPD_MAX, 12);
++	uint16_t i_int = FloatToUint(i, I_MIN, I_MAX, 12);
+ 	uint8_t T_motor_int = (uint8_t)(T1*2.0f+50.0f);
+ 	uint8_t T_MOS_int = (uint8_t)(T2*2.0f+50.0f);
+ 
+diff --git a/UserSrc/Src/flash.c b/UserSrc/Src/flash.c
+index 4f8431a..b3056a2 100644
+--- a/UserSrc/Src/flash.c
++++ b/UserSrc/Src/flash.c
+@@ -45,26 +45,26 @@ void Write_MotorData(void)
+ 	HAL_StatusTypeDef status;
+ 
+ 	// 1. 准备数据
+-	flash_buffer[0] = float2uint(p_encoder_g->elec_offset);//电角度偏移
+-	flash_buffer[1] = float2uint(p_motor_g->phase_order);//相序
++	flash_buffer[0] = Float2Uint(p_encoder_g->elec_offset);//电角度偏移
++	flash_buffer[1] = Float2Uint(p_motor_g->phase_order);//相序
+ 	flash_buffer[2] = p_encoder_g->cali_finish;//编码器整定完成标志
+-	flash_buffer[3] = float2uint(p_motor_g->phase_resistance);//电阻
+-	flash_buffer[4] = float2uint(p_motor_g->phase_inductance);//电感
++	flash_buffer[3] = Float2Uint(p_motor_g->phase_resistance);//电阻
++	flash_buffer[4] = Float2Uint(p_motor_g->phase_inductance);//电感
+ 	flash_buffer[5] = p_motor_g->motor_calibrated;//电机整定完成标志
+ 	flash_buffer[6] = 0;//每次写入数据时会清零故障码
+-	flash_buffer[7] = float2uint(p_encoder2_g->mech_offset);//输出端零位机械偏移
++	flash_buffer[7] = Float2Uint(p_encoder2_g->mech_offset);//输出端零位机械偏移
+ 	
+-	flash_buffer[8] = float2uint(p_min);//位置下限
+-	flash_buffer[9] = float2uint(p_max);//位置上限
+-	flash_buffer[10] = float2uint(w_min);//速度下限
+-	flash_buffer[11] = float2uint(w_max);//速度上限
+-	flash_buffer[12] = float2uint(iq_min);//扭矩下限
+-	flash_buffer[13] = float2uint(iq_max);//扭矩上限	
+-	flash_buffer[14] = float2uint(KP_MIN);//KP下限
+-	flash_buffer[15] = float2uint(KP_MAX);//KP上限
++	flash_buffer[8] = Float2Uint(p_min);//位置下限
++	flash_buffer[9] = Float2Uint(p_max);//位置上限
++	flash_buffer[10] = Float2Uint(w_min);//速度下限
++	flash_buffer[11] = Float2Uint(w_max);//速度上限
++	flash_buffer[12] = Float2Uint(iq_min);//扭矩下限
++	flash_buffer[13] = Float2Uint(iq_max);//扭矩上限	
++	flash_buffer[14] = Float2Uint(KP_MIN);//KP下限
++	flash_buffer[15] = Float2Uint(KP_MAX);//KP上限
+ 	
+-	flash_buffer[16] = float2uint(KD_MIN);//KD下限
+-	flash_buffer[17] = float2uint(KD_MAX);//KD上限
++	flash_buffer[16] = Float2Uint(KD_MIN);//KD下限
++	flash_buffer[17] = Float2Uint(KD_MAX);//KD上限
+ 	flash_buffer[18] = FDCAN_ID;
+ 	flash_buffer[19] = 0;
+ 	flash_buffer[20] = 0;
+@@ -141,27 +141,27 @@ void Read_MotorData (void)
+ 	p_motor_g->motor_calibrated = flash_buffer[5];
+ 	if (p_encoder_g->cali_finish == 1)
+ 	{
+-		p_encoder_g->elec_offset = uint2float(flash_buffer[0]);//电角度偏移
+-		p_motor_g->phase_order = uint2float(flash_buffer[1]);//相序
++		p_encoder_g->elec_offset = Uint2Float(flash_buffer[0]);//电角度偏移
++		p_motor_g->phase_order = Uint2Float(flash_buffer[1]);//相序
+ 	}
+ 	if (p_motor_g->motor_calibrated == 1)
+ 	{
+-		p_motor_g->phase_resistance = uint2float(flash_buffer[3]);//电阻
+-		p_motor_g->phase_inductance = uint2float(flash_buffer[4]);//电感
++		p_motor_g->phase_resistance = Uint2Float(flash_buffer[3]);//电阻
++		p_motor_g->phase_inductance = Uint2Float(flash_buffer[4]);//电感
+ 	}
+ 	p_motor_g->lastError = flash_buffer[6];
+-	p_encoder2_g->mech_offset = uint2float(flash_buffer[7]);
++	p_encoder2_g->mech_offset = Uint2Float(flash_buffer[7]);
+ 	
+-	p_min = uint2float(flash_buffer[8]);
+-	p_max = uint2float(flash_buffer[9]);
+-	w_min = uint2float(flash_buffer[10]);
+-	w_max = uint2float(flash_buffer[11]);
+-	iq_min = uint2float(flash_buffer[12]);
+-	iq_max = uint2float(flash_buffer[13]);
+-	KP_MIN = uint2float(flash_buffer[14]);
+-	KP_MAX = uint2float(flash_buffer[15]);
+-	KD_MIN = uint2float(flash_buffer[16]);
+-	KD_MAX = uint2float(flash_buffer[17]);
++	p_min = Uint2Float(flash_buffer[8]);
++	p_max = Uint2Float(flash_buffer[9]);
++	w_min = Uint2Float(flash_buffer[10]);
++	w_max = Uint2Float(flash_buffer[11]);
++	iq_min = Uint2Float(flash_buffer[12]);
++	iq_max = Uint2Float(flash_buffer[13]);
++	KP_MIN = Uint2Float(flash_buffer[14]);
++	KP_MAX = Uint2Float(flash_buffer[15]);
++	KD_MIN = Uint2Float(flash_buffer[16]);
++	KD_MAX = Uint2Float(flash_buffer[17]);
+ 	FDCAN_ID = (uint8_t)flash_buffer[18];
+ }
+ 
+@@ -171,7 +171,7 @@ typedef union
+ 	uint32_t da;
+ } UN32;
+ 
+-uint32_t float2uint(float var)
++uint32_t Float2Uint(float var)
+ {	
+ 	UN32 a;
+ 	
+@@ -179,7 +179,7 @@ uint32_t float2uint(float var)
+ 	return a.da;
+ }
+ 
+-float uint2float(uint32_t var)
++float Uint2Float(uint32_t var)
+ {
+ 	UN32 a;
+ 	
+diff --git a/UserSrc/Src/interact.c b/UserSrc/Src/interact.c
+index 09625c0..588694e 100644
+--- a/UserSrc/Src/interact.c
++++ b/UserSrc/Src/interact.c
+@@ -13,10 +13,10 @@ float FOC_velAccDec = 200;//速度规划 加/减速度 单位rad/s/s
+ 
+ volatile uint16_t state_change = 0;
+ 
+-void enter_menu_state(void)
++void EnterMenuState(void)
+ {
+ 	printf("Firmware Version: %s\r", VERSION_NUM);//打印软件版本
+-	disablePWM();
++	DisablePWM();
+ 	p_position_loop_g->target = p_encoder2_g->pos_abs;//当前位置值赋给指令值，以免位置环下刚进入电机模式，电机便会运动到0（p_position_loop_g->target初始化一般为0）			
+ 	p_motor_g->i_d_ref = 0;/*电流环id指令清零*/
+ 	p_motor_g->i_q_ref = 0;/*电流环iq指令清零*/
+@@ -34,62 +34,62 @@ void enter_menu_state(void)
+ 	
+     printf("\n\r");
+     printf(" Commands:\n\r");
+-    delay_us(10);
++    DelayUs(10);
+     printf(" m - Motor Mode\n\r");
+-    delay_us(10);
++    DelayUs(10);
+     printf(" c - Calibrate Encoder\n\r");
+-    delay_us(10);
++    DelayUs(10);
+     printf(" s - Setup\n\r");
+-    delay_us(10);
++    DelayUs(10);
+ 	printf(" h - Homing\n\r");
+-    delay_us(10);
++    DelayUs(10);
+     printf(" e - Display Encoder\n\r");
+-    delay_us(10);
++    DelayUs(10);
+     printf(" z - Set Zero Position\n\r");
+-    delay_us(10);
++    DelayUs(10);
+     printf(" esc - Exit to Menu\n\r");
+-    delay_us(10);
++    DelayUs(10);
+     state_change = 0;
+ }
+ 
+-void enter_setup_state(void)
++void EnterSetupState(void)
+ {
+ 	printf("\n\r Configuration Options \n\r");
+-	delay_us(10);
++	DelayUs(10);
+ 	printf(" %-6s %-31s %-5s %-6s %-2s\n\r\n\r", "prefix", "parameter", "min", "max", "current value");
+-	delay_us(10);
++	DelayUs(10);
+ 	printf(" %-6s %-31s %-5s %-6s %-5i\n\r", "c", "Control Mode", "0", "4", p_motor_g->controlMode);
+-	delay_us(10);
++	DelayUs(10);
+ 	printf(" %-6s %-31s %-5s %-6s %.1f\n\r", "b", "Current Bandwidth (Hz)", "10", "2000", I_BW);
+-	delay_us(10);
++	DelayUs(10);
+ 	printf(" %-6s %-31s %-5s %-6s %-5i\n\r", "i", "CAN ID", "0", "127", CAN_ID);
+-	delay_us(10);
++	DelayUs(10);
+ 	printf(" %-6s %-31s %-5s %-6s %-5i\n\r", "m", "CAN Master ID", "0", "127", CAN_MASTER);
+-	delay_us(10);
++	DelayUs(10);
+ 	printf(" %-6s %-31s %-5s %-6s %.1f\n\r", "o", "Current Software Over(A)", "0.0", "50.0", I_SWOver);
+-	delay_us(10);
++	DelayUs(10);
+ 	printf(" %-6s %-31s %-5s %-6s %.7f\n\r", "P", "Velocity Loop P_Coefficient", "0.0", "1.0", p_velocity_loop_g->kp);
+-	delay_us(10);
++	DelayUs(10);
+ 	printf(" %-6s %-31s %-5s %-6s %.7f\n\r", "I", "Velocity Loop I_Coefficient", "0.0", "1.0", p_velocity_loop_g->ki);
+-	delay_us(10);
++	DelayUs(10);
+ 	printf(" %-6s %-31s %-5s %-6s %.7f\n\r", "M", "Position Loop P_Coefficient", "0.0", "100.0", p_position_loop_g->kp);
+-	delay_us(10);
++	DelayUs(10);
+ 	printf(" %-6s %-31s %-5s %-6s %.7f\n\r", "N", "Position Loop I_Coefficient", "0.0", "1.0", p_position_loop_g->ki);
+-	delay_us(10);
++	DelayUs(10);
+ 	printf(" %-6s %-31s %-5s %-6s %.7f\n\r", "Q", "Current Loop P_Coefficient", "0.0", "1.0", controller.k_d);
+-	delay_us(10);
++	DelayUs(10);
+ 	printf(" %-6s %-31s %-5s %-6s %.7f\n\r", "W", "Current Loop I_Coefficient", "0.0", "1.0", controller.ki_d);
+-	delay_us(10);
++	DelayUs(10);
+ 	printf(" %-6s %-31s %-5s %-6s %.5f\n\r", "A", "Velocity Loop Acc/Dec", "0.0", "5000.0", FOC_velAccDec);
+-	delay_us(10);
++	DelayUs(10);
+ 	printf(" %-6s %-31s %-5s %-6s %d\n\r", "t", "CAN Timeout (cycles)(0 = none)", "0", "100000", CAN_TIMEOUT);
+-	delay_us(10);
++	DelayUs(10);
+ //	printf(" %-6s %-31s %-5s %-6s %.5f\n\r", "V", "W_interval(rad/s)", "0.0", "5000.0", W_interval);
+-//	delay_us(10);
++//	DelayUs(10);
+ //	printf(" %-6s %-31s %-5s %-6s %d\n\r", "T", "T_interval(ms)", "0", "100000", T_interval);
+-//	delay_us(10);
++//	DelayUs(10);
+ 	printf("\n\r To reset HW OverCurrent, type 'r''0''ENTER'");
+ 	printf("\n\r To change a value, type 'prefix''value''ENTER'\n\r i.e. 'b1000''ENTER'\n\r\n\r");
+-	delay_us(10);
++	DelayUs(10);
+ 	state_change = 0;
+ }
+-- 
+2.45.2.windows.1
+

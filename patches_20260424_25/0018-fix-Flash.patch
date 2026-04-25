@@ -1,0 +1,25 @@
+---
+ Core/Src/main.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/Core/Src/main.c b/Core/Src/main.c
+index a29d89a..3ee612d 100644
+--- a/Core/Src/main.c
++++ b/Core/Src/main.c
+@@ -387,8 +387,11 @@ int main(void)
+ 			}
+ 			disablePWM();
+ 
+-			/*校准后Flash参数写入*/
+-			Write_MotorData();
++			/*校准后Flash参数写入（仅校准成功时）*/
++			if(p_encoder_g->cali_finish == 1 || p_motor_g->motor_calibrated == 1)
++			{
++				Write_MotorData();
++			}
+ 
+ 			printf("\n\r Calibration complete.  Press 'esc' to return to menu\n\r");
+ 			caliOn_flag = 0;
+-- 
+2.45.2.windows.1
+

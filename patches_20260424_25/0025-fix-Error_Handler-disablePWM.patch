@@ -1,0 +1,19 @@
+---
+ Core/Src/main.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/Core/Src/main.c b/Core/Src/main.c
+index 3ee612d..70cae21 100644
+--- a/Core/Src/main.c
++++ b/Core/Src/main.c
+@@ -533,6 +533,7 @@ void Error_Handler(void)
+ {
+   /* USER CODE BEGIN Error_Handler_Debug */
+   /* User can add his own implementation to report the HAL error return state */
++  disablePWM(); // 关闭PWM，防止电机失控
+   __disable_irq();
+   while (1)
+   {
+-- 
+2.45.2.windows.1
+

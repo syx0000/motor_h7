@@ -196,6 +196,12 @@ void (*MeasureInductance)(void);
 }MotorManager_typedef;
 /* ------------------------------ Manager Extern ------------------------------ */
 extern const MotorManager_typedef Motor;
+
+// ADC3 规则通道采样结果（在 main.c 中定义）
+extern volatile uint32_t adc3_vdc_value;
+extern volatile uint32_t adc3_temp_mos_value;
+extern volatile uint32_t adc3_temp_motor_value;
+
 void Motor_Init(void);
 void CurrentSample(void);
 void Calc_current_rms(void);
@@ -204,7 +210,6 @@ void TemperatureSample(void);
 void RunPllVelocity(void);
 void MotorStop(void);
 void EnableADC(void);
-void StartJADC(void);
 void DeltaFilter(uint8_t errcnt, volatile float phase_current, volatile float *phase_current_filter1, volatile float *phase_current_filter2);
 #endif
 

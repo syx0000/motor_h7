@@ -1,0 +1,23 @@
+---
+ UserSrc/Src/can_rv.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/UserSrc/Src/can_rv.c b/UserSrc/Src/can_rv.c
+index 01fa254..2fe5765 100644
+--- a/UserSrc/Src/can_rv.c
++++ b/UserSrc/Src/can_rv.c
+@@ -362,8 +362,9 @@ void Pack_ActiveReport(uint8_t *tData,float pos, float vel, float torque, uint16
+ //	uint16_t temp_Mos = (uint16_t)(TEMPERATURE_MOSFET*10);
+ 
+ 	uint16_t t_int = (uint16_t)(p_motor_g->phase_a_Current_RMS*100);//相电流有效值，单位A
+-	uint16_t v_int = float_to_uint(vel/GR, w_min, w_max, 16) * 10;//速度，单位0.1RPM
+-	uint32_t p_int = float_to_uint(pos, p_min, p_max, 24) * 1000;//位置，单位0.001°
++	// 修复溢出：先缩放范围再转换，避免乘法溢出
++	uint16_t v_int = float_to_uint(vel/GR * 10.0f, w_min*10.0f, w_max*10.0f, 16);//速度，单位0.1RPM
++	uint32_t p_int = float_to_uint(pos * 1000.0f, p_min*1000.0f, p_max*1000.0f, 24);//位置，单位0.001°
+ 	
+ 	uint16_t temp_Motor = (uint16_t)(TEMPERATURE_MOTOR*10);
+ 	uint16_t temp_Mos = (uint16_t)(TEMPERATURE_MOSFET*10);
+-- 
+2.45.2.windows.1
+

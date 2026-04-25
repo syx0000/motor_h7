@@ -60,6 +60,13 @@
   - `MDK-ARM/FIVE.axf` — ELF 可执行文件
   - `MDK-ARM/FIVE.hex` — Intel HEX 格式（~189KB）
   - `MDK-ARM/FIVE.bin` — 二进制格式（~67KB）
+
+### 命令行编译
+- **Keil UV4 路径**：`C:/Keil_v5/UV4/UV4.exe`
+- **增量编译**：`"C:/Keil_v5/UV4/UV4.exe" -b "MDK-ARM/FIVE.uvprojx" -o build_log.txt -j0`
+- **全量重编**：先删除 `MDK-ARM/FIVE/` 目录，再执行增量编译命令
+- **编译日志**：输出到 `build_log.txt`，检查最后一行确认 `0 Error(s), 0 Warning(s)`
+- **退出码**：0 表示成功（注意：Keil 即使有 error 也可能返回 0，必须检查日志）
   
 ### 编译产物管理
 - `MDK-ARM/FIVE/` 目录下的所有编译产物（.o, .d, .crf, .axf, .map 等）不纳入 Git 管理

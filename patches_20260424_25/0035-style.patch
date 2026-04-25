@@ -1,0 +1,258 @@
+---
+ FOC/encoder.c              |  8 ++++----
+ FOC/encoderRaw.c           |  2 +-
+ FOC/motor.c                | 14 +++++++-------
+ MotionControl/PPtraj.c     |  2 +-
+ MotionControl/trajectory.c |  2 +-
+ UserSrc/Src/Diag.c         | 16 ++++++++--------
+ UserSrc/Src/can_rv.c       | 22 +++++++++++-----------
+ UserSrc/Src/flash.c        |  2 +-
+ UserSrc/Src/uart4_VOFA+.c  |  4 ++--
+ UserSrc/Src/uart_printf.c  |  2 +-
+ 10 files changed, 37 insertions(+), 37 deletions(-)
+
+diff --git a/FOC/encoder.c b/FOC/encoder.c
+index 4b0e762..1005ff0 100644
+--- a/FOC/encoder.c
++++ b/FOC/encoder.c
+@@ -33,10 +33,10 @@ int32_t delta_time_CNT_M = 0;
+ volatile int32_t delta_encoder_cnt_M = 0;
+ volatile int32_t delta_encoderInner_cnt_M = 0;
+ 
+-float test_H1=0;
+-float test_H2=0;
+-float test_H3=0;
+-float test_H4=0;
++float test_H1 = 0;
++float test_H2 = 0;
++float test_H3 = 0;
++float test_H4 = 0;
+ uint8_t vel_zero_cnt = 0;
+ void Encoder_Init(void)//初始化
+ {
+diff --git a/FOC/encoderRaw.c b/FOC/encoderRaw.c
+index 0d3d584..df34bca 100644
+--- a/FOC/encoderRaw.c
++++ b/FOC/encoderRaw.c
+@@ -41,7 +41,7 @@ void ReadEncoderRaw(void)
+ // 偶校验计算函数
+ uint16_t calc_even_parity(uint16_t data) {
+     uint8_t count = 0;
+-    for (uint8_t i=0; i<16; i++) {
++    for (uint8_t i = 0; i<16; i++) {
+         if (data & (1<<i)) count++;
+     }
+     return (count % 2) ? 0 : 1;
+diff --git a/FOC/motor.c b/FOC/motor.c
+index 15515d0..595a37d 100644
+--- a/FOC/motor.c
++++ b/FOC/motor.c
+@@ -52,7 +52,7 @@ void Motor_Init(void)
+ 	p_motor_g->phase_order = NEGATIVE_PHASE_ORDER;//反相序
+ 	p_motor_g->pole_pairs = 8;     // @todo flash
+ 	p_motor_g->IMax = 60.0f * CURRENT_COMPENSATION_RATIO;//电流限制
+-	p_motor_g->current_loop_bandwidth = PWM_FREQUENCY_DEFAULT / 10.0f; // @todo flash 10k/10=1k
++	p_motor_g->current_loop_bandwidth = PWM_FREQUENCY_DEFAULT / 10.0f; // @todo flash 10k/10 = 1k
+ 	p_motor_g->velocity_loop_bandwidth = 100.0f;
+ 	p_motor_g->direct_current = 0.6f;
+ 	p_motor_g->flux_current = 0.6f;
+@@ -90,7 +90,7 @@ void Motor_Init(void)
+ 	
+ 	p_motor_g->lastError = 0;
+ 
+-	// 电机温度初始化（防止ADC=4095除零）
++	// 电机温度初始化（防止ADC = 4095除零）
+ 	float adc1_voltage = (float)ADC1->DR * 3.3f / 4095.0f;
+ 	if (adc1_voltage >= 3.29f) // 接近满量程，分母接近0
+ 	{
+@@ -106,7 +106,7 @@ void Motor_Init(void)
+ 	}
+ 	TEMP_MOTOR_filter2 = TEMP_MOTOR_filter1;
+ 
+-	// MOS温度初始化（防止ADC=4095除零）
++	// MOS温度初始化（防止ADC = 4095除零）
+ 	float adc2_voltage = (float)ADC2->DR * 3.3f / 4095.0f;
+ 	if (adc2_voltage >= 3.29f)
+ 	{
+@@ -204,7 +204,7 @@ static void MeasureResistance(void)
+ 	
+   for (int i = 0; i < 800; i++)
+   {
+-		d_current_sum += p_motor_g->phase_a_current;//必须是a相电流，因为theta=0时，d轴电压与a相电压相等
++		d_current_sum += p_motor_g->phase_a_current;//必须是a相电流，因为theta = 0时，d轴电压与a相电压相等
+     HAL_Delay(1); // wait for some time
+   }
+   d_current_ave = d_current_sum / 800.0f;
+@@ -232,7 +232,7 @@ static void MeasureInductance(void)
+ 	float volt_d_test = voltage_test, volt_q_test = 0.0f;//1V
+ 	float K = 0.0f;
+   uint8_t sampletime = 200;
+-	for (int k = 0; k < measure_induct_num; k++)//measure_induct_num=15
++	for (int k = 0; k < measure_induct_num; k++)//measure_induct_num = 15
+ 			current_sum[k] = 0.0f;
+ 	
+   for (int i = 0; i < sampletime; i++)
+@@ -378,7 +378,7 @@ void Calc_current_rms(void)
+ {
+     float sumA = 0,sumB = 0,sumC = 0;
+     // 1. 平方累加
+-    for (int i=0; i<SAMPLE_CNT; i++)
++    for (int i = 0; i<SAMPLE_CNT; i++)
+ 	{
+         sumA += p_motor_g->phase_a_current * p_motor_g->phase_a_current;
+ 		sumB += p_motor_g->phase_b_current * p_motor_g->phase_b_current;
+@@ -466,7 +466,7 @@ void enableADC(void)
+ void startJADC(void)
+ {
+ //硬件状态不同步：
+-//如果ADC尚未使能（ADEN=0）或未准备就绪（ADRDY=0），直接触发JADSTART可能导致转换无法启动，或者使ADC进入一个不可预知的状态，调用
++//如果ADC尚未使能（ADEN = 0）或未准备就绪（ADRDY = 0），直接触发JADSTART可能导致转换无法启动，或者使ADC进入一个不可预知的状态，调用
+ //函数HAL_ADCEx_InjectedStart可解决该问题，但是处理时间变长了
+ 	HAL_ADCEx_InjectedStart(&hadc1);//处理顺序：使能ADC -> 等待就绪 -> 启动注入转换（包含完整工作序列）
+ 	HAL_ADCEx_InjectedStart(&hadc2);
+diff --git a/MotionControl/PPtraj.c b/MotionControl/PPtraj.c
+index 5d5ba1f..23a2c4e 100644
+--- a/MotionControl/PPtraj.c
++++ b/MotionControl/PPtraj.c
+@@ -4,7 +4,7 @@
+ #include <stdbool.h>
+ #include "main.h"
+ #include "PPtraj.h"
+-uint8_t trajcplt=0;
++uint8_t trajcplt = 0;
+ 
+ 
+ MotionPlanner planner_s;
+diff --git a/MotionControl/trajectory.c b/MotionControl/trajectory.c
+index 5a50917..c7a7222 100644
+--- a/MotionControl/trajectory.c
++++ b/MotionControl/trajectory.c
+@@ -111,7 +111,7 @@ static void Get_Trape_Plan(Trajectory_t *trajectory)//将加速度、速度、
+ 	  
+ 	if (traj_active)
+ 		{
+-    for (uint16_t i=0;i <= trajectory->p_data_max_num; i++)
++    for (uint16_t i = 0;i <= trajectory->p_data_max_num; i++)
+ 			{
+         if ((trajectory->t1 - i*p_period) >= 0.00001f)
+         {
+diff --git a/UserSrc/Src/Diag.c b/UserSrc/Src/Diag.c
+index 0789d69..282f429 100644
+--- a/UserSrc/Src/Diag.c
++++ b/UserSrc/Src/Diag.c
+@@ -6,13 +6,13 @@
+ #define TEMP_MOTORWARNING	90.0f
+ #define TEMP_MOTOROver		100.0f//单位：℃
+ 
+-uint8_t Report_SWOvercur=0;
+-uint8_t Report_HWOvercur=0;
+-uint8_t Report_SWUndervolt=0;
+-uint8_t Report_SWOvervolt=0;
+-uint8_t Report_MOS_OverTEMP=0;
+-uint8_t Report_MOTOR_OverTEMP=0;
+-uint8_t Report_OverSpeed=0;
++uint8_t Report_SWOvercur = 0;
++uint8_t Report_HWOvercur = 0;
++uint8_t Report_SWUndervolt = 0;
++uint8_t Report_SWOvervolt = 0;
++uint8_t Report_MOS_OverTEMP = 0;
++uint8_t Report_MOTOR_OverTEMP = 0;
++uint8_t Report_OverSpeed = 0;
+ 
+ 
+ float a_cur[3] = {0.0f},b_cur[3] = {0.0f},c_cur[3] = {0.0f},DC_bus[3] = {0.0f},temperature_MOS[3] = {0.0f},temperature_MOTOR[3] = {0.0f};
+@@ -194,7 +194,7 @@ void errorReport(void)
+ //		HAL_GPIO_WritePin(LED3_GPIO_Port,LED3_Pin,GPIO_PIN_RESET);//红灯
+ //		flash_reg[134] = p_motor_g->lastError;
+ //		Flash.Erase();//擦除FLASH
+-//		for (uint16_t i=0; i<NUMBER_PARA; i++)  //保存140个参数
++//		for (uint16_t i = 0; i<NUMBER_PARA; i++)  //保存140个参数
+ //		{
+ //			FLASH_ProgramWord(PARAM_FLASH_SECTOR+4*i, flash_reg[i]);
+ //		}
+diff --git a/UserSrc/Src/can_rv.c b/UserSrc/Src/can_rv.c
+index d36dec1..ceae87e 100644
+--- a/UserSrc/Src/can_rv.c
++++ b/UserSrc/Src/can_rv.c
+@@ -1,16 +1,16 @@
+ #include "can_rv.h"
+ #include "FOC.h"
+ #include "main.h"
+-float KP_MIN=0.0f;
+-float KP_MAX=500.0f;
+-float KD_MIN=0.0f;
+-float KD_MAX=5.0f;
+-float POS_MIN=-5.0f;//机械角度
+-float POS_MAX=5.0f;
+-float SPD_MIN=-10.472f;//机械速度
+-float SPD_MAX=10.472f;
+-float T_MIN=-30.0f;
+-float T_MAX=30.0f;
++float KP_MIN = 0.0f;
++float KP_MAX = 500.0f;
++float KD_MIN = 0.0f;
++float KD_MAX = 5.0f;
++float POS_MIN = -5.0f; // 机械角度
++float POS_MAX = 5.0f;
++float SPD_MIN = -10.472f; // 机械速度
++float SPD_MAX = 10.472f;
++float T_MIN = -30.0f;
++float T_MAX = 30.0f;
+ 
+ #define I_MIN -50.0f
+ #define I_MAX 50.0f
+@@ -483,7 +483,7 @@ void CAN_MsgProcess(uint32_t Identifier, uint8_t *FDCANRxData)
+ 	bool bSaveDataFlag = false;
+ 	CAN_timeout = 0; // 收到CAN消息，清零超时计数器
+ 
+-	for (uint8_t i=0;i<64;i++)
++	for (uint8_t i = 0;i<64;i++)
+ 	{
+ 		FDCAN1_RX_DATA[i] = FDCANRxData[i];
+ 		FDCANRxData[i] = 0;
+diff --git a/UserSrc/Src/flash.c b/UserSrc/Src/flash.c
+index 2f78f35..4f8431a 100644
+--- a/UserSrc/Src/flash.c
++++ b/UserSrc/Src/flash.c
+@@ -127,7 +127,7 @@ void Write_MotorData(void)
+ /*Flash参数读取*/
+ void Read_MotorData (void)
+ {
+-	for (uint16_t i=0; i<32; i++)
++	for (uint16_t i = 0; i<32; i++)
+ 		flash_buffer[i] = *(uint32_t*)(DATA_FLASH_ADDR + 4*i);
+ 
+ 	// 校验magic number，无效则使用默认值
+diff --git a/UserSrc/Src/uart4_VOFA+.c b/UserSrc/Src/uart4_VOFA+.c
+index f2e9089..eca49fa 100644
+--- a/UserSrc/Src/uart4_VOFA+.c
++++ b/UserSrc/Src/uart4_VOFA+.c
+@@ -90,10 +90,10 @@ void LoadData()
+ //	VOFA_data[0] = (float)p_encoder_g->mech_pos;
+ //	VOFA_data[1] = p_encoder_g->mech_vel;
+ 	
+-	for(uint16_t i=0;i<CH_COUNT;i++)
++	for(uint16_t i = 0;i<CH_COUNT;i++)
+ 	{
+ 		temp.b = VOFA_data[i];
+-		for(uint16_t j=0;j<4;j++) VOFA_dma_tx_buf[4*i+j]=temp.a[j];
++		for(uint16_t j = 0;j<4;j++) VOFA_dma_tx_buf[4*i+j]=temp.a[j];
+ 	}
+ 	
+ 	/*帧尾*/
+diff --git a/UserSrc/Src/uart_printf.c b/UserSrc/Src/uart_printf.c
+index 53b4b2e..021477f 100644
+--- a/UserSrc/Src/uart_printf.c
++++ b/UserSrc/Src/uart_printf.c
+@@ -19,7 +19,7 @@
+ /*****************  发送字符串（重新定向） **********************/
+ void Usart_SendString(uint8_t *str)
+ {
+-    unsigned int k=0;
++    unsigned int k = 0;
+   do
+   {
+       HAL_UART_Transmit(&huart1,(uint8_t *)(str + k) ,1,1000);
+-- 
+2.45.2.windows.1
+

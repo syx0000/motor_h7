@@ -1,0 +1,87 @@
+---
+ FOC/motor.c | 54 ++++++++++++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 45 insertions(+), 9 deletions(-)
+
+diff --git a/FOC/motor.c b/FOC/motor.c
+index 773e8bd..70b70e5 100644
+--- a/FOC/motor.c
++++ b/FOC/motor.c
+@@ -90,13 +90,37 @@ void Motor_Init(void)
+ 	p_motor_g->i_q_ref = 0;
+ 	
+ 	p_motor_g->lastError = 0;
+-	
+-	float r1_ntc = 10.0f*((float)ADC1->DR*3.3f/4095.0f)/(3.3-((float)ADC1->DR*3.3f/4095.0f));//kΩ
+-	TEMP_MOTOR_filter1 = 1.0f / ( (1.0f / 298.15f) + (logf(r1_ntc / 10.0f) / 3950.0f ) ) - 273.15f;//初始化电机温度
++
++	// 电机温度初始化（防止ADC=4095除零）
++	float adc1_voltage = (float)ADC1->DR * 3.3f / 4095.0f;
++	if(adc1_voltage >= 3.29f) // 接近满量程，分母接近0
++	{
++		TEMP_MOTOR_filter1 = 25.0f; // 默认室温
++	}
++	else
++	{
++		float r1_ntc = 10.0f * adc1_voltage / (3.3f - adc1_voltage);
++		if(r1_ntc > 0.01f) // 防止log(0)
++			TEMP_MOTOR_filter1 = 1.0f / ((1.0f / 298.15f) + (logf(r1_ntc / 10.0f) / 3950.0f)) - 273.15f;
++		else
++			TEMP_MOTOR_filter1 = 25.0f;
++	}
+ 	TEMP_MOTOR_filter2 = TEMP_MOTOR_filter1;
+-	
+-	float r2_ntc = 3.3f*((float)ADC2->DR*3.3f/4095.0f)/(3.3-((float)ADC2->DR*3.3f/4095.0f));//kΩ
+-	TEMP_MOS_filter1 = 1.0f / ( (1.0f / 298.15f) + (logf(r2_ntc / 10.0f) / 3380.0f ) ) - 273.15f;//初始化MOS温度
++
++	// MOS温度初始化（防止ADC=4095除零）
++	float adc2_voltage = (float)ADC2->DR * 3.3f / 4095.0f;
++	if(adc2_voltage >= 3.29f)
++	{
++		TEMP_MOS_filter1 = 25.0f;
++	}
++	else
++	{
++		float r2_ntc = 3.3f * adc2_voltage / (3.3f - adc2_voltage);
++		if(r2_ntc > 0.01f)
++			TEMP_MOS_filter1 = 1.0f / ((1.0f / 298.15f) + (logf(r2_ntc / 10.0f) / 3380.0f)) - 273.15f;
++		else
++			TEMP_MOS_filter1 = 25.0f;
++	}
+   /* set volt to amp conversion rate */
+ }
+ 
+@@ -377,7 +401,13 @@ void temperatureSample()
+ 	//电机温度计算
+ //	float r1_ntc = resDivide_MOTOR*((float)ADC2->JDR2*ADC_supply/ADC_resolution)/(ADC_supply-((float)ADC2->JDR2*ADC_supply/ADC_resolution));//电机绕组端NTC电阻阻值 单位：kΩ
+ //	float r1_ntc = resDivide_MOTOR*((float)ADC1->DR*ADC_supply/ADC_resolution)/(ADC_supply-((float)ADC1->DR*ADC_supply/ADC_resolution));//电机绕组端NTC电阻阻值 单位：kΩ
+-	float r1_ntc = resDivide_MOTOR*((float)ADC2->JDR2/ADC_resolution)/(1-((float)ADC2->JDR2/ADC_resolution));//电机绕组端NTC电阻阻值
++	float adc_jdr2 = (float)ADC2->JDR2 / ADC_resolution;
++	float r1_ntc;
++	if(adc_jdr2 >= 0.999f)
++		r1_ntc = 999.0f; // 防止除零
++	else
++		r1_ntc = resDivide_MOTOR * (adc_jdr2 / (1.0f - adc_jdr2));
++	if(r1_ntc < 0.01f) r1_ntc = 0.01f; // 防止log(0)
+ 	TEMP_MOTOR = 1.0f / ( (1.0f / (absoluteZero + 25.0f) ) + (logf(r1_ntc / nominalRes_MOTOR) / B_const_MOTOR ) ) - absoluteZero;//单位：摄氏度
+ //	计算绝对差值
+ //  float delta = fabsf(TEMP_MOTOR - TEMP_MOTOR_filter1);
+@@ -404,8 +434,14 @@ void temperatureSample()
+ //	float r2_ntc = resDivide_MOS*((float)ADC2->JDR1*ADC_supply/ADC_resolution)/(ADC_supply-((float)ADC2->JDR1*ADC_supply/ADC_resolution));//kΩ
+ //	float r2_ntc = resDivide_MOS*((float)ADC2->DR*ADC_supply/ADC_resolution)/(ADC_supply-((float)ADC2->DR*ADC_supply/ADC_resolution));//kΩ
+ 	
+-	float r2_ntc = resDivide_MOS*((float)ADC2->JDR1/ADC_resolution)/(1-((float)ADC2->JDR1/ADC_resolution));//kΩ
+-	
++	float adc_jdr1 = (float)ADC2->JDR1 / ADC_resolution;
++	float r2_ntc;
++	if(adc_jdr1 >= 0.999f)
++		r2_ntc = 999.0f;
++	else
++		r2_ntc = resDivide_MOS * (adc_jdr1 / (1.0f - adc_jdr1));
++	if(r2_ntc < 0.01f) r2_ntc = 0.01f;
++
+ 	TEMP_MOS = 1.0f / ( (1.0f / (absoluteZero + 25.0f) ) + (logf(r2_ntc / nominalRes_MOS) / B_const_MOS ) ) - absoluteZero;//摄氏度
+ 	TEMP_MOS_filter1 = 0.6*TEMP_MOS + 0.4*TEMP_MOS_filter1;//一阶低通
+ }
+-- 
+2.45.2.windows.1
+

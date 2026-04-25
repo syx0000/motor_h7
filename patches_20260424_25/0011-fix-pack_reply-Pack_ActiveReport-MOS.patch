@@ -1,0 +1,22 @@
+---
+ UserSrc/Src/can_rv.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/UserSrc/Src/can_rv.c b/UserSrc/Src/can_rv.c
+index f2b28a2..c7b37f9 100644
+--- a/UserSrc/Src/can_rv.c
++++ b/UserSrc/Src/can_rv.c
+@@ -315,8 +315,8 @@ void pack_reply(uint8_t *tData,float pos, float vel, float torque, uint16_t err1
+ */
+ 	tData[7] = temp_Motor;//电机温度
+ 	tData[8] = temp_Motor>>8;
+-	tData[9] = temp_Motor;//Mos温度
+-	tData[10] = temp_Motor>>8;
++	tData[9] = temp_Mos;//Mos温度
++	tData[10] = temp_Mos>>8;
+ 	
+ 	if(FSMstate == REST_MODE)
+ 		state &= 0xFE;
+-- 
+2.45.2.windows.1
+

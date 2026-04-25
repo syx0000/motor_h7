@@ -1,0 +1,73 @@
+---
+ Core/Src/stm32h7xx_it.c | 6 +++---
+ FOC/encoder.c           | 5 +++--
+ UserSrc/Src/can_rv.c    | 2 +-
+ 3 files changed, 7 insertions(+), 6 deletions(-)
+
+diff --git a/Core/Src/stm32h7xx_it.c b/Core/Src/stm32h7xx_it.c
+index 57c06d0..a10967f 100644
+--- a/Core/Src/stm32h7xx_it.c
++++ b/Core/Src/stm32h7xx_it.c
+@@ -528,12 +528,12 @@ void TIM1_UP_IRQHandler(void)
+ 						}
+ 						if (pos_loop_flag==1)//两次速度环运行一次位置环 5k-2.5k
+ 						{
+-							p_position_loop_g->target = p_encoder2_g->mech_offset;
++							p_position_loop_g->target = 0.0f;
+ 							pos_loop_flag = 0;
+ 							Homing();
+ 						}
+ 				}
+-				if (fabs(p_encoder2_g->mech_offset - p_encoder2_g->mech_abs)<0.05) 
++				if (fabs(p_encoder2_g->pos_abs) < 0.05f) 
+ 				{
+ 					DisablePWM();
+ 					FSMstate = REST_MODE;
+@@ -873,7 +873,7 @@ void USART1_IRQHandler(void)
+ 	//					printf("%.1f\n\r",Motor_P);
+ 	//					break;  								
+ 					case 'p':
+-						Motor_P = fmaxf(fminf(atof(cmd_val_str), p_max), p_min) + p_encoder2_g->mech_offset;//在机械零位的基础上运动
++						Motor_P = fmaxf(fminf(atof(cmd_val_str), p_max), p_min);
+ 						/*位置插补*/
+ 						if (p_motor_g->controlMode == FOC_POSITION_LOOP_PP)
+ 						{
+diff --git a/FOC/encoder.c b/FOC/encoder.c
+index 979d090..70fb60d 100644
+--- a/FOC/encoder.c
++++ b/FOC/encoder.c
+@@ -133,7 +133,9 @@ void EncoderSample(void)//电机电角度标定后，位置加上偏移的角度
+ 	}
+ 	// 计算上电后的绝对位置（含电子圈数）
+ 	p_encoder2_g->pos_abs = PI_TIMES_2 * ((float)p_encoder2_g->rotations + (float)p_encoder2_g->mech_pos * p_encoder2_g->one_div_cpr);
+-	
++	// 从源头减去机械零位偏移，使 pos_abs 直接表示相对于零点的位置
++	p_encoder2_g->pos_abs -= p_encoder2_g->mech_offset;
++
+ 	static uint8_t vel_calc_count = 0;//vel_calc_count为静态局部变量
+ 	vel_calc_count++;
+ 	if (vel_calc_count >= VEL_CALC_PERIOD)
+@@ -182,7 +184,6 @@ static void prvCalcVelocity(void)
+ 	p_encoder_g->mech_pos_several_times_before = p_encoder_g->mech_pos;
+ 	
+ 	
+-	
+ 	delta_encoderInner_cnt_M = p_encoder2_g->mech_pos-p_encoder2_g->mech_pos_several_times_before;
+ 	if (delta_encoderInner_cnt_M > p_encoder2_g->cpr_div_two) delta_encoderInner_cnt_M -= p_encoder2_g->cpr;
+ 	else if (delta_encoderInner_cnt_M < -p_encoder2_g->cpr_div_two) delta_encoderInner_cnt_M += p_encoder2_g->cpr;
+diff --git a/UserSrc/Src/can_rv.c b/UserSrc/Src/can_rv.c
+index 59710be..b73e2ba 100644
+--- a/UserSrc/Src/can_rv.c
++++ b/UserSrc/Src/can_rv.c
+@@ -432,7 +432,7 @@ void UnpackPositionCmd(uint8_t CAN_RxData[])
+ 	uint32_t p_raw = (CAN_RxData[FDCAN_ID*6-4]<<16)|(CAN_RxData[FDCAN_ID*6-5]<<8)|(CAN_RxData[FDCAN_ID*6-6]);
+ 	uint16_t v_raw = ((CAN_RxData[FDCAN_ID*6-2])<<8)|(CAN_RxData[FDCAN_ID*6-3]);
+ 	
+-	Motor_P = (Uint32ToFloat(p_raw, p_min, p_max, 24)) + p_encoder2_g->mech_offset;
++	Motor_P = Uint32ToFloat(p_raw, p_min, p_max, 24);
+ 	
+ 	if (p_motor_g->controlMode == FOC_POSITION_LOOP_PP && trajcplt == 0)
+ 	{
+-- 
+2.45.2.windows.1
+

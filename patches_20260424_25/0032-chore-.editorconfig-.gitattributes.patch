@@ -1,0 +1,135 @@
+---
+ .editorconfig  | 48 +++++++++++++++++++++++++++++++++++++
+ .gitattributes | 65 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 113 insertions(+)
+ create mode 100644 .editorconfig
+ create mode 100644 .gitattributes
+
+diff --git a/.editorconfig b/.editorconfig
+new file mode 100644
+index 0000000..c990473
+--- /dev/null
++++ b/.editorconfig
+@@ -0,0 +1,48 @@
++# EditorConfig for STM32H7 FOC Motor Control Project
++# https://editorconfig.org
++
++root = true
++
++# All files
++[*]
++charset = utf-8
++insert_final_newline = true
++trim_trailing_whitespace = true
++
++# C/C++ source files
++[*.{c,h,cpp,hpp}]
++indent_style = tab
++indent_size = 4
++end_of_line = crlf
++
++# Markdown files
++[*.md]
++indent_style = space
++indent_size = 2
++end_of_line = lf
++trim_trailing_whitespace = false
++
++# YAML files
++[*.{yml,yaml}]
++indent_style = space
++indent_size = 2
++end_of_line = lf
++
++# JSON files
++[*.json]
++indent_style = space
++indent_size = 2
++end_of_line = lf
++
++# Makefile
++[Makefile]
++indent_style = tab
++end_of_line = lf
++
++# Git files
++[.gitignore]
++end_of_line = lf
++
++# Keil project files
++[*.{uvprojx,uvoptx}]
++end_of_line = crlf
+diff --git a/.gitattributes b/.gitattributes
+new file mode 100644
+index 0000000..0a71f12
+--- /dev/null
++++ b/.gitattributes
+@@ -0,0 +1,65 @@
++# Git attributes for STM32H7 FOC Motor Control Project
++
++# Auto detect text files and perform LF normalization
++* text=auto
++
++# C/C++ source files - CRLF for Windows/Keil compatibility
++*.c text eol=crlf
++*.h text eol=crlf
++*.cpp text eol=crlf
++*.hpp text eol=crlf
++
++# Markdown and documentation - LF
++*.md text eol=lf
++*.txt text eol=lf
++
++# Configuration files - LF
++*.json text eol=lf
++*.yml text eol=lf
++*.yaml text eol=lf
++.gitignore text eol=lf
++.gitattributes text eol=lf
++.editorconfig text eol=lf
++
++# Keil MDK project files - CRLF
++*.uvprojx text eol=crlf
++*.uvoptx text eol=crlf
++*.uvguix.* text eol=crlf
++*.sct text eol=crlf
++
++# STM32CubeMX files - CRLF
++*.ioc text eol=crlf
++
++# Assembly files - CRLF
++*.s text eol=crlf
++*.asm text eol=crlf
++
++# Linker scripts - CRLF
++*.ld text eol=crlf
++
++# Binary files - no conversion
++*.bin binary
++*.hex binary
++*.elf binary
++*.axf binary
++*.o binary
++*.lib binary
++*.a binary
++*.so binary
++*.dll binary
++*.exe binary
++
++# Image files
++*.png binary
++*.jpg binary
++*.jpeg binary
++*.gif binary
++*.ico binary
++*.bmp binary
++
++# Archive files
++*.zip binary
++*.tar binary
++*.gz binary
++*.7z binary
++*.rar binary
+-- 
+2.45.2.windows.1
+

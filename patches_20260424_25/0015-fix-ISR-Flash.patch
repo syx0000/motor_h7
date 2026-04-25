@@ -1,0 +1,90 @@
+---
+ Core/Src/main.c         | 9 ++++++++-
+ Core/Src/stm32h7xx_it.c | 2 +-
+ UserSrc/Inc/flash.h     | 1 +
+ UserSrc/Src/can_rv.c    | 4 ++--
+ UserSrc/Src/flash.c     | 1 +
+ 5 files changed, 13 insertions(+), 4 deletions(-)
+
+diff --git a/Core/Src/main.c b/Core/Src/main.c
+index a96cd7d..a29d89a 100644
+--- a/Core/Src/main.c
++++ b/Core/Src/main.c
+@@ -250,7 +250,14 @@ int main(void)
+ 			
+ 			u8_1msFlag = 0;
+ 		}
+-		
++
++		// Flash写入标志检查（主循环执行，避免ISR阻塞）
++		if(flash_write_pending == 1)
++		{
++			flash_write_pending = 0;
++			Write_MotorData();
++		}
++
+ 		if(stateChange==1)
+ 		{
+ 			FSMstate = MOTOR_MODE;
+diff --git a/Core/Src/stm32h7xx_it.c b/Core/Src/stm32h7xx_it.c
+index a230825..c63be4c 100644
+--- a/Core/Src/stm32h7xx_it.c
++++ b/Core/Src/stm32h7xx_it.c
+@@ -643,7 +643,7 @@ void USART1_IRQHandler(void)
+ 
+ 				case 'z':
+ 					p_encoder2_g->mech_offset = p_encoder2_g->mech_abs;
+-					Write_MotorData();
++					flash_write_pending = 1;
+ 					printf("\n\r  Saved new zero position:  %.4f\n\r\n\r",p_encoder2_g->mech_offset);
+ 	//				enc_sincos_read_deg(p_my_configure);  //末端角度计算
+ 	//				p_encoder2_g->mech_offset = p_my_configure->state.hy_rad_multiturn/36000.0f*PI_TIMES_2*GR;//单位：rad/28
+diff --git a/UserSrc/Inc/flash.h b/UserSrc/Inc/flash.h
+index 589f0af..c06d6e0 100644
+--- a/UserSrc/Inc/flash.h
++++ b/UserSrc/Inc/flash.h
+@@ -8,6 +8,7 @@
+ #define DATA_FLASH_SECTOR  FLASH_SECTOR_7
+ #define DATA_FLASH_ADDR    0x081E0000 // Bank2的Sector7的起始地址
+ extern uint32_t flash_buffer[32]; // 32 * 4 = 128 Bytes
++extern volatile uint8_t flash_write_pending; // ISR设置标志，主循环执行写入
+ 
+ 
+ HAL_StatusTypeDef Flash_Init(void);
+diff --git a/UserSrc/Src/can_rv.c b/UserSrc/Src/can_rv.c
+index a2e2fea..01fa254 100644
+--- a/UserSrc/Src/can_rv.c
++++ b/UserSrc/Src/can_rv.c
+@@ -508,7 +508,7 @@ void CAN_MsgProcess(uint32_t Identifier, uint8_t *FDCANRxData)
+ 			(FDCAN1_RX_DATA[4]==0xFF) && (FDCAN1_RX_DATA[5]==0xFF) && (FDCAN1_RX_DATA[6]==0xFF) && (FDCAN1_RX_DATA[7]==0xFC)))
+ 		{
+ 			p_encoder2_g->mech_offset = p_encoder2_g->mech_abs;//设置位置零点
+-			Write_MotorData();
++			flash_write_pending = 1;
+ 		}
+ 		else if(((FDCAN1_RX_DATA[0]==0xFF) && (FDCAN1_RX_DATA[1]==0xFF) && (FDCAN1_RX_DATA[2]==0xFF) && (FDCAN1_RX_DATA[3]==0xFF) && 
+ 			(FDCAN1_RX_DATA[4]==0xFF) && (FDCAN1_RX_DATA[5]==0xFF) && (FDCAN1_RX_DATA[6]==0xFF) && (FDCAN1_RX_DATA[7]==0xFD)))
+@@ -809,7 +809,7 @@ void CAN_MsgProcess(uint32_t Identifier, uint8_t *FDCANRxData)
+ 					break;
+ 				}
+ 				if(bSaveDataFlag == true)
+-					Write_MotorData();
++					flash_write_pending = 1;
+ 				
+ 				FDCAN1_TxData[0] = 0x60;
+ 				FDCAN1_TxData[1] = FDCAN1_RX_DATA[1];
+diff --git a/UserSrc/Src/flash.c b/UserSrc/Src/flash.c
+index 37ea778..25bfbf2 100644
+--- a/UserSrc/Src/flash.c
++++ b/UserSrc/Src/flash.c
+@@ -6,6 +6,7 @@
+ 
+ // 定义一个32字节的缓冲区
+ uint32_t flash_buffer[32]; // 32 * 4 = 128 Bytes
++volatile uint8_t flash_write_pending = 0; // ISR设置标志，主循环执行写入
+ 
+ HAL_StatusTypeDef Flash_Init(void)
+ {
+-- 
+2.45.2.windows.1
+

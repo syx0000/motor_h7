@@ -1,0 +1,40 @@
+---
+ MotionControl/PPtraj.c     | 8 +++++++-
+ MotionControl/trajectory.c | 2 +-
+ 2 files changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/MotionControl/PPtraj.c b/MotionControl/PPtraj.c
+index c0e68a8..426e945 100644
+--- a/MotionControl/PPtraj.c
++++ b/MotionControl/PPtraj.c
+@@ -42,7 +42,13 @@ void init_planner(MotionPlanner* planner, float start_pos, float target, float v
+ 	// 计算运动方向
+ 	const float sign_dir = (displacement >= 0) ? 1.0f : -1.0f;
+ 		
+-	float effective_acc = (acc * dec) / (acc + dec);
++	float effective_acc;
++	if((acc + dec) < 1e-6f)
++	{
++		planner->total_time = 0.0f;
++		return;
++	}
++	effective_acc = (acc * dec) / (acc + dec);
+ //	float max_feasible_v = sqrtf(2 * effective_acc * abs_displacement + start_vel * start_vel);
+ 	float max_feasible_v = sqrtf(2 * effective_acc * abs_displacement);
+ 		
+diff --git a/MotionControl/trajectory.c b/MotionControl/trajectory.c
+index ec84078..85065d6 100644
+--- a/MotionControl/trajectory.c
++++ b/MotionControl/trajectory.c
+@@ -64,7 +64,7 @@ static void Get_Trape_Para(Trajectory_t *trajectory)//根据给定参数（pos1
+ 		}
+     if(sa+sd > sq)//21.9325568 加减速时间内的路程已经大于要走的路程，对vel_max重新计算赋值
+     {
+-			trajectory->vel_max = sqrt(2.0f * sq / (1.0f / trajectory->acc + 1.0f / trajectory->dec));
++			trajectory->vel_max = sqrtf(2.0f * sq / (1.0f / trajectory->acc + 1.0f / trajectory->dec));
+ 			trajectory->t1 = trajectory->vel_max/trajectory->acc;
+ 			trajectory->t2 = 0;
+ 			trajectory->t3 = trajectory->vel_max/trajectory->dec;
+-- 
+2.45.2.windows.1
+

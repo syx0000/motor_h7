@@ -1,0 +1,199 @@
+---
+ CLAUDE.md       | 46 +++++++++++++++++++++++++++++++++++++++++++---
+ Core/Src/main.c | 16 ----------------
+ FOC/FOC.c       | 28 +++++++++++++++-------------
+ FOC/motor.c     | 10 +++++-----
+ FOC/pid.c       |  7 ++++---
+ 5 files changed, 67 insertions(+), 40 deletions(-)
+
+diff --git a/CLAUDE.md b/CLAUDE.md
+index 1c82f8a..8a0305d 100644
+--- a/CLAUDE.md
++++ b/CLAUDE.md
+@@ -22,6 +22,46 @@
+ - 协议：HTTPS
+ 
+ ## 编码规范
+-- C 语言（嵌入式 ARM）
+-- 使用 STM32 HAL 库
+-- 中文注释
++
++### 代码风格
++- **命名规范**
++  - 函数：PascalCase（如 `EncoderSample`, `CurrentSample`, `EnablePWM`）
++  - 宏定义：全大写+下划线（如 `V_WINDOW_N`, `RES_DIVIDE_MOS`, `CLAMP`）
++  - 变量：camelCase（如 `motorState`, `canTimeout`）
++  
++- **格式规范**
++  - 缩进：Tab（4空格宽度）
++  - 行尾：CRLF（Windows）
++  - 编码：UTF-8（无BOM）
++  - 关键字后加空格：`if (`, `for (`, `while (`, `switch (`
++  - 赋值运算符前后加空格：`a = b`
++  - 最多连续2个空行
++  - 文件末尾保留换行符
++
++- **语言规范**
++  - C 语言（嵌入式 ARM）
++  - 使用 STM32 HAL 库
++  - 中文注释
++  - 浮点常量添加 `f` 后缀（如 `0.5f`, `3.14f`）
++  - ISR 与主循环共享变量必须添加 `volatile`
++  - 避免严格别名违规（使用 union 进行类型双关）
++
++## 编译方案
++
++### 编译环境
++- IDE：Keil MDK-ARM (uVision)
++- 编译器：ARM Compiler 6 (ARMCLANG)
++- 优化级别：-O2
++- 目标：STM32H743VITx
++
++### 编译标准
++- **目标：0 error, 0 warning**
++- 编译输出：
++  - `MDK-ARM/FIVE.axf` — ELF 可执行文件
++  - `MDK-ARM/FIVE.hex` — Intel HEX 格式（~189KB）
++  - `MDK-ARM/FIVE.bin` — 二进制格式（~67KB）
++  
++### 编译产物管理
++- `MDK-ARM/FIVE/` 目录下的所有编译产物（.o, .d, .crf, .axf, .map 等）不纳入 Git 管理
++- `.gitignore` 已配置忽略规则
++- 工程文件 `FIVE.uvprojx` 和 `FIVE.ioc` 纳入版本控制
+diff --git a/Core/Src/main.c b/Core/Src/main.c
+index c381942..afbe94b 100644
+--- a/Core/Src/main.c
++++ b/Core/Src/main.c
+@@ -50,7 +50,6 @@
+ /* Private variables ---------------------------------------------------------*/
+ 
+ /* USER CODE BEGIN PV */
+-uint8_t stateChange = 0;
+ 
+ 
+ uint8_t TorqueTestFlag = 0;//测试转矩控制精度
+@@ -258,21 +257,6 @@ int main(void)
+ 			Write_MotorData();
+ 		}
+ 
+-		if (stateChange==1)
+-		{
+-			FSMstate = MOTOR_MODE;
+-			state_change = 1;
+-			stateChange = 0;
+-		}
+-		if (stateChange==2)
+-		{
+-			EnablePWM();
+-			ApplyVoltDQToSVPWM(1.5, 0, PI/2.0f);
+-			HAL_Delay(1000);
+-			stateChange = 0;
+-			DisablePWM();
+-		}
+-
+ //		if (HAL_GPIO_ReadPin(K1_GPIO_Port,K1_Pin) == GPIO_PIN_RESET)  /* 霍尔传感器状态获取 */
+ //		{
+ ////		caliOn_flag = 1;
+diff --git a/FOC/FOC.c b/FOC/FOC.c
+index e29a2f5..47ea868 100644
+--- a/FOC/FOC.c
++++ b/FOC/FOC.c
+@@ -310,19 +310,21 @@ void CurrentLoop()//电流环 CLARK和PARK变换+PI+SVPWM
+ //启动dq轴电流滤波
+ //	float i_d_error = p_motor_g->i_d_ref - p_motor_g->D_axis_current_filt;
+ //	float i_q_error = p_motor_g->i_q_ref - p_motor_g->Q_axis_current_filt;
+-	// Integrate Error //
+-	controller.d_int += controller.ki_d*i_d_error;
+-	controller.q_int += controller.ki_q*i_q_error;
+-
+-	if (controller.d_int>OVERMODULATION*p_motor_g->vbus)
+-		controller.d_int=OVERMODULATION*p_motor_g->vbus;
+-	else if (controller.d_int<-OVERMODULATION*p_motor_g->vbus) 
+-		controller.d_int=-OVERMODULATION*p_motor_g->vbus;
+-	
+-	if (controller.q_int>OVERMODULATION*p_motor_g->vbus) 
+-		controller.q_int=OVERMODULATION*p_motor_g->vbus;
+-	else if (controller.q_int<-OVERMODULATION*p_motor_g->vbus) 
+-		controller.q_int=-OVERMODULATION*p_motor_g->vbus;
++	// Integrate Error（冻结策略：输出饱和时停止积分累积）
++	float v_bus_limit = OVERMODULATION * p_motor_g->vbus;
++	float d_int_new = controller.d_int + controller.ki_d * i_d_error;
++	float q_int_new = controller.q_int + controller.ki_q * i_q_error;
++
++	// D轴：仅在积分不会导致输出饱和时才更新
++	if (fabsf(controller.k_d * i_d_error + d_int_new) < v_bus_limit)
++		controller.d_int = d_int_new;
++	// 积分限幅（防止极端情况）
++	controller.d_int = fmaxf(-v_bus_limit, fminf(v_bus_limit, controller.d_int));
++
++	// Q轴：同上
++	if (fabsf(controller.k_q * i_q_error + q_int_new) < v_bus_limit)
++		controller.q_int = q_int_new;
++	controller.q_int = fmaxf(-v_bus_limit, fminf(v_bus_limit, controller.q_int));
+ 	
+ 	/*使用给定电角速度计算前馈*/
+ 	controller.v_d_ff = -p_velocity_loop_g->target*p_motor_g->pole_pairs*p_motor_g->phase_inductance*p_motor_g->i_q_ref;
+diff --git a/FOC/motor.c b/FOC/motor.c
+index a6c83df..52dd582 100644
+--- a/FOC/motor.c
++++ b/FOC/motor.c
+@@ -92,7 +92,7 @@ void Motor_Init(void)
+ 
+ 	// 电机温度初始化（防止ADC = 4095除零）
+ 	float adc1_voltage = (float)ADC1->DR * 3.3f / 4095.0f;
+-	if (adc1_voltage >= 3.29f) // 接近满量程，分母接近0
++	if (adc1_voltage >= 3.2f) // 接近满量程，分母接近0
+ 	{
+ 		TEMP_MOTOR_filter1 = 25.0f; // 默认室温
+ 	}
+@@ -108,7 +108,7 @@ void Motor_Init(void)
+ 
+ 	// MOS温度初始化（防止ADC = 4095除零）
+ 	float adc2_voltage = (float)ADC2->DR * 3.3f / 4095.0f;
+-	if (adc2_voltage >= 3.29f)
++	if (adc2_voltage >= 3.2f)
+ 	{
+ 		TEMP_MOS_filter1 = 25.0f;
+ 	}
+@@ -401,8 +401,8 @@ void TemperatureSample()
+ //	float r1_ntc = RES_DIVIDE_MOTOR*((float)ADC1->DR*ADC_supply/ADC_resolution)/(ADC_supply-((float)ADC1->DR*ADC_supply/ADC_resolution));//电机绕组端NTC电阻阻值 单位：kΩ
+ 	float adc_jdr2 = (float)ADC2->JDR2 / ADC_resolution;
+ 	float r1_ntc;
+-	if (adc_jdr2 >= 0.999f)
+-		r1_ntc = 999.0f; // 防止除零
++	if (adc_jdr2 >= 0.97f) // 更保守的阈值，防止除零
++		r1_ntc = 999.0f;
+ 	else
+ 		r1_ntc = RES_DIVIDE_MOTOR * (adc_jdr2 / (1.0f - adc_jdr2));
+ 	if (r1_ntc < 0.01f) r1_ntc = 0.01f; // 防止log(0)
+@@ -434,7 +434,7 @@ void TemperatureSample()
+ 	
+ 	float adc_jdr1 = (float)ADC2->JDR1 / ADC_resolution;
+ 	float r2_ntc;
+-	if (adc_jdr1 >= 0.999f)
++	if (adc_jdr1 >= 0.97f) // 更保守的阈值，防止除零
+ 		r2_ntc = 999.0f;
+ 	else
+ 		r2_ntc = RES_DIVIDE_MOS * (adc_jdr1 / (1.0f - adc_jdr1));
+diff --git a/FOC/pid.c b/FOC/pid.c
+index a6b081f..6263895 100644
+--- a/FOC/pid.c
++++ b/FOC/pid.c
+@@ -139,10 +139,11 @@ static float DoPidCalc(pid_t *pid, float feedback)
+ 		pid->P = pid->kp * pid->err;//比例系数×误差
+ 		pid->output = pid->P + pid->feedforward * pid->feedforward_ratio;
+ 
+-		// 积分饱和冻结策略：输出饱和时停止积分累积
+-		if (fabsf(pid->output + pid->I) < pid->output_limit)
++		// 积分饱和冻结策略：新积分值导致输出饱和时停止累积
++		float i_new = pid->I + pid->ki * pid->err;
++		if (fabsf(pid->output + i_new) < pid->output_limit)
+ 		{
+-			pid->I += pid->ki * pid->err;//积分系数×误差（一直累积）
++			pid->I = i_new;
+ 		}
+ 		// 积分限幅
+ 		pid->I = MIN(pid->I, pid->output_limit);
+-- 
+2.45.2.windows.1
+

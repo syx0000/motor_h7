@@ -1,0 +1,18 @@
+---
+ UserSrc/Src/flash.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/UserSrc/Src/flash.c b/UserSrc/Src/flash.c
+index 879bdd8..607d5ce 100644
+--- a/UserSrc/Src/flash.c
++++ b/UserSrc/Src/flash.c
+@@ -185,4 +185,4 @@ float FlashUint2Float(uint32_t var)
+ 	
+ 	a.da = var;
+ 	return a.f;
+-}
+\ No newline at end of file
++}
+-- 
+2.45.2.windows.1
+

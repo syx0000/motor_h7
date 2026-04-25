@@ -1,0 +1,35 @@
+---
+ Core/Src/stm32h7xx_it.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/Core/Src/stm32h7xx_it.c b/Core/Src/stm32h7xx_it.c
+index 47d5069..a230825 100644
+--- a/Core/Src/stm32h7xx_it.c
++++ b/Core/Src/stm32h7xx_it.c
+@@ -805,9 +805,9 @@ void USART1_IRQHandler(void)
+ 				{
+ 					cmd_id = c;
+ 				}
+-				else
++				else if(char_count - 1 < 8)
+ 				{
+-					cmd_val[char_count-1] = c;   
++					cmd_val[char_count-1] = c;
+ 				}
+ 				char_count++;
+ 			}
+@@ -892,9 +892,9 @@ void USART1_IRQHandler(void)
+ 				{
+ 					cmd_id = c;
+ 				}
+-				else
++				else if(char_count - 1 < 8)
+ 				{
+-					cmd_val[char_count-1] = c;   
++					cmd_val[char_count-1] = c;
+ 				}
+ 				char_count++;
+ 			}
+-- 
+2.45.2.windows.1
+

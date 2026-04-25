@@ -1,0 +1,56 @@
+---
+ FOC/SweepSine.c        | 1 -
+ FOC/motor.c            | 1 -
+ MotionControl/PPtraj.c | 2 --
+ UserSrc/Src/Diag.c     | 1 -
+ 4 files changed, 5 deletions(-)
+
+diff --git a/FOC/SweepSine.c b/FOC/SweepSine.c
+index 6a34813..ebe0e3b 100644
+--- a/FOC/SweepSine.c
++++ b/FOC/SweepSine.c
+@@ -18,7 +18,6 @@
+ #endif
+ 
+ 
+-
+ /**
+  * @brief 初始化扫频信号发生器
+  * @param gen 发生器结构体指针
+diff --git a/FOC/motor.c b/FOC/motor.c
+index 595a37d..84f9cd2 100644
+--- a/FOC/motor.c
++++ b/FOC/motor.c
+@@ -124,7 +124,6 @@ void Motor_Init(void)
+ }
+ 
+ 
+-
+ float pos_estimate_counts_ = 0.0f;  //当前估算的位置值，单位[count]  
+ float pos_cpr_counts_ = 0.0f;       //当前约束在cpr范围内的位置值，单位[count]
+ float current_meas_period = 0.0001;
+diff --git a/MotionControl/PPtraj.c b/MotionControl/PPtraj.c
+index 23a2c4e..41e29cc 100644
+--- a/MotionControl/PPtraj.c
++++ b/MotionControl/PPtraj.c
+@@ -115,8 +115,6 @@ void init_planner(MotionPlanner* planner, float start_pos, float target, float v
+ }
+ 
+ 
+-
+-
+ // 获取下一个规划位置（时间步长建议0.001-0.1秒 0.002s）
+ bool get_next_position(MotionPlanner* planner, float dt, float* position)
+ {
+diff --git a/UserSrc/Src/Diag.c b/UserSrc/Src/Diag.c
+index 282f429..d83d644 100644
+--- a/UserSrc/Src/Diag.c
++++ b/UserSrc/Src/Diag.c
+@@ -244,4 +244,3 @@ void errorReport(void)
+ }
+ 
+ 
+-
+-- 
+2.45.2.windows.1
+

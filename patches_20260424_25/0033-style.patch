@@ -1,0 +1,247 @@
+---
+ FOC/FOC.c     |  4 ++--
+ FOC/FOC.h     |  8 ++++----
+ FOC/encoder.c | 33 ++++++++++++++++-----------------
+ FOC/motor.c   | 39 +++++++++++++++++++--------------------
+ FOC/motor.h   |  2 +-
+ 5 files changed, 42 insertions(+), 44 deletions(-)
+
+diff --git a/FOC/FOC.c b/FOC/FOC.c
+index 24fbf6c..9950ded 100644
+--- a/FOC/FOC.c
++++ b/FOC/FOC.c
+@@ -261,9 +261,9 @@ void VelocityLoop(void)//速度环 PI运算得到q轴电流给定 p_motor_g->i_d
+ 	/*速度斜坡规划*/
+ 	if(p_motor_g->controlMode == FOC_VELOCITY_LOOP)//速度闭环添加规划
+ 	{
+-		float max_step_size = fabsf(FOC_velAccDec * vel_calc_period / PWM_FREQUENCY_DEFAULT);
++		float max_step_size = fabsf(FOC_velAccDec * VEL_CALC_PERIOD / PWM_FREQUENCY_DEFAULT);
+ 		float full_step = p_velocity_loop_g->targetend - p_velocity_loop_g->target;
+-		float step = clamp(full_step, -max_step_size, max_step_size);
++		float step = CLAMP(full_step, -max_step_size, max_step_size);
+ 		p_velocity_loop_g->target += step;
+ 	}
+ 	/*位置闭环下摆臂实验中增加前馈控制，提高速度环响应速度*/
+diff --git a/FOC/FOC.h b/FOC/FOC.h
+index 679d6bf..8a7dce6 100644
+--- a/FOC/FOC.h
++++ b/FOC/FOC.h
+@@ -111,7 +111,7 @@ extern ControllerStruct controller;
+ #define _2_BY_3 			0.6666666666667f
+ #define MAX(a, b) (a > b ? a : b)
+ #define MIN(a, b) (a < b ? a : b)
+-#define clamp(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
++#define CLAMP(amt, low, high) ((amt) < (low) ? (low) : ((amt) > (high) ? (high) : (amt)))
+ #define ADC_sample_time 400.0f; // remain some time for ADC sample
+ 
+ static void SVPWM(float alpha, float beta);
+@@ -155,9 +155,9 @@ uint8_t DWT_Init(void);
+ #define PWM_FREQUENCY_DEFAULT	10000.0f		// Frequence of pwm[Hz]
+ #define PeriodPWM 0.0001f
+ 
+-#define current_compensation_ratio 1.00f
+-#define vel_calc_period 4  // 采集位置和解算速度的周期比值
+-#define pos_calc_period 4  // 采集位置和进位置环的周期比值
++#define CURRENT_COMPENSATION_RATIO 1.00f
++#define VEL_CALC_PERIOD 4  // 采集位置和解算速度的周期比值
++#define POS_CALC_PERIOD 4  // 采集位置和进位置环的周期比值
+ #define KT_OUT 1.48//3.5f            //KT*GR  模组测试得到
+ #endif
+ 
+diff --git a/FOC/encoder.c b/FOC/encoder.c
+index ff33ee7..e369944 100644
+--- a/FOC/encoder.c
++++ b/FOC/encoder.c
+@@ -4,11 +4,10 @@
+ #include "stdlib.h"
+ 
+ /*速度解算相关*/
+-#define v_window_N 2//滑窗滤波窗口大小
+-//#define v_window_N 20//滑窗滤波窗口大小
+-#define v_window_N_Inner 10//滑窗滤波窗口大小
+-float M_velVec[v_window_N]={0};//M法速度解算滑窗滤波速度数组
+-float M_velVec_Inner[v_window_N_Inner]={0};//M法速度解算滑窗滤波速度数组
++#define V_WINDOW_N 2 // 滑窗滤波窗口大小
++#define V_WINDOW_N_INNER 10 // 滑窗滤波窗口大小
++float M_velVec[V_WINDOW_N] = {0}; // M法速度解算滑窗滤波速度数组
++float M_velVec_Inner[V_WINDOW_N_INNER] = {0}; // M法速度解算滑窗滤波速度数组
+ 
+ volatile float encoder_theta;
+ Encoder_t encoder_g;
+@@ -137,7 +136,7 @@ void encoderSample(void)//电机电角度标定后，位置加上偏移的角度
+ 	
+ 	static uint8_t vel_calc_count = 0;//vel_calc_count为静态局部变量
+ 	vel_calc_count++;
+-	if(vel_calc_count >= vel_calc_period)
++	if(vel_calc_count >= VEL_CALC_PERIOD)
+ 	{
+ 		vel_calc_count = 0;
+ 		vel_loop_flag = 1;
+@@ -146,7 +145,7 @@ void encoderSample(void)//电机电角度标定后，位置加上偏移的角度
+ 	
+ 	static uint8_t pos_calc_count = 0;
+ 	pos_calc_count++;
+-	if(pos_calc_count >= pos_calc_period)
++	if(pos_calc_count >= POS_CALC_PERIOD)
+ 	{
+ 		pos_calc_count = 0;
+ 		pos_loop_flag = 1;
+@@ -164,17 +163,17 @@ static void prvCalcVelocity(void)
+ 	if(delta_encoder_cnt_M > p_encoder_g->cpr_div_two) delta_encoder_cnt_M -= p_encoder_g->cpr;
+ 	else if (delta_encoder_cnt_M < -p_encoder_g->cpr_div_two) delta_encoder_cnt_M += p_encoder_g->cpr;
+ 	
+-	p_encoder_g->mech_vel = delta_encoder_cnt_M * PI_TIMES_2 * PWM_FREQUENCY_DEFAULT / p_encoder_g->cpr / (float)vel_calc_period;
++	p_encoder_g->mech_vel = delta_encoder_cnt_M * PI_TIMES_2 * PWM_FREQUENCY_DEFAULT / p_encoder_g->cpr / (float)VEL_CALC_PERIOD;
+ 
+ 	/*M法滑窗滤波*/
+ 	float sum_M = p_encoder_g->mech_vel;
+-	for (uint16_t i = 1; i < v_window_N; i++)
++	for (uint16_t i = 1; i < V_WINDOW_N; i++)
+ 	{
+-			M_velVec[v_window_N - i] = M_velVec[v_window_N - i - 1];
+-			sum_M += M_velVec[v_window_N - i];
++			M_velVec[V_WINDOW_N - i] = M_velVec[V_WINDOW_N - i - 1];
++			sum_M += M_velVec[V_WINDOW_N - i];
+ 	}
+ 	M_velVec[0] = p_encoder_g->mech_vel;
+-	p_encoder_g->mech_vel =  sum_M/(float)v_window_N;
++	p_encoder_g->mech_vel =  sum_M/(float)V_WINDOW_N;
+ 	if((p_encoder_g->mech_vel == 0) && (FSMstate == MOTOR_MODE)) vel_zero_cnt++;
+ 
+ 	// 一阶低通滤波
+@@ -188,17 +187,17 @@ static void prvCalcVelocity(void)
+ 	if(delta_encoderInner_cnt_M > p_encoder2_g->cpr_div_two) delta_encoderInner_cnt_M -= p_encoder2_g->cpr;
+ 	else if (delta_encoderInner_cnt_M < -p_encoder2_g->cpr_div_two) delta_encoderInner_cnt_M += p_encoder2_g->cpr;
+ 	
+-	p_encoder2_g->mech_vel = delta_encoderInner_cnt_M * PI_TIMES_2 * PWM_FREQUENCY_DEFAULT / p_encoder2_g->cpr / (float)vel_calc_period;
++	p_encoder2_g->mech_vel = delta_encoderInner_cnt_M * PI_TIMES_2 * PWM_FREQUENCY_DEFAULT / p_encoder2_g->cpr / (float)VEL_CALC_PERIOD;
+ 
+ 	/*M法滑窗滤波*/
+ 	float sum_M_Inner = p_encoder2_g->mech_vel;
+-	for (uint16_t j = 1; j < v_window_N_Inner; j++)
++	for (uint16_t j = 1; j < V_WINDOW_N_INNER; j++)
+ 	{
+-			M_velVec_Inner[v_window_N_Inner - j] = M_velVec_Inner[v_window_N_Inner - j - 1];
+-			sum_M_Inner += M_velVec_Inner[v_window_N_Inner - j];
++			M_velVec_Inner[V_WINDOW_N_INNER - j] = M_velVec_Inner[V_WINDOW_N_INNER - j - 1];
++			sum_M_Inner += M_velVec_Inner[V_WINDOW_N_INNER - j];
+ 	}
+ 	M_velVec_Inner[0] = p_encoder2_g->mech_vel;
+-	p_encoder2_g->mech_vel =  sum_M_Inner/(float)v_window_N_Inner;
++	p_encoder2_g->mech_vel =  sum_M_Inner/(float)V_WINDOW_N_INNER;
+ 
+ 	// 一阶低通滤波
+ 	p_encoder2_g->mech_vel_filt += v_filter_k * (p_encoder2_g->mech_vel - p_encoder2_g->mech_vel_filt);
+diff --git a/FOC/motor.c b/FOC/motor.c
+index 70b70e5..d8ac278 100644
+--- a/FOC/motor.c
++++ b/FOC/motor.c
+@@ -25,21 +25,20 @@ const float sample_resistance = 0.0025f;//采样电阻
+ 
+ //const float voltage_coefficient = 0.016193848;//1M 910k 100k
+ //static const float voltage_coefficient = 0.0169189453125;//1M 1M 100k
+-//static const float voltage_coefficient = vlotage_resDivide*ADC_supply/ADC_resolution;
++//static const float voltage_coefficient = VOLTAGE_RES_DIVIDE*ADC_supply/ADC_resolution;
+ static const float voltage_coefficient = ADC_supply/ADC_resolution;//1M 1M 100k
+ /*电流采样*/
+-#define HALL_sensitivity 0.044f//44mV/A
+-//#define HALL_sensitivity 0.132f//44mV/A
++#define HALL_SENSITIVITY 0.044f // 44mV/A
+ /*温度采样*/
+-#define B_const_MOS 3950.0f
+-#define resDivide_MOS 10.0f//kΩ
+-#define nominalRes_MOS 10.0f//kΩ
++#define B_CONST_MOS 3950.0f
++#define RES_DIVIDE_MOS 10.0f // kΩ
++#define NOMINAL_RES_MOS 10.0f // kΩ
+ 
+-#define B_const_MOTOR 3435.0f
+-#define resDivide_MOTOR 10.0f//kΩ
+-#define nominalRes_MOTOR 10.0f//kΩ
++#define B_CONST_MOTOR 3435.0f
++#define RES_DIVIDE_MOTOR 10.0f // kΩ
++#define NOMINAL_RES_MOTOR 10.0f // kΩ
+ 
+-#define absoluteZero 273.15f//K
++#define ABSOLUTE_ZERO 273.15f // K
+ 
+ float TEMP_MOTOR = 0.0f;
+ float TEMP_MOS = 0.0f;
+@@ -52,7 +51,7 @@ void Motor_Init(void)
+ 	p_motor_g->vbus = 48;
+ 	p_motor_g->phase_order = NEGATIVE_PHASE_ORDER;//反相序
+ 	p_motor_g->pole_pairs = 8;     // @todo flash
+-	p_motor_g->IMax = 60.0f * current_compensation_ratio;//电流限制
++	p_motor_g->IMax = 60.0f * CURRENT_COMPENSATION_RATIO;//电流限制
+ 	p_motor_g->current_loop_bandwidth = PWM_FREQUENCY_DEFAULT / 10.0f; // @todo flash 10k/10=1k
+ 	p_motor_g->velocity_loop_bandwidth = 100.0f;
+ 	p_motor_g->direct_current = 0.6f;
+@@ -83,7 +82,7 @@ void Motor_Init(void)
+ 	p_motor_g->Err1 = MotorErr1_Nomal;
+ 	p_motor_g->Err2 = MotorErr1_Nomal;
+ 	p_motor_g->Warning = MotorWarning_Nomal;
+-//	voltage_coefficient = vlotage_resDivide * 3.3f / 4096.0f;
++//	voltage_coefficient = VOLTAGE_RES_DIVIDE * 3.3f / 4096.0f;
+ 	
+ 	p_motor_g->controlMode = FOC_POSITION_LOOP;//FOC_VELOCITY_LOOP;//默认FOC速度模式
+ 	p_motor_g->i_d_ref = 0;
+@@ -399,16 +398,16 @@ void voltageSample()
+ void temperatureSample()
+ {
+ 	//电机温度计算
+-//	float r1_ntc = resDivide_MOTOR*((float)ADC2->JDR2*ADC_supply/ADC_resolution)/(ADC_supply-((float)ADC2->JDR2*ADC_supply/ADC_resolution));//电机绕组端NTC电阻阻值 单位：kΩ
+-//	float r1_ntc = resDivide_MOTOR*((float)ADC1->DR*ADC_supply/ADC_resolution)/(ADC_supply-((float)ADC1->DR*ADC_supply/ADC_resolution));//电机绕组端NTC电阻阻值 单位：kΩ
++//	float r1_ntc = RES_DIVIDE_MOTOR*((float)ADC2->JDR2*ADC_supply/ADC_resolution)/(ADC_supply-((float)ADC2->JDR2*ADC_supply/ADC_resolution));//电机绕组端NTC电阻阻值 单位：kΩ
++//	float r1_ntc = RES_DIVIDE_MOTOR*((float)ADC1->DR*ADC_supply/ADC_resolution)/(ADC_supply-((float)ADC1->DR*ADC_supply/ADC_resolution));//电机绕组端NTC电阻阻值 单位：kΩ
+ 	float adc_jdr2 = (float)ADC2->JDR2 / ADC_resolution;
+ 	float r1_ntc;
+ 	if(adc_jdr2 >= 0.999f)
+ 		r1_ntc = 999.0f; // 防止除零
+ 	else
+-		r1_ntc = resDivide_MOTOR * (adc_jdr2 / (1.0f - adc_jdr2));
++		r1_ntc = RES_DIVIDE_MOTOR * (adc_jdr2 / (1.0f - adc_jdr2));
+ 	if(r1_ntc < 0.01f) r1_ntc = 0.01f; // 防止log(0)
+-	TEMP_MOTOR = 1.0f / ( (1.0f / (absoluteZero + 25.0f) ) + (logf(r1_ntc / nominalRes_MOTOR) / B_const_MOTOR ) ) - absoluteZero;//单位：摄氏度
++	TEMP_MOTOR = 1.0f / ( (1.0f / (ABSOLUTE_ZERO + 25.0f) ) + (logf(r1_ntc / NOMINAL_RES_MOTOR) / B_CONST_MOTOR ) ) - ABSOLUTE_ZERO;//单位：摄氏度
+ //	计算绝对差值
+ //  float delta = fabsf(TEMP_MOTOR - TEMP_MOTOR_filter1);
+ //  TEMP_MOTOR_filter1 = ((delta > 1) ? TEMP_MOTOR_filter1 : TEMP_MOTOR);//100us升不了1℃吧？
+@@ -431,18 +430,18 @@ void temperatureSample()
+ 	//MOS温度计算
+ 	//共约3.5us 使用热敏电阻的Steinhart-Hart方程进行温度计算
+ //	float r2_ntc = 3.3f*3.3f/((float)ADC2->DR*3.3f/4095.0f)-3.3;//kΩ
+-//	float r2_ntc = resDivide_MOS*((float)ADC2->JDR1*ADC_supply/ADC_resolution)/(ADC_supply-((float)ADC2->JDR1*ADC_supply/ADC_resolution));//kΩ
+-//	float r2_ntc = resDivide_MOS*((float)ADC2->DR*ADC_supply/ADC_resolution)/(ADC_supply-((float)ADC2->DR*ADC_supply/ADC_resolution));//kΩ
++//	float r2_ntc = RES_DIVIDE_MOS*((float)ADC2->JDR1*ADC_supply/ADC_resolution)/(ADC_supply-((float)ADC2->JDR1*ADC_supply/ADC_resolution));//kΩ
++//	float r2_ntc = RES_DIVIDE_MOS*((float)ADC2->DR*ADC_supply/ADC_resolution)/(ADC_supply-((float)ADC2->DR*ADC_supply/ADC_resolution));//kΩ
+ 	
+ 	float adc_jdr1 = (float)ADC2->JDR1 / ADC_resolution;
+ 	float r2_ntc;
+ 	if(adc_jdr1 >= 0.999f)
+ 		r2_ntc = 999.0f;
+ 	else
+-		r2_ntc = resDivide_MOS * (adc_jdr1 / (1.0f - adc_jdr1));
++		r2_ntc = RES_DIVIDE_MOS * (adc_jdr1 / (1.0f - adc_jdr1));
+ 	if(r2_ntc < 0.01f) r2_ntc = 0.01f;
+ 
+-	TEMP_MOS = 1.0f / ( (1.0f / (absoluteZero + 25.0f) ) + (logf(r2_ntc / nominalRes_MOS) / B_const_MOS ) ) - absoluteZero;//摄氏度
++	TEMP_MOS = 1.0f / ( (1.0f / (ABSOLUTE_ZERO + 25.0f) ) + (logf(r2_ntc / NOMINAL_RES_MOS) / B_CONST_MOS ) ) - ABSOLUTE_ZERO;//摄氏度
+ 	TEMP_MOS_filter1 = 0.6*TEMP_MOS + 0.4*TEMP_MOS_filter1;//一阶低通
+ }
+ 
+diff --git a/FOC/motor.h b/FOC/motor.h
+index af91f2f..8286d1d 100644
+--- a/FOC/motor.h
++++ b/FOC/motor.h
+@@ -8,7 +8,7 @@
+ #define POSITIVE_PHASE_ORDER	1.0f
+ #define Motor_Rph	0.4965f//相电阻实测值(Ω)
+ #define Motor_Lph	0.00025062f//相电感实测值(H)
+-#define vlotage_resDivide 21.0f//电压采样分压电阻比例
++#define VOLTAGE_RES_DIVIDE 21.0f // 电压采样分压电阻比例
+ 
+ //#define ADC_sample_time 400.0f; // remain some time for ADC sample
+ 
+-- 
+2.45.2.windows.1
+

@@ -1263,11 +1263,11 @@ ARM Macro Assembler    Page 20
               00000000 
               00000000 
 Command Line: --debug --xref --diag_suppress=9931 --cpu=Cortex-M7.fp.dp --apcs=
-interwork --depend=five\startup_stm32h743xx.d -ofive\startup_stm32h743xx.o -ID:
-\iflytek_works\src\motor_h7\MDK-ARM\RTE -IC:\Keil_v5\ARM\PACK\ARM\CMSIS\4.5.0\C
-MSIS\Include --predefine="__MICROLIB SETA 1" --predefine="__UVISION_VERSION SET
-A 521" --predefine="_RTE_ SETA 1" --list=startup_stm32h743xx.lst startup_stm32h
-743xx.s
+interwork --depend=five\startup_stm32h743xx.d -ofive\startup_stm32h743xx.o -IC:
+\Users\syx19\Desktop\src_git\motor_h7\MDK-ARM\RTE -IC:\Keil_v5\ARM\PACK\ARM\CMS
+IS\4.5.0\CMSIS\Include --predefine="__MICROLIB SETA 1" --predefine="__UVISION_V
+ERSION SETA 521" --predefine="_RTE_ SETA 1" --list=startup_stm32h743xx.lst star
+tup_stm32h743xx.s
 
 
 

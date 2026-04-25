@@ -1,0 +1,19 @@
+---
+ FOC/encoder.h | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/FOC/encoder.h b/FOC/encoder.h
+index 6322fea..4aa9d60 100644
+--- a/FOC/encoder.h
++++ b/FOC/encoder.h
+@@ -55,7 +55,6 @@ typedef struct _Encoder_t
+ 	volatile float mech_vel;
+ 	float mech_vel_filt;
+ 	float elec_vel;
+-	float elec_pos_table[2048];
+ 	float elec_offset;
+ 	float mech_offset;//机械零位
+ 	float compSin;//机械角度正弦值
+-- 
+2.45.2.windows.1
+

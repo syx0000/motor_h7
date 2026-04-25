@@ -1,0 +1,20 @@
+---
+ FOC/encoder.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/FOC/encoder.c b/FOC/encoder.c
+index 54060c0..ff33ee7 100644
+--- a/FOC/encoder.c
++++ b/FOC/encoder.c
+@@ -114,6 +114,8 @@ void encoderSample(void)//电机电角度标定后，位置加上偏移的角度
+ 
+ 	// 计算电角度（减去电角度偏移）
+ 	p_encoder_g->elec_pos = ((float)p_encoder_g->mech_pos * p_encoder_g->one_div_cpr)*(float)p_motor_g->pole_pairs*PI_TIMES_2 - p_encoder_g->elec_offset;
++	p_encoder_g->elec_pos = fmodf(p_encoder_g->elec_pos, PI_TIMES_2);
++	if(p_encoder_g->elec_pos < 0) p_encoder_g->elec_pos += PI_TIMES_2;
+ 	
+ 	p_encoder2_g->last_mech_pos = p_encoder2_g->mech_pos;
+ 	p_encoder2_g->mech_pos = angleInner;
+-- 
+2.45.2.windows.1
+

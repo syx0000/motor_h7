@@ -1,0 +1,105 @@
+---
+ FOC/FOC.c | 34 +++++++++++++++++-----------------
+ FOC/FOC.h | 34 +++++++++++++++++-----------------
+ 2 files changed, 34 insertions(+), 34 deletions(-)
+
+diff --git a/FOC/FOC.c b/FOC/FOC.c
+index 46073e7..1256751 100644
+--- a/FOC/FOC.c
++++ b/FOC/FOC.c
+@@ -3,9 +3,9 @@
+ #include <math.h>
+ #include <stdint.h>
+ 
+-char cmd_val[8] = {0};
+-char cmd_id = 0;
+-char char_count = 0;
++volatile char cmd_val[8] = {0};
++volatile char cmd_id = 0;
++volatile char char_count = 0;
+ 
+ 
+ extern volatile uint16_t state_change;
+@@ -13,20 +13,20 @@ extern ControllerStruct controller;
+ /*位置插补*/
+ extern Trajectory_t trajectory_g;
+ extern Trajectory_t *p_trajectory_g;
+-char is_PPMode = 0;//默认直通
+-
+-float I_BW_set;
+-float I_SWOver_set;
+-float Motor_Iq_set;
+-float Motor_W_set;
+-float Motor_P_set;
+-float Velocity_P_set;
+-float Velocity_I_set;
+-float Position_P_set;
+-float Position_I_set;
+-float Current_P_set;
+-float Current_I_set;
+-float FOC_velAccDec_set;
++volatile char is_PPMode = 0;//默认直通
++
++volatile float I_BW_set;
++volatile float I_SWOver_set;
++volatile float Motor_Iq_set;
++volatile float Motor_W_set;
++volatile float Motor_P_set;
++volatile float Velocity_P_set;
++volatile float Velocity_I_set;
++volatile float Position_P_set;
++volatile float Position_I_set;
++volatile float Current_P_set;
++volatile float Current_I_set;
++volatile float FOC_velAccDec_set;
+ 
+ volatile uint16_t FSMstate = REST_MODE;
+ uint8_t caliOn_flag = 0;
+diff --git a/FOC/FOC.h b/FOC/FOC.h
+index b7c386b..679d6bf 100644
+--- a/FOC/FOC.h
++++ b/FOC/FOC.h
+@@ -2,23 +2,23 @@
+ #define __FOC_H
+ #include <stdint.h>
+ #include "SweepSine.h"
+-extern char cmd_val[8];
+-extern char cmd_id;
+-extern char char_count;
+-
+-extern float I_BW_set;
+-extern float I_SWOver_set;
+-extern float Motor_Iq_set;
+-extern float Motor_W_set;
+-extern float Motor_P_set;
+-extern float Velocity_P_set;
+-extern float Velocity_I_set;
+-extern float Position_P_set;
+-extern float Position_I_set;
+-extern float Current_P_set;
+-extern float Current_I_set;
+-extern float FOC_velAccDec_set;
+-extern char is_PPMode;
++extern volatile char cmd_val[8];
++extern volatile char cmd_id;
++extern volatile char char_count;
++
++extern volatile float I_BW_set;
++extern volatile float I_SWOver_set;
++extern volatile float Motor_Iq_set;
++extern volatile float Motor_W_set;
++extern volatile float Motor_P_set;
++extern volatile float Velocity_P_set;
++extern volatile float Velocity_I_set;
++extern volatile float Position_P_set;
++extern volatile float Position_I_set;
++extern volatile float Current_P_set;
++extern volatile float Current_I_set;
++extern volatile float FOC_velAccDec_set;
++extern volatile char is_PPMode;
+ #define DWT_CR              *(volatile uint32_t *)0xE0001000
+ #define DWT_CYCCNT          *(volatile uint32_t *)0xE0001004
+ #define DEM_CR              *(volatile uint32_t *)0xE000EDFC
+-- 
+2.45.2.windows.1
+

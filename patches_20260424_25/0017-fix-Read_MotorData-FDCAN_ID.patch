@@ -1,0 +1,19 @@
+---
+ UserSrc/Src/flash.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/UserSrc/Src/flash.c b/UserSrc/Src/flash.c
+index 0cb2680..bc4b07e 100644
+--- a/UserSrc/Src/flash.c
++++ b/UserSrc/Src/flash.c
+@@ -162,6 +162,7 @@ void Read_MotorData (void)
+ 	KP_MAX = uint2float(flash_buffer[15]);
+ 	KD_MIN = uint2float(flash_buffer[16]);
+ 	KD_MAX = uint2float(flash_buffer[17]);
++	FDCAN_ID = (uint8_t)flash_buffer[18];
+ }
+ 
+ typedef union
+-- 
+2.45.2.windows.1
+

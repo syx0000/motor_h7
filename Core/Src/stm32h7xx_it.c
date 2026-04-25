@@ -299,8 +299,6 @@ void TIM1_UP_IRQHandler(void)
 		u8_1msFlag = 1;
 	}
 
-	StartJADC();//ADC2 温度采样（ADC1 由 TRGO 硬件触发）
-
 	ErrorDiag();//故障诊断
 
 	EncoderSample();//编码器采样
@@ -349,11 +347,10 @@ void ADC_IRQHandler(void)
 		__HAL_ADC_CLEAR_FLAG(&hadc1, ADC_FLAG_JEOS);
 
 		CurrentSample();
-		VoltageSample();
+		// VoltageSample 已移至主循环（ADC3 规则通道采样）
 
 		ADC1->CR |= ADC_CR_JADSTART;
 
-		if (TIM1->SR & TIM_SR_UIF)
 		{
 			float PP_position;
 			switch (FSMstate)

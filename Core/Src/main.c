@@ -51,6 +51,10 @@
 
 /* USER CODE BEGIN PV */
 
+// ADC3 规则通道采样结果（全局变量）
+volatile uint32_t adc3_vdc_value = 0;
+volatile uint32_t adc3_temp_mos_value = 0;
+volatile uint32_t adc3_temp_motor_value = 0;
 
 uint8_t TorqueTestFlag = 0;//测试转矩控制精度
 uint8_t TorqueTestLoop = 3;
@@ -118,6 +122,7 @@ int main(void)
 	MX_FDCAN1_Init();
 	MX_ADC1_Init();
 	MX_ADC2_Init();
+	MX_ADC3_Init();
 	MX_USART2_UART_Init();
 	MX_USART6_UART_Init();
 	MX_USART3_UART_Init();
@@ -126,6 +131,13 @@ int main(void)
 	HAL_Delay(100);
 	//1. ADC使能
 	EnableADC();
+	// ADC3 首次同步采样（避免 vbus=0 导致 SVPWM 除零）
+	HAL_ADCEx_InjectedStart(&hadc3);
+	while (!(__HAL_ADC_GET_FLAG(&hadc3, ADC_FLAG_JEOS))) {}
+	__HAL_ADC_CLEAR_FLAG(&hadc3, ADC_FLAG_JEOS);
+	adc3_vdc_value = ADC3->JDR1;
+	adc3_temp_mos_value = ADC3->JDR2;
+	adc3_temp_motor_value = ADC3->JDR3;
 	// 启动 ADC1 注入转换并使能 JEOS 中断
 	HAL_ADCEx_InjectedStart_IT(&hadc1);
 	//2. TIM1初始化
@@ -218,7 +230,19 @@ int main(void)
 			
 		if (u8_1msFlag == 1)//1ms时基
 		{
+			// ADC3 非阻塞采样：读取上一轮结果，启动下一轮
+			if (__HAL_ADC_GET_FLAG(&hadc3, ADC_FLAG_JEOS))
+			{
+				__HAL_ADC_CLEAR_FLAG(&hadc3, ADC_FLAG_JEOS);
+				adc3_vdc_value = ADC3->JDR1;
+				adc3_temp_mos_value = ADC3->JDR2;
+				adc3_temp_motor_value = ADC3->JDR3;
+			}
+			HAL_ADCEx_InjectedStart(&hadc3);  // 启动下一轮，不等待
+
+			// 处理采样数据
 			Calc_current_rms();
+			VoltageSample();
 			TemperatureSample();
 			
 			static uint8_t cnt=0;
