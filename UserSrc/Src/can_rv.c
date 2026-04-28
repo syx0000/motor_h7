@@ -384,8 +384,8 @@ void Pack_ActiveReport(uint8_t *tData,float pos, float vel, float torque, uint16
 
 	tData[8] = temp_Motor;//电机温度
 	tData[9] = temp_Motor>>8;
-	tData[10] = temp_Motor;//Mos温度
-	tData[11] = temp_Motor>>8;
+	tData[10] = temp_Mos;//Mos温度
+	tData[11] = temp_Mos>>8;
 	
 	if (FSMstate == REST_MODE)
 		state &= 0xFE;
