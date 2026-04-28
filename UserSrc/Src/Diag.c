@@ -28,19 +28,16 @@ void ErrorDiag(void)
 //		Report_OverSpeed = 1;
 //	}
 	
-/*软件过流保护*/
+/*软件过流保护（仅检测实采样的 B、C 两相）*/
 	static uint8_t SWOvercur_cnt = 0;
 	static uint8_t indexCur = 0;
-//	static float A_CURRENT,B_CURRENT,C_CURRENT;
-	a_cur[indexCur] = p_motor_g->phase_a_current;
 	b_cur[indexCur] = p_motor_g->phase_b_current;
 	c_cur[indexCur] = p_motor_g->phase_c_current;
-	A_CURRENT = (a_cur[0] + a_cur[1] + a_cur[2]) / 3.0f;
 	B_CURRENT = (b_cur[0] + b_cur[1] + b_cur[2]) / 3.0f;
 	C_CURRENT = (c_cur[0] + c_cur[1] + c_cur[2]) / 3.0f;
 	indexCur++;
 	if (indexCur >= 3) indexCur = 0;
-	if ( ( fabsf(A_CURRENT) > I_SWOver) || ( fabsf(B_CURRENT) > I_SWOver) || ( fabsf(C_CURRENT) > I_SWOver) )
+	if ( ( fabsf(B_CURRENT) > I_SWOver) || ( fabsf(C_CURRENT) > I_SWOver) )
 	{
 		SWOvercur_cnt++;
 		if (SWOvercur_cnt > 10)
