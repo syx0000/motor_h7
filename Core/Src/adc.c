@@ -236,6 +236,7 @@ void MX_ADC3_Init(void)
   */
   sConfigInjected.InjectedChannel = ADC_CHANNEL_5;  // TEMP_MOS (PB1)
   sConfigInjected.InjectedRank = ADC_INJECTED_RANK_2;
+  sConfigInjected.InjectedSamplingTime = ADC_SAMPLETIME_64CYCLES_5;  // NTC 需要更长采样时间
   if (HAL_ADCEx_InjectedConfigChannel(&hadc3, &sConfigInjected) != HAL_OK)
   {
     Error_Handler();
@@ -245,6 +246,7 @@ void MX_ADC3_Init(void)
   */
   sConfigInjected.InjectedChannel = ADC_CHANNEL_9;  // TEMP_MOTOR (PB0)
   sConfigInjected.InjectedRank = ADC_INJECTED_RANK_3;
+  sConfigInjected.InjectedSamplingTime = ADC_SAMPLETIME_64CYCLES_5;  // NTC 需要更长采样时间
   if (HAL_ADCEx_InjectedConfigChannel(&hadc3, &sConfigInjected) != HAL_OK)
   {
     Error_Handler();
@@ -356,14 +358,9 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* adcHandle)
     }
 
     /**ADC1 GPIO Configuration
-    PA6     ------> ADC1_INP3
-    PA7     ------> ADC1_INP7
-    PC4     ------> ADC1_INP4
-    PC5     ------> ADC1_INP8
+    PC5     ------> ADC1_INP8 (CUR_C, dual mode master)
     */
-    HAL_GPIO_DeInit(GPIOA, VDC_Pin|CUR_A_Pin);
-
-    HAL_GPIO_DeInit(GPIOC, CUR_B_Pin|CUR_C_Pin);
+    HAL_GPIO_DeInit(GPIOC, CUR_C_Pin);
 
   /* USER CODE BEGIN ADC1_MspDeInit 1 */
 
