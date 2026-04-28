@@ -133,11 +133,25 @@ int main(void)
 	EnableADC();
 	// ADC3 首次同步采样（避免 vbus=0 导致 SVPWM 除零）
 	HAL_ADCEx_InjectedStart(&hadc3);
-	while (!(__HAL_ADC_GET_FLAG(&hadc3, ADC_FLAG_JEOS))) {}
-	__HAL_ADC_CLEAR_FLAG(&hadc3, ADC_FLAG_JEOS);
-	adc3_vdc_value = ADC3->JDR1;
-	adc3_temp_mos_value = ADC3->JDR2;
-	adc3_temp_motor_value = ADC3->JDR3;
+	{
+		volatile uint32_t timeout = 100000;
+		while (!(__HAL_ADC_GET_FLAG(&hadc3, ADC_FLAG_JEOS)) && timeout--)
+			;
+		if (timeout == 0)
+		{
+			// ADC3 超时，使用安全默认值
+			adc3_vdc_value = (uint16_t)(48.0f / 21.0f / ADC_supply * ADC_resolution);
+			adc3_temp_mos_value = 0;
+			adc3_temp_motor_value = 0;
+		}
+		else
+		{
+			__HAL_ADC_CLEAR_FLAG(&hadc3, ADC_FLAG_JEOS);
+			adc3_vdc_value = ADC3->JDR1;
+			adc3_temp_mos_value = ADC3->JDR2;
+			adc3_temp_motor_value = ADC3->JDR3;
+		}
+	}
 	// 启动 ADC1 注入转换并使能 JEOS 中断
 	HAL_ADCEx_InjectedStart_IT(&hadc1);
 	//2. TIM1初始化
