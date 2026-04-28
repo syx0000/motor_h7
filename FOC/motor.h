@@ -118,17 +118,15 @@ typedef struct _Motor_t
 	volatile float phase_a_current;
 	volatile float phase_a_current_filt1;
 	volatile float phase_a_current_filt2;
-	volatile float phase_a_current_actual;
+	volatile float phase_a_current_actual;  // A 相计算值（用于调试）
 
 	volatile float phase_b_current;
 	volatile float phase_b_current_filt1;
 	volatile float phase_b_current_filt2;
-	volatile float phase_b_current_actual;
-		
+
 	volatile float phase_c_current;
 	volatile float phase_c_current_filt1;
 	volatile float phase_c_current_filt2;
-	volatile float phase_c_current_actual;
 	
 	volatile float phase_a_current_filt;
 	volatile float phase_b_current_filt;

@@ -343,8 +343,8 @@ void CurrentSample()
 	// 第三相通过基尔霍夫电流定律计算（Ia + Ib + Ic = 0）
 	p_motor_g->phase_a_current = -(p_motor_g->phase_b_current + p_motor_g->phase_c_current);
 
-	// 保留 B 相实际采样值用于调试
-	p_motor_g->phase_a_current_actual = (p_motor_g->volt2amp_rate * CurrentB_Raw) / 10.0f / sample_resistance;
+	// 保留 A 相计算值用于调试
+	p_motor_g->phase_a_current_actual = p_motor_g->phase_a_current;
 
 	if (measure_time)  // 整定电感时用到
 	{
