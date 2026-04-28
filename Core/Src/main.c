@@ -279,7 +279,10 @@ int main(void)
 			if (VOFA_On)
 			{
 				LoadData();
-				HAL_UART_Transmit_DMA(&huart6,VOFA_dma_tx_buf,4*CH_COUNT+4);
+				if (huart6.gState == HAL_UART_STATE_READY)
+				{
+					HAL_UART_Transmit_DMA(&huart6,VOFA_dma_tx_buf,4*CH_COUNT+4);
+				}
 			}
 			
 			if (bDynamMode == true)

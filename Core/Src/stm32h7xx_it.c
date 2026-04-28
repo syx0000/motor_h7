@@ -328,8 +328,11 @@ void TIM1_CC_IRQHandler(void)
 			if (TIM1->CR1 & TIM_CR1_DIR)
 			{
 				// 预触发：发送编码器请求（~45µs before UP event）
-				RS485DIR_TX;
-				HAL_UART_Transmit_DMA(&huart2, USART2_TX_BUF, 1);
+				if (huart2.gState == HAL_UART_STATE_READY)
+				{
+					RS485DIR_TX;
+					HAL_UART_Transmit_DMA(&huart2, USART2_TX_BUF, 1);
+				}
 			}
 		}
 	}
