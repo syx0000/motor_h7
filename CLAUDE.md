@@ -21,6 +21,35 @@
 - 用户：yxsui <yxsui2@iflytek.com>
 - 协议：HTTPS
 
+## Git 工作流规范
+
+### 提交规范
+- **禁止自动提交**：除非用户明确要求，否则不得自动执行 `git commit`
+- **禁止自动推送**：除非用户明确要求，否则不得自动执行 `git push`
+- **Commit Message 格式**：
+  - 类型：`feat`, `fix`, `refactor`, `docs`, `chore`, `style`, `test`
+  - 格式：`<type>(<scope>): <subject>`
+  - 示例：`feat(adc): Dual Mode 两相电流采样`
+  - 末尾添加：`Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>`
+
+### Patch 导出规范
+- **导出目录**：`patches_20260424_25/`（按日期命名）
+- **命名规则**：`00XX-<type>-<brief-description>.patch`
+- **编号规则**：从 0001 开始递增，连续编号
+- **导出命令**：
+  ```bash
+  git format-patch -1 <commit-hash> --stdout | sed '1,/^---$/d' > patches_20260424_25/00XX-<name>.patch
+  ```
+- **去除头部**：使用 `sed '1,/^---$/d'` 去除 From/Date/Subject 等头部信息，只保留 diff 内容
+- **不自动提交**：导出 patch 后不自动提交到 Git，由用户决定是否提交
+- **增量导出**：
+  - 检查已有 patch 的最大编号（如 0045）
+  - 找到对应的最后一个 commit hash
+  - 只导出该 commit 之后的新 commit
+  - 避免重复导出已有的 patch
+  - 检查命令：`ls -1 patches_20260424_25/*.patch | tail -1` 查看最新 patch
+  - 增量命令：`git log --oneline <last-commit>..HEAD` 查看新增 commit
+
 ## 编码规范
 
 ### 代码风格
