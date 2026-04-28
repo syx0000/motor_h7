@@ -10,6 +10,7 @@ float M_velVec[V_WINDOW_N] = {0}; // M法速度解算滑窗滤波速度数组
 float M_velVec_Inner[V_WINDOW_N_INNER] = {0}; // M法速度解算滑窗滤波速度数组
 
 volatile float encoder_theta;
+volatile uint8_t encoder_calibrating = 0;
 Encoder_t encoder_g;
 Encoder_t encoder2_g;
 Torque_t torque_g;

@@ -15,6 +15,7 @@ uint32_t   raw_b[2688]={0};											//2688=128*p_motor_g->pole_pairs
 //-35,-36,-35,-35,-36,-35,-34,-34,-33,-30,-29};
 void OrderPhases()
 {
+	encoder_calibrating = 1;
 	///Checks phase order, to ensure that positive Q current produces
 	///torque in the positive direction wrt the position sensor.
 	p_encoder_g->rotations = 0;//否则电机长时运行后，再整定会出现问题
@@ -187,8 +188,9 @@ void Calibrate()
 
 //    PositionSensor_WriteLUT(lut);                                                      // write lookup table to position sensor object
 	printf("\n\rEncoder Electrical Offset (rad) %f\n\r",  offset);
-	p_encoder_g->elec_offset = offset;		
+	p_encoder_g->elec_offset = offset;
 	p_encoder_g->cali_finish = 1;
+	encoder_calibrating = 0;
 }
 
 void PositionSensor_WriteLUT(int32_t new_lut[128])

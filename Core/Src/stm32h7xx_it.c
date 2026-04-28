@@ -301,7 +301,8 @@ void TIM1_UP_IRQHandler(void)
 
 	ErrorDiag();//故障诊断
 
-	EncoderSample();//编码器采样
+	if (!encoder_calibrating)
+		EncoderSample();
 
 	TIM1->SR = 0x0; // reset the status register
 /* USER CODE END TIM1_UP_IRQn 0 */

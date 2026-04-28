@@ -21,6 +21,8 @@ void Encoder_Init(void);
 void EncoderSetZero(Encoder_t *enc);
 static void prvCalcVelocity(void);
 
+extern volatile uint8_t encoder_calibrating;
+
 extern uint8_t vel_loop_flag;
 extern uint8_t pos_loop_flag;
 extern float speed_w;
