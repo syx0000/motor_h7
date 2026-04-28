@@ -351,23 +351,32 @@ void CurrentSample()
 		current_a[measure_induct_num - measure_time] = p_motor_g->phase_a_current;
 		measure_time--;
 	}
+
+	// RMS 跨周期累积平方和（10kHz ISR 中累积，主循环中计算）
+	rms_sumB += p_motor_g->phase_b_current * p_motor_g->phase_b_current;
+	rms_sumC += p_motor_g->phase_c_current * p_motor_g->phase_c_current;
+	rms_cnt++;
 }
 
-#define SAMPLE_CNT 1000
+#define RMS_SAMPLE_CNT 1000
+static volatile float rms_sumB = 0.0f, rms_sumC = 0.0f;
+static volatile uint16_t rms_cnt = 0;
+
 void Calc_current_rms(void)
 {
-    float sumA = 0,sumB = 0,sumC = 0;
-    // 1. 平方累加
-    for (int i = 0; i<SAMPLE_CNT; i++)
+	if (rms_cnt >= RMS_SAMPLE_CNT)
 	{
-        sumA += p_motor_g->phase_a_current * p_motor_g->phase_a_current;
-		sumB += p_motor_g->phase_b_current * p_motor_g->phase_b_current;
-		sumC += p_motor_g->phase_c_current * p_motor_g->phase_c_current;
-    }
-    // 2. 均方根
-    p_motor_g->phase_a_Current_RMS =  sqrt(sumA / SAMPLE_CNT);
-	p_motor_g->phase_b_Current_RMS =  sqrt(sumB / SAMPLE_CNT);
-	p_motor_g->phase_c_Current_RMS =  sqrt(sumC / SAMPLE_CNT);
+		float inv_n = 1.0f / (float)rms_cnt;
+		p_motor_g->phase_b_Current_RMS = sqrtf(rms_sumB * inv_n);
+		p_motor_g->phase_c_Current_RMS = sqrtf(rms_sumC * inv_n);
+		p_motor_g->phase_a_Current_RMS = sqrtf(
+			p_motor_g->phase_b_Current_RMS * p_motor_g->phase_b_Current_RMS +
+			p_motor_g->phase_c_Current_RMS * p_motor_g->phase_c_Current_RMS +
+			p_motor_g->phase_b_Current_RMS * p_motor_g->phase_c_Current_RMS);
+		rms_sumB = 0.0f;
+		rms_sumC = 0.0f;
+		rms_cnt = 0;
+	}
 }
 
 void VoltageSample()
