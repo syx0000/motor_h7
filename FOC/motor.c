@@ -80,7 +80,7 @@ void Motor_Init(void)
 	
 	p_motor_g->error = Normal;
 	p_motor_g->Err1 = MotorErr1_Nomal;
-	p_motor_g->Err2 = MotorErr1_Nomal;
+	p_motor_g->Err2 = MotorErr2_Nomal;
 	p_motor_g->Warning = MotorWarning_Nomal;
 //	voltage_coefficient = VOLTAGE_RES_DIVIDE * 3.3f / 4096.0f;
 	
