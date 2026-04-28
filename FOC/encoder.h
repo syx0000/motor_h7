@@ -14,8 +14,11 @@
 /* ------------------------------ Includes ------------------------------ */
 #include "main.h"
 /* ------------------------------ Defines ------------------------------ */
+#define ENCODER_RESIDUAL_DELAY_S  8e-6f  // 编码器残余延迟补偿（秒），需根据实测调整
+
 void EncoderSample(void);
 void Encoder_Init(void);
+void EncoderSetZero(Encoder_t *enc);
 static void prvCalcVelocity(void);
 
 extern uint8_t vel_loop_flag;

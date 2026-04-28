@@ -511,9 +511,7 @@ void CAN_MsgProcess(uint32_t Identifier, uint8_t *FDCANRxData)
 		else if (((FDCAN1_RX_DATA[0]==0xFF) && (FDCAN1_RX_DATA[1]==0xFF) && (FDCAN1_RX_DATA[2]==0xFF) && (FDCAN1_RX_DATA[3]==0xFF) && 
 			(FDCAN1_RX_DATA[4]==0xFF) && (FDCAN1_RX_DATA[5]==0xFF) && (FDCAN1_RX_DATA[6]==0xFF) && (FDCAN1_RX_DATA[7]==0xFC)))
 		{
-			p_encoder2_g->mech_offset = p_encoder2_g->mech_abs;//设置位置零点
-			p_encoder2_g->rotations = 0;//清零圈数，使 pos_abs 立即归零
-			p_encoder2_g->last_mech_pos = p_encoder2_g->mech_pos;//同步 last_mech_pos，避免下次采样误判
+			EncoderSetZero(p_encoder2_g);
 			flash_write_pending = 1;
 		}
 		else if (((FDCAN1_RX_DATA[0]==0xFF) && (FDCAN1_RX_DATA[1]==0xFF) && (FDCAN1_RX_DATA[2]==0xFF) && (FDCAN1_RX_DATA[3]==0xFF) && 

@@ -92,6 +92,13 @@ void Encoder_Init(void)//初始化
 	p_encoder2_g->last_mech_pos = p_encoder2_g->mech_pos;
 }
 
+void EncoderSetZero(Encoder_t *enc)
+{
+	enc->mech_offset = enc->mech_abs;
+	enc->rotations = 0;
+	enc->last_mech_pos = enc->mech_pos;
+}
+
 void EncoderSample(void)//电机电角度标定后，位置加上偏移的角度
 {
 	p_encoder_g->last_mech_pos = p_encoder_g->mech_pos;
@@ -118,7 +125,7 @@ void EncoderSample(void)//电机电角度标定后，位置加上偏移的角度
 	if (p_encoder_g->elec_pos < 0) p_encoder_g->elec_pos += PI_TIMES_2;
 
 	// 电角度延迟补偿（残余延迟 ~8µs）
-	p_encoder_g->elec_pos_comp = p_encoder_g->elec_pos + p_encoder_g->elec_vel * 8e-6f;
+	p_encoder_g->elec_pos_comp = p_encoder_g->elec_pos + p_encoder_g->elec_vel * ENCODER_RESIDUAL_DELAY_S;
 	p_encoder_g->elec_pos_comp = fmodf(p_encoder_g->elec_pos_comp, PI_TIMES_2);
 	if (p_encoder_g->elec_pos_comp < 0) p_encoder_g->elec_pos_comp += PI_TIMES_2;
 

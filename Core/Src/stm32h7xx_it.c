@@ -628,9 +628,7 @@ void USART1_IRQHandler(void)
 				break;
 
 				case 'z':
-					p_encoder2_g->mech_offset = p_encoder2_g->mech_abs;
-					p_encoder2_g->rotations = 0;
-					p_encoder2_g->last_mech_pos = p_encoder2_g->mech_pos;
+					EncoderSetZero(p_encoder2_g);
 					flash_write_pending = 1;
 					printf("\n\r  Saved new zero position:  %.4f\n\r\n\r",p_encoder2_g->mech_offset);
 	//				enc_sincos_read_deg(p_my_configure);  //末端角度计算
