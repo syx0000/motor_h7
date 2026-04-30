@@ -189,27 +189,53 @@ void RunPllVelocity()
 }
 
 /**
- * @brief  brief.
- * @note   give d-axis voltage and measure d-axis current,then calculate the d-axis resistance
+ * @brief  Measure phase resistance with dead-time compensation
+ * @note   施加 3 个不同 D 轴电压，对 (I, V) 做最小二乘线性拟合：
+ *         V = V_dead + R*I，斜率即真实相电阻，截距即死区压降。
+ *         消除死区时间引入的常数偏置（典型可减小 30%~50% 的 R 误差）。
  * @retval None
  */
 static void MeasureResistance(void)
 {
-  float volt_d_test = voltage_test, volt_q_test = 0.0f;//1V
-  float d_current_sum = 0.0f, d_current_ave = 0.0f;
+	float v_test[3] = {1.5f, 3.0f, 4.5f};        // 3 个测试电压点
+	float i_meas[3] = {0.0f, 0.0f, 0.0f};        // 对应稳态电流
+	const float volt_q_test = 0.0f;
+	const uint16_t n_avg = 100;                  // 每点平均 100 次（100ms）
+	float R = 0.0f;
 
-  ApplyVoltDQToSVPWM(volt_d_test, volt_q_test, theta_test); // apply a voltage  将电机吸到电角度为0的位置
-  HAL_Delay(1000);// wait for some time to settle
-	
-  for (int i = 0; i < 800; i++)
-  {
-		d_current_sum += p_motor_g->phase_a_current;//必须是a相电流，因为theta = 0时，d轴电压与a相电压相等
-    HAL_Delay(1); // wait for some time
-  }
-  d_current_ave = d_current_sum / 800.0f;
-  p_motor_g->phase_resistance = volt_d_test / d_current_ave;
+	for (int k = 0; k < 3; k++)
+	{
+		float i_sum = 0.0f;
+		ApplyVoltDQToSVPWM(v_test[k], volt_q_test, theta_test);
+		HAL_Delay(500);                          // 等电流稳定（5ms 时间常数 × 数倍）
 
-  printf("volt:%f,phase resistance: %f\r\n",volt_d_test, p_motor_g->phase_resistance);
+		for (uint16_t i = 0; i < n_avg; i++)
+		{
+			i_sum += p_motor_g->D_axis_current;  // 用 D 轴电流，避免基尔霍夫推算误差
+			HAL_Delay(1);
+		}
+		i_meas[k] = i_sum / (float)n_avg;
+		printf("V=%.2f, I=%.4f\r\n", v_test[k], i_meas[k]);
+
+		MotorStop();                             // 每点测完停 PWM 让电机冷却
+		HAL_Delay(300);                          // 冷却间歇
+	}
+
+	// 线性拟合 V = V_dead + R*I：x=I, y=V，斜率 K 即 R
+	if (least_square_method_flux(i_meas, v_test, 3, &R) && R > 0.0f)
+	{
+		p_motor_g->phase_resistance = R;
+		float mean_v = (v_test[0] + v_test[1] + v_test[2]) / 3.0f;
+		float mean_i = (i_meas[0] + i_meas[1] + i_meas[2]) / 3.0f;
+		float V_dead = mean_v - R * mean_i;
+		printf("R: %.6f, V_dead: %.4f (linear fit)\r\n", R, V_dead);
+	}
+	else
+	{
+		// 拟合失败：回退到中间点单点测量（V_CAL 兼容）
+		p_motor_g->phase_resistance = v_test[1] / i_meas[1];
+		printf("Linear fit failed, fallback single-point R: %.6f\r\n", p_motor_g->phase_resistance);
+	}
 }
 
 void MotorStop(void)
@@ -240,8 +266,18 @@ static void MeasureInductance(void)
     HAL_Delay(5);
     MotorStop();
     measure_time = measure_induct_num;
-    while (measure_time)//每进行一次电流采样就减1
+    // 自旋等 ISR 减计数，加 100ms 超时保护防 ISR 异常死锁
+    uint32_t timeout_tick = HAL_GetTick() + 100;
+    while (measure_time && HAL_GetTick() < timeout_tick)
       ;
+    if (measure_time)
+    {
+      // ISR 未在超时内完成采样：异常退出
+      MotorStop();
+      p_motor_g->motor_calibrated = 0;
+      printf("Inductance ISR sampling timeout at iter %d\r\n", i);
+      return;
+    }
 		for (int k = 0; k < measure_induct_num; k++)
 			current_sum[k] += current_a[k];
   }
@@ -261,11 +297,11 @@ static void MeasureInductance(void)
 	}
 	else
 	{
-		HAL_Delay(5);
-		p_motor_g->phase_inductance = p_motor_g->phase_resistance / (-K * PWM_FREQUENCY_DEFAULT);
-		printf("K:%f,phase inductance: %.8f\r\n",K, p_motor_g->phase_inductance);
+		// 拟合失败：保留旧的 phase_inductance（默认或上次成功值），仅置标记
+		printf("Inductance measurement failed (K=%f), keeping old value: %.8f\r\n", K, p_motor_g->phase_inductance);
 		p_motor_g->motor_calibrated = 0;
 	}
+	MotorStop();  // 函数返回前确保 PWM 处于停止状态
 }
 void CalcCurrentOffset(float *phase_a_offset, float *phase_b_offset, float *phase_c_offset)
 {
@@ -322,6 +358,11 @@ void CalcCurrentOffset(float *phase_a_offset, float *phase_b_offset, float *phas
 
 	printf("Phase Current Offset:a:%f b:%f c:%f\r\n",p_motor_g->phase_a_current_offset,p_motor_g->phase_b_current_offset,p_motor_g->phase_c_current_offset);
 }
+
+#define RMS_SAMPLE_CNT 1000
+static volatile float rms_sumB = 0.0f, rms_sumC = 0.0f;
+static volatile uint16_t rms_cnt = 0;
+
 void CurrentSample()
 {
 	// 读取 ADC1 和 ADC2 注入通道结果（Dual Mode 两相采样）
@@ -357,10 +398,6 @@ void CurrentSample()
 	rms_sumC += p_motor_g->phase_c_current * p_motor_g->phase_c_current;
 	rms_cnt++;
 }
-
-#define RMS_SAMPLE_CNT 1000
-static volatile float rms_sumB = 0.0f, rms_sumC = 0.0f;
-static volatile uint16_t rms_cnt = 0;
 
 void Calc_current_rms(void)
 {

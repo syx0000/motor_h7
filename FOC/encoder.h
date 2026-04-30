@@ -18,7 +18,6 @@
 
 void EncoderSample(void);
 void Encoder_Init(void);
-void EncoderSetZero(Encoder_t *enc);
 static void prvCalcVelocity(void);
 
 extern volatile uint8_t encoder_calibrating;
@@ -69,6 +68,8 @@ typedef struct _Encoder_t
 	uint8_t cali_start;
 	uint8_t cali_finish;
 }Encoder_t;
+
+void EncoderSetZero(Encoder_t *enc);
 
 typedef struct _Torque_t
 {

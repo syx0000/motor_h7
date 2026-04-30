@@ -39,7 +39,7 @@
 //#endif
 
 #define GR 25.0f//模组减速比
-#define V_CAL 1.5f;
+#define V_CAL 1.5f//整定测试电压（避免末尾分号导致表达式上下文编译失败）
 /*FOC控制限幅*/
 //#define iq_min   -60.2f
 //#define iq_max   60.2f
