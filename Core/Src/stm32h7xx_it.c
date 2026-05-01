@@ -38,6 +38,19 @@ uint8_t VOFA_cnt = 0;
 uint8_t Encoder_readFlag = 0;
 float frequency = 100.0f;
 float amplitude = 5.0f;
+volatile uint32_t dbg_cc4 = 0;
+volatile uint32_t dbg_cc4_tx = 0;
+volatile uint32_t dbg_tc = 0;
+volatile uint32_t dbg_idle = 0;
+volatile uint32_t dbg_rxcb = 0;
+volatile uint32_t dbg_rearm_ret = 99;
+volatile uint32_t dbg_cr1_snap = 0;
+volatile uint32_t dbg_dma_ndtr = 0;
+volatile uint32_t dbg_rs485_dir = 0;
+volatile uint32_t dbg_cr3_snap = 0;
+volatile uint32_t dbg_isr_snap = 0;
+volatile uint8_t enc_tx_pending = 0;
+volatile uint16_t enc_timeout = 0;
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -286,25 +299,29 @@ void FDCAN1_IT0_IRQHandler(void)
 void TIM1_UP_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM1_UP_IRQn 0 */
-	//10k开关频率
 	HAL_GPIO_WritePin(LED_RUN_GPIO_Port,LED_RUN_Pin,GPIO_PIN_SET);
-	ISR_start = DWT_CYCCNT;      // 记录起始计数值
-	
+	ISR_start = DWT_CYCCNT;
+
 	u8_100usFlag = 1;
-	
+
 	u32Timecnt++;
-	if (u32Timecnt >= PWM_FREQUENCY_DEFAULT/1000)//1ms
+	if (u32Timecnt >= PWM_FREQUENCY_DEFAULT/1000)
 	{
 		u32Timecnt = 0;
 		u8_1msFlag = 1;
 	}
 
-	ErrorDiag();//故障诊断
+	ErrorDiag();
+
+	dbg_dma_ndtr = ((DMA_Stream_TypeDef *)huart2.hdmarx->Instance)->NDTR;
+	dbg_rs485_dir = HAL_GPIO_ReadPin(RS485_DIR_GPIO_Port, RS485_DIR_Pin);
+	dbg_cr3_snap = USART2->CR3;
+	dbg_isr_snap = USART2->ISR;
 
 	if (!encoder_calibrating)
 		EncoderSample();
 
-	TIM1->SR = 0x0; // reset the status register
+	TIM1->SR &= ~TIM_SR_UIF; // 只清 UIF，不误清 CC4IF
 /* USER CODE END TIM1_UP_IRQn 0 */
 	HAL_TIM_IRQHandler(&htim1);
 /* USER CODE BEGIN TIM1_UP_IRQn 1 */
@@ -325,14 +342,33 @@ void TIM1_CC_IRQHandler(void)
 		{
 			__HAL_TIM_CLEAR_IT(&htim1, TIM_IT_CC4);
 
-			// 仅在下降沿触发（DIR=1 表示向下计数）
 			if (TIM1->CR1 & TIM_CR1_DIR)
 			{
-				// 预触发：发送编码器请求（~45µs before UP event）
-				if (huart2.gState == HAL_UART_STATE_READY)
+				dbg_cc4++;
+				if (enc_tx_pending == 1)
 				{
+					if (USART2->ISR & USART_ISR_TC)
+					{
+						USART2->ICR = USART_ICR_TCCF;
+						RS485DIR_RX;
+						enc_tx_pending = 2;
+						enc_timeout = 0;
+					}
+				}
+				else if (enc_tx_pending == 2)
+				{
+					if (++enc_timeout > 200) // 超时 20ms (200*100µs)
+					{
+						enc_tx_pending = 0;
+						enc_timeout = 0;
+					}
+				}
+				else if (enc_tx_pending == 0 && (USART2->ISR & USART_ISR_TXE_TXFNF))
+				{
+					dbg_cc4_tx++;
 					RS485DIR_TX;
-					HAL_UART_Transmit_DMA(&huart2, USART2_TX_BUF, 1);
+					USART2->TDR = USART2_TX_BUF[0];
+					enc_tx_pending = 1;
 				}
 			}
 		}
@@ -933,20 +969,16 @@ void USART1_IRQHandler(void)
 void USART2_IRQHandler(void)
 {
   /* USER CODE BEGIN USART2_IRQn 0 */
-	if (__HAL_UART_GET_FLAG(&huart2,UART_FLAG_IDLE))//空闲中断
+	if (__HAL_UART_GET_FLAG(&huart2,UART_FLAG_IDLE))
 	{
+		dbg_idle++;
 		IDLE_flag = 1;
-//		huart2.gState = HAL_UART_STATE_READY;
 		HAL_UART_IRQHandler(&huart2);
-		USART2->ICR  |= 0x00000010;//向此位写入“1”时， USART_ISR 寄存器中的 IDLE 标志将清零 进中断后先清标志位
-//		HAL_UARTEx_ReceiveToIdle_IT(&huart2, (unsigned char *)USART2_RX_BUF, USART2_REC_LEN);//开启空闲中断
-		HAL_UARTEx_ReceiveToIdle_DMA(&huart2, (unsigned char *)USART2_RX_BUF, USART2_REC_LEN);//开启空闲中断
-	}
-	else if (__HAL_UART_GET_FLAG(&huart2,UART_FLAG_TC))//发送完成中断
-	{
-		RS485DIR_RX;                        //发送完毕 改成接收状态
-		HAL_UART_IRQHandler(&huart2);
-		USART2->ICR  |= 0x00000040;//向此位写入“1”时， USART_ISR 寄存器中的 TC 标志将清零
+		USART2->ICR  |= 0x00000010;
+		huart2.RxState = HAL_UART_STATE_READY;
+		dbg_rearm_ret = HAL_UARTEx_ReceiveToIdle_DMA(&huart2, (unsigned char *)USART2_RX_BUF, USART2_REC_LEN);
+		dbg_cr1_snap = USART2->CR1;
+		enc_tx_pending = 0; // DMA 挂好后才允许下一次发送，避免竞态
 	}
 	else
 	/* USER CODE END USART2_IRQn 0 */
@@ -975,11 +1007,10 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
 {
 	if (huart->Instance == USART2&&IDLE_flag==1)
 	{
-	//	USART2_RX_COMPLETE = 1;//告诉主循环有数据待处理
+		dbg_rxcb++;
 		USART2_RX_Cnt = Size;
 		IDLE_flag = 0;
-		HAL_UART_DMAStop(huart);// 停止当前 DMA 传输（防止数据覆盖）
-		/*可以在这里将缓存USART2_RX_BUF中的数据转移到缓存USART2_RX_DATA中，然后清空USART2_RX_BUF，后面直接处理缓存USART2_RX_DATA*/
+		HAL_UART_DMAStop(huart);
 		for (uint8_t i=0;i<USART2_RX_Cnt;i++)
 		{
 			USART2_RX_DATA[i] = USART2_RX_BUF[i];
@@ -987,8 +1018,6 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
 		}
 		angleInner = USART2_RX_DATA[2] << 16 | USART2_RX_DATA[1] << 8 | USART2_RX_DATA[0];
 		angleOutter = USART2_RX_DATA[5] << 16 | USART2_RX_DATA[4] << 8 | USART2_RX_DATA[3];
-	//	angleInnerFloat = angleInner / (float)(1 << 24) * 360;
-	//	angleOutterFloat = angleOutter / (float)(1 << 24) *360;
 		if (USART2_RX_DATA[7] != CalcCRC(USART2_RX_DATA,7)) EncoderCnt++;
 	}
 }

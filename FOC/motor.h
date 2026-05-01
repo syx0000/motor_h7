@@ -196,9 +196,9 @@ void (*MeasureInductance)(void);
 extern const MotorManager_typedef Motor;
 
 // ADC3 规则通道采样结果（在 main.c 中定义）
-extern volatile uint32_t adc3_vdc_value;
-extern volatile uint32_t adc3_temp_mos_value;
-extern volatile uint32_t adc3_temp_motor_value;
+extern volatile uint32_t adc1_vdc_value;
+extern volatile uint32_t adc1_temp_mos_value;
+extern volatile uint32_t adc1_temp_motor_value;
 
 void Motor_Init(void);
 void CurrentSample(void);

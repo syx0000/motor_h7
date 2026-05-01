@@ -55,8 +55,7 @@ void MX_ADC1_Init(void)
   hadc1.Init.ConversionDataManagement = ADC_CONVERSIONDATA_DR;
   hadc1.Init.Overrun = ADC_OVR_DATA_PRESERVED;
   hadc1.Init.LeftBitShift = ADC_LEFTBITSHIFT_NONE;
-  hadc1.Init.OversamplingMode = ENABLE;
-  hadc1.Init.Oversampling.Ratio = 16;
+  hadc1.Init.OversamplingMode = DISABLE;
   if (HAL_ADC_Init(&hadc1) != HAL_OK)
   {
     Error_Handler();
@@ -102,6 +101,41 @@ void MX_ADC1_Init(void)
   {
     Error_Handler();
   }
+
+  /** Configure Regular Channels for VDC/TEMP_MOS/TEMP_MOTOR
+  */
+  ADC_ChannelConfTypeDef sConfig = {0};
+
+  // Regular Channel: VDC (PA6 = INP3)
+  sConfig.Channel = ADC_CHANNEL_3;
+  sConfig.Rank = ADC_REGULAR_RANK_1;
+  sConfig.SamplingTime = ADC_SAMPLETIME_16CYCLES_5;
+  sConfig.SingleDiff = ADC_SINGLE_ENDED;
+  sConfig.OffsetNumber = ADC_OFFSET_NONE;
+  sConfig.Offset = 0;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  // Regular Channel: TEMP_MOS (PB1 = INP5)
+  sConfig.Channel = ADC_CHANNEL_5;
+  sConfig.Rank = ADC_REGULAR_RANK_1;  // 每次只配置一个通道
+  sConfig.SamplingTime = ADC_SAMPLETIME_64CYCLES_5;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  // Regular Channel: TEMP_MOTOR (PB0 = INP9)
+  sConfig.Channel = ADC_CHANNEL_9;
+  sConfig.Rank = ADC_REGULAR_RANK_1;
+  sConfig.SamplingTime = ADC_SAMPLETIME_64CYCLES_5;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
   /* USER CODE BEGIN ADC1_Init 2 */
 
   /* USER CODE END ADC1_Init 2 */
@@ -193,7 +227,7 @@ void MX_ADC3_Init(void)
   */
   hadc3.Instance = ADC3;
   hadc3.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV4;
-  hadc3.Init.Resolution = ADC_RESOLUTION_16B;
+  hadc3.Init.Resolution = ADC_RESOLUTION_12B;  // ADC3 最高支持 12-bit
   hadc3.Init.ScanConvMode = ADC_SCAN_ENABLE;  // 多通道扫描
   hadc3.Init.EOCSelection = ADC_EOC_SEQ_CONV;
   hadc3.Init.LowPowerAutoWait = DISABLE;
@@ -275,13 +309,24 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* adcHandle)
     }
 
     __HAL_RCC_GPIOC_CLK_ENABLE();
+    __HAL_RCC_GPIOA_CLK_ENABLE();
+    __HAL_RCC_GPIOB_CLK_ENABLE();
     /**ADC1 GPIO Configuration
     PC5     ------> ADC1_INP8 (CUR_C, dual mode master)
+    PA6     ------> ADC1_INP3 (VDC, regular channel)
+    PB0     ------> ADC1_INP9 (TEMP_MOTOR, regular channel)
+    PB1     ------> ADC1_INP5 (TEMP_MOS, regular channel)
     */
     GPIO_InitStruct.Pin = CUR_C_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+    GPIO_InitStruct.Pin = VDC_Pin;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+    GPIO_InitStruct.Pin = TEMP_MOTOR_Pin | TEMP_MOS_Pin;
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /* USER CODE BEGIN ADC1_MspInit 1 */
     HAL_NVIC_SetPriority(ADC_IRQn, 0, 0);
@@ -320,22 +365,7 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* adcHandle)
     /* ADC3 clock enable */
     __HAL_RCC_ADC3_CLK_ENABLE();
 
-    __HAL_RCC_GPIOA_CLK_ENABLE();
-    __HAL_RCC_GPIOB_CLK_ENABLE();
-    /**ADC3 GPIO Configuration
-    PA6     ------> ADC3_INP3 (VDC)
-    PB0     ------> ADC3_INP9 (TEMP_MOTOR)
-    PB1     ------> ADC3_INP5 (TEMP_MOS)
-    */
-    GPIO_InitStruct.Pin = VDC_Pin;
-    GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-    GPIO_InitStruct.Pin = TEMP_MOTOR_Pin|TEMP_MOS_Pin;
-    GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+    // GPIO 已迁移到 ADC1 MspInit（PA6/PB0/PB1 是 ADC1 的输入引脚）
 
   /* USER CODE BEGIN ADC3_MspInit 1 */
 

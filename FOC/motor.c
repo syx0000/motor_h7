@@ -305,58 +305,50 @@ static void MeasureInductance(void)
 }
 void CalcCurrentOffset(float *phase_a_offset, float *phase_b_offset, float *phase_c_offset)
 {
-	p_motor_g->volt2amp_rate =  ADC_supply/ADC_resolution;
-  /* record offset summary */
-  float a_offset_sum = 0.0f;
+	p_motor_g->volt2amp_rate = ADC_supply / ADC_resolution;
+
+	// 保存 JSQR 并临时切换为软件触发（清除 JEXTEN 位 [8:7]）
+	uint32_t jsqr_backup = hadc1.Instance->JSQR;
+	hadc1.Instance->JSQR = jsqr_backup & ~(0x3UL << 7);
+
 	float b_offset_sum = 0.0f;
 	float c_offset_sum = 0.0f;
-  /* adc1_Rank1 for phase A, adc1_Rank2 for phase B*/
-  uint16_t currentA_raw, currentB_raw, currentC_raw;
-  /* sample 500 times, then get average */
-  for (uint16_t i = 0; i < 5000; i++)
-  {
-		//过采样
-//		uint32_t ADC_Value_sum[2] = {0};
-//		/* 在采样值数组中分别取出每个通道的采样值并求和 */
-//		for (uint8_t i = 0;i < ADC2_CHANNELS_WINDOW;i ++)
-//		{
-//			ADC_Value_sum[0] +=  ADC_Cur_vbus_Value[i*ADC2_CHANNELS+0];
-//			ADC_Value_sum[1] +=  ADC_Cur_vbus_Value[i*ADC2_CHANNELS+1];
-//		}
-//    currentA_raw = ADC_Value_sum[0]>>ADC2_CHANNELS_WINDOW_movebit;
-//    currentB_raw = ADC_Value_sum[1]>>ADC2_CHANNELS_WINDOW_movebit;
-		hadc1.Instance->CR  |= ADC_CR_JADSTART;
-		HAL_Delay(0);
-    currentA_raw = ADC1->JDR2;
-    currentB_raw = ADC1->JDR1;
-		currentC_raw = ADC1->JDR3;
-		printf("%d   %d   %d\r\n",currentA_raw,currentB_raw,currentC_raw);
-		if (i>=2)
+	uint16_t currentB_raw, currentC_raw;
+
+	// 采样 5000 次求平均
+	for (uint16_t i = 0; i < 5000; i++)
+	{
+		// 软件触发 ADC1（Dual Mode 下会同时触发 ADC2）
+		hadc1.Instance->CR |= ADC_CR_JADSTART;
+
+		// 等待转换完成（JEOS 标志）
+		volatile uint32_t timeout = 10000;
+		while (!(__HAL_ADC_GET_FLAG(&hadc1, ADC_FLAG_JEOS)) && timeout--)
+			;
+
+		if (timeout > 0)
 		{
-			a_offset_sum += (float) currentA_raw;
-			b_offset_sum += (float) currentB_raw;
-			c_offset_sum += (float) currentC_raw;
+			__HAL_ADC_CLEAR_FLAG(&hadc1, ADC_FLAG_JEOS);
+			currentC_raw = ADC1->JDR1;  // CUR_C
+			currentB_raw = ADC2->JDR1;  // CUR_B
+
+			if (i >= 2)  // 跳过前两次（ADC 稳定）
+			{
+				b_offset_sum += (float)currentB_raw;
+				c_offset_sum += (float)currentC_raw;
+			}
 		}
-  }
-	/*前两个数据不对*/
-  *phase_a_offset = a_offset_sum / 4998.0f;
+	}
+
+	// 恢复 JSQR（外部触发配置）
+	hadc1.Instance->JSQR = jsqr_backup;
+
+	// A 相不采样，偏置设为 0（CurrentSample 中 A 相由 B/C 计算）
+	*phase_a_offset = 0.0f;
 	*phase_b_offset = b_offset_sum / 4998.0f;
 	*phase_c_offset = c_offset_sum / 4998.0f;
 
-//#if defined(JM65_DP28_DE_C)
-//  *phase_a_offset = a_offset_sum / 500.0f;
-//	*phase_b_offset = b_offset_sum / 500.0f;
-//#elif defined(JM57_DP18_DE_C)//手动校准电流偏置
-//	*phase_a_offset = a_offset_sum / 500.0f + 13.54f;
-//	*phase_b_offset = b_offset_sum / 500.0f + 6.69f;
-//#elif defined(FIVE_2808)//手动校准电流偏置
-//	*phase_a_offset = a_offset_sum / 500.0f;
-//	*phase_b_offset = b_offset_sum / 500.0f;
-//#else
-//    #error "未定义产品型号！"
-//#endif
-
-	printf("Phase Current Offset:a:%f b:%f c:%f\r\n",p_motor_g->phase_a_current_offset,p_motor_g->phase_b_current_offset,p_motor_g->phase_c_current_offset);
+	printf("Phase Current Offset: b:%f c:%f\r\n", *phase_b_offset, *phase_c_offset);
 }
 
 #define RMS_SAMPLE_CNT 1000
@@ -418,16 +410,16 @@ void Calc_current_rms(void)
 
 void VoltageSample()
 {
-	// 从 ADC3 规则通道读取（在主循环里已采样）
-	p_motor_g->vbus = (voltage_coefficient * (float)adc3_vdc_value) * 21.0f;
+	// ADC1 规则通道 16-bit (0-65535)
+	p_motor_g->vbus = (ADC_supply / ADC_resolution * (float)adc1_vdc_value) * 21.0f;
 }
 
 void TemperatureSample()
 {
 	// 从 ADC3 规则通道读取（在主循环里已采样）
 
-	// 电机温度计算
-	float adc_temp_motor = (float)adc3_temp_motor_value / ADC_resolution;
+	// 电机温度计算（ADC1 规则通道 16-bit）
+	float adc_temp_motor = (float)adc1_temp_motor_value / ADC_resolution;
 	float r1_ntc;
 	if (adc_temp_motor >= 0.97f)  // 防止除零
 		r1_ntc = 999.0f;
@@ -453,8 +445,8 @@ void TemperatureSample()
 	}
 	TEMP_MOTOR_filter2 = 0.6f * TEMP_MOTOR_filter1 + 0.4f * TEMP_MOTOR_filter2;  // 一阶低通
 
-	// MOS 温度计算
-	float adc_temp_mos = (float)adc3_temp_mos_value / ADC_resolution;
+	// MOS 温度计算（ADC1 规则通道 16-bit）
+	float adc_temp_mos = (float)adc1_temp_mos_value / ADC_resolution;
 	float r2_ntc;
 	if (adc_temp_mos >= 0.97f)  // 防止除零
 		r2_ntc = 999.0f;
@@ -481,7 +473,7 @@ void EnableADC(void)
 {
 	hadc1.Instance->CR |=  ADC_CR_ADEN;
 	hadc2.Instance->CR |=  ADC_CR_ADEN;
-//	hadc3.Instance->CR |=  ADC_CR_ADEN;
+	// ADC3 不再使用
 }
 
 // StartJADC 已删除：ADC1 由 TIM1 TRGO 硬件触发，ADC2 为 dual mode slave，温度由 ADC3 规则通道采样

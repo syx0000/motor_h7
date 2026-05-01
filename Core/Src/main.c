@@ -51,10 +51,31 @@
 
 /* USER CODE BEGIN PV */
 
-// ADC3 规则通道采样结果（全局变量）
-volatile uint32_t adc3_vdc_value = 0;
-volatile uint32_t adc3_temp_mos_value = 0;
-volatile uint32_t adc3_temp_motor_value = 0;
+// ADC1 规则通道采样结果（全局变量）
+volatile uint32_t adc1_vdc_value = 0;
+volatile uint32_t adc1_temp_mos_value = 0;
+volatile uint32_t adc1_temp_motor_value = 0;
+
+// ADC1 规则通道读取辅助函数（软件触发单通道转换）
+// ADC1 规则通道读取（init 时已用 HAL 配置 PCSEL/SMPR，这里只切通道和启动）
+static uint32_t ADC1_ReadRegularChannel(uint32_t ch_num)
+{
+	// 确保 ADC 已就绪
+	while (!(ADC1->ISR & ADC_ISR_ADRDY))
+	{
+		ADC1->CR |= ADC_CR_ADEN;
+	}
+	// 等待上一次规则转换结束（如果有）
+	while (ADC1->CR & ADC_CR_ADSTART)
+		;
+	ADC1->SQR1 = (ch_num << ADC_SQR1_SQ1_Pos);
+	ADC1->ISR = ADC_ISR_EOC | ADC_ISR_EOS | ADC_ISR_OVR;
+	ADC1->CR |= ADC_CR_ADSTART;
+	volatile uint32_t timeout = 100000;
+	while (!(ADC1->ISR & ADC_ISR_EOC) && timeout--)
+		;
+	return ADC1->DR;
+}
 
 uint8_t TorqueTestFlag = 0;//测试转矩控制精度
 uint8_t TorqueTestLoop = 3;
@@ -131,27 +152,12 @@ int main(void)
 	HAL_Delay(100);
 	//1. ADC使能
 	EnableADC();
-	// ADC3 首次同步采样（避免 vbus=0 导致 SVPWM 除零）
-	HAL_ADCEx_InjectedStart(&hadc3);
-	{
-		volatile uint32_t timeout = 100000;
-		while (!(__HAL_ADC_GET_FLAG(&hadc3, ADC_FLAG_JEOS)) && timeout--)
-			;
-		if (timeout == 0)
-		{
-			// ADC3 超时，使用安全默认值
-			adc3_vdc_value = (uint16_t)(48.0f / 21.0f / ADC_supply * ADC_resolution);
-			adc3_temp_mos_value = 0;
-			adc3_temp_motor_value = 0;
-		}
-		else
-		{
-			__HAL_ADC_CLEAR_FLAG(&hadc3, ADC_FLAG_JEOS);
-			adc3_vdc_value = ADC3->JDR1;
-			adc3_temp_mos_value = ADC3->JDR2;
-			adc3_temp_motor_value = ADC3->JDR3;
-		}
-	}
+	// ADC1 规则通道首次采样（VDC / TEMP_MOS / TEMP_MOTOR，避免 vbus=0 导致 SVPWM 除零）
+	adc1_vdc_value = ADC1_ReadRegularChannel(3);
+	adc1_temp_mos_value = ADC1_ReadRegularChannel(5);
+	adc1_temp_motor_value = ADC1_ReadRegularChannel(9);
+	// 电流偏置校准
+	CalcCurrentOffset(&p_motor_g->phase_a_current_offset,&p_motor_g->phase_b_current_offset,&p_motor_g->phase_c_current_offset);
 	// 启动 ADC1 注入转换并使能 JEOS 中断
 	HAL_ADCEx_InjectedStart_IT(&hadc1);
 	//2. TIM1初始化
@@ -161,14 +167,19 @@ int main(void)
 	TIM1->DIER |= TIM_DIER_CC4IE;         // enable CC4 interrupt for encoder pre-trigger
 	TIM1->CR1  |= TIM_CR1_UDIS;						//先不产生更新事件
 	TIM1->CR1  |= 0x0001;//Enable Counter
+	// 启动 TIM1 CH4 用于编码器预触发（TIMING 模式下 CC4IF 会自动设置，但显式启动更保险）
+	HAL_TIM_OC_Start(&htim1, TIM_CHANNEL_4);
 	//3. TIM6初始化
 	htim6.Instance->CR1 |= TIM_CR1_CEN;
 	
 	//4.电机及编码器参数初始化
-	RS485DIR_TX;//发送状态
-	HAL_Delay(1);
-	HAL_UART_Transmit_DMA(&huart2,USART2_TX_BUF,1);
-	HAL_Delay(1);
+	RS485DIR_TX;
+	while (!(USART2->ISR & USART_ISR_TXE_TXFNF));
+	USART2->TDR = USART2_TX_BUF[0];
+	while (!(USART2->ISR & USART_ISR_TC));          // 等发完
+	USART2->ICR = USART_ICR_TCCF;
+	RS485DIR_RX;
+	HAL_Delay(2);                                    // 等编码器响应
 	Motor_Init();
 	DWT_Init();
 	Encoder_Init();
@@ -190,19 +201,20 @@ int main(void)
 	Pid.Init(p_position_loop_g, Position_P, Position_I, 0.0f, 150.0f, 0.0004f, 1.0f);//FOC位置环控制参数初始化
 	
 	Pid.Init(p_velocity_loop_g, Velocity_P, Velocity_I, 0.0f, 45.0f, 0.0f, 1.0f);//FOC速度环控制参数初始化 加入转速前馈 126-40.2；90-17.2
-	
-//	TIM1->CR1 ^= TIM_CR1_UDIS;//开始产生TIM1更新事件
-	CalcCurrentOffset(&p_motor_g->phase_a_current_offset,&p_motor_g->phase_b_current_offset,&p_motor_g->phase_c_current_offset);//计算电流偏置
-	
-	
+
+
 	/*上电自动回零*/
 //	FSMstate = HOMING_MODE;
 //	state_change = 1;
 	
 	
-	
 
-	TIM1->CR1 ^= TIM_CR1_UDIS;//开始产生TIM1更新事件
+
+	// 清除 UDIS 前先重置计数器到已知状态，避免 CC4/UP 时序混乱
+	TIM1->CR1 &= ~TIM_CR1_CEN;  // 停止计数器
+	TIM1->CNT = 0;              // 重置计数器
+	TIM1->CR1 &= ~TIM_CR1_UDIS; // 清除 UDIS，允许更新事件
+	TIM1->CR1 |= TIM_CR1_CEN;   // 重新启动计数器
 	EnterMenuState();
 	
 // 1. 初始化发生器
@@ -244,20 +256,27 @@ int main(void)
 			
 		if (u8_1msFlag == 1)//1ms时基
 		{
-			// ADC3 非阻塞采样：读取上一轮结果，启动下一轮
-			if (__HAL_ADC_GET_FLAG(&hadc3, ADC_FLAG_JEOS))
-			{
-				__HAL_ADC_CLEAR_FLAG(&hadc3, ADC_FLAG_JEOS);
-				adc3_vdc_value = ADC3->JDR1;
-				adc3_temp_mos_value = ADC3->JDR2;
-				adc3_temp_motor_value = ADC3->JDR3;
-			}
-			HAL_ADCEx_InjectedStart(&hadc3);  // 启动下一轮，不等待
+			// ADC1 规则通道采样（VDC / TEMP_MOS / TEMP_MOTOR）
+			adc1_vdc_value = ADC1_ReadRegularChannel(3);
+			adc1_temp_mos_value = ADC1_ReadRegularChannel(5);
+			adc1_temp_motor_value = ADC1_ReadRegularChannel(9);
 
 			// 处理采样数据
 			Calc_current_rms();
 			VoltageSample();
 			TemperatureSample();
+
+			{
+				extern volatile uint32_t dbg_cc4, dbg_cc4_tx, dbg_tc, dbg_idle, dbg_rxcb, dbg_rearm_ret, dbg_cr1_snap, dbg_dma_ndtr, dbg_rs485_dir, dbg_cr3_snap, dbg_isr_snap;
+				static uint16_t dbg_ms = 0;
+				if (++dbg_ms >= 1000)
+				{
+					dbg_ms = 0;
+					printf("ENC tx=%u tc=%u idle=%u rxcb=%u ndtr=%u ISR=0x%08X angle=%u\r\n",
+						dbg_cc4_tx, dbg_tc, dbg_idle, dbg_rxcb,
+						(unsigned)dbg_dma_ndtr, (unsigned)dbg_isr_snap, (unsigned)angleOutter);
+				}
+			}
 			
 			static uint8_t cnt=0;
 			if (fabs(p_position_loop_g->target - p_encoder2_g->pos_abs) < 0.015)
