@@ -248,9 +248,8 @@ int main(void)
 		
 		if (u8_100usFlag == 1)//100us时基
 		{
-			Pack_ActiveReport_Current(FOC_CAN_TxData ,p_motor_g->Q_axis_current_filt);
-			CAN_SendMessage(CanID_Upload,FOC_CAN_TxData,8);//测试上传CAN ID = 0x700
-			
+//			Pack_ActiveReport_Current(FOC_CAN_TxData ,p_motor_g->Q_axis_current_filt);
+//			CAN_SendMessage(CanID_Upload,FOC_CAN_TxData,8);//测试上传CAN ID = 0x700
 			u8_100usFlag = 0;
 		}
 			
@@ -266,18 +265,6 @@ int main(void)
 			VoltageSample();
 			TemperatureSample();
 
-			{
-				extern volatile uint32_t dbg_cc4, dbg_cc4_tx, dbg_tc, dbg_idle, dbg_rxcb, dbg_rearm_ret, dbg_cr1_snap, dbg_dma_ndtr, dbg_rs485_dir, dbg_cr3_snap, dbg_isr_snap;
-				static uint16_t dbg_ms = 0;
-				if (++dbg_ms >= 1000)
-				{
-					dbg_ms = 0;
-					printf("ENC tx=%u tc=%u idle=%u rxcb=%u ndtr=%u ISR=0x%08X angle=%u\r\n",
-						dbg_cc4_tx, dbg_tc, dbg_idle, dbg_rxcb,
-						(unsigned)dbg_dma_ndtr, (unsigned)dbg_isr_snap, (unsigned)angleOutter);
-				}
-			}
-			
 			static uint8_t cnt=0;
 			if (fabs(p_position_loop_g->target - p_encoder2_g->pos_abs) < 0.015)
 			//if (fabs(Motor_P - p_encoder2_g->pos_abs) < 0.015)

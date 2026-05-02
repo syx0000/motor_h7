@@ -87,6 +87,8 @@ void Error_Handler(void);
 #define ERR_RUN_GPIO_Port GPIOB
 #define LED_RUN_Pin GPIO_PIN_5
 #define LED_RUN_GPIO_Port GPIOB
+#define CAN_STB_Pin GPIO_PIN_10
+#define CAN_STB_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
 
