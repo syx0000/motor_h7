@@ -120,9 +120,24 @@ void Write_MotorData(void)
 		printf("Flash_Program Error!");
         return;
     }
+	status = HAL_FLASH_Program(FLASH_TYPEPROGRAM_FLASHWORD, DATA_FLASH_ADDR+96, (uint32_t)(&flash_buffer[24]));
+    if (status != HAL_OK)
+	{
+        HAL_FLASH_Lock();
+		printf("Flash_Program Error!");
+        return;
+    }
 
     // 5. 锁定Flash
     HAL_FLASH_Lock();
+
+	// 6. 回读验证
+	uint32_t verify_magic = *(volatile uint32_t*)(DATA_FLASH_ADDR + 4*31);
+	uint32_t verify_cali  = *(volatile uint32_t*)(DATA_FLASH_ADDR + 4*2);
+	printf("[Flash] Write done. verify: magic=0x%08X cali=%d offset=%.4f order=%.0f\r\n",
+		(unsigned int)verify_magic, (int)verify_cali,
+		FlashUint2Float(*(volatile uint32_t*)(DATA_FLASH_ADDR + 4*0)),
+		FlashUint2Float(*(volatile uint32_t*)(DATA_FLASH_ADDR + 4*1)));
 }
 /*Flash参数读取*/
 void Read_MotorData (void)
@@ -133,9 +148,16 @@ void Read_MotorData (void)
 	// 校验magic number，无效则使用默认值
 	if (flash_buffer[31] != FLASH_MAGIC)
 	{
-		printf("Flash data invalid, using defaults\r\n");
+		printf("[Flash] Read INVALID: magic=0x%08X (expect 0x%08X)\r\n",
+			(unsigned int)flash_buffer[31], (unsigned int)FLASH_MAGIC);
 		return;
 	}
+
+	printf("[Flash] Read OK: cali=%d, offset=%.4f, order=%.0f, mechOff=%.4f\r\n",
+		(int)flash_buffer[2],
+		FlashUint2Float(flash_buffer[0]),
+		FlashUint2Float(flash_buffer[1]),
+		FlashUint2Float(flash_buffer[7]));
 
 	p_encoder_g->cali_finish = flash_buffer[2];
 	p_motor_g->motor_calibrated = flash_buffer[5];

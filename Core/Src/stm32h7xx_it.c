@@ -40,6 +40,20 @@ float frequency = 100.0f;
 float amplitude = 5.0f;
 volatile uint8_t enc_tx_pending = 0;
 volatile uint16_t enc_timeout = 0;
+
+volatile uint32_t ts_cc4_trigger;
+volatile uint32_t ts_rs485_tx_done;
+volatile uint32_t ts_pwm_update;
+volatile uint32_t ts_adc_done;
+volatile uint32_t ts_rs485_rx_done;
+volatile uint32_t update_cnt_at_irq;
+volatile uint32_t update_dir_at_irq;
+volatile uint32_t adc_cnt_at_irq;
+volatile uint32_t adc_dir_at_irq;
+volatile uint32_t adc_ccr1_at_irq;
+volatile uint32_t adc_ccr2_at_irq;
+volatile uint32_t adc_ccr3_at_irq;
+volatile uint8_t timing_print_req;
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -289,6 +303,9 @@ void TIM1_UP_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM1_UP_IRQn 0 */
 	HAL_GPIO_WritePin(LED_RUN_GPIO_Port,LED_RUN_Pin,GPIO_PIN_SET);
+	update_cnt_at_irq = TIM1->CNT;
+	update_dir_at_irq = (TIM1->CR1 & TIM_CR1_DIR) ? 1u : 0u;
+	ts_pwm_update = TIM2->CNT;
 	ISR_start = DWT_CYCCNT;
 
 	u8_100usFlag = 1;
@@ -300,7 +317,7 @@ void TIM1_UP_IRQHandler(void)
 		u8_1msFlag = 1;
 	}
 
-	ErrorDiag();
+	//ErrorDiag();
 
 	if (!encoder_calibrating)
 		EncoderSample();
@@ -326,8 +343,10 @@ void TIM1_CC_IRQHandler(void)
 		{
 			__HAL_TIM_CLEAR_IT(&htim1, TIM_IT_CC4);
 
-			if (TIM1->CR1 & TIM_CR1_DIR)
+			if (TIM1->CR1 & TIM_CR1_DIR)  // 下降沿触发（DIR=1）
 			{
+				ts_cc4_trigger = TIM2->CNT;
+
 				if (enc_tx_pending == 1)
 				{
 					if (++enc_timeout > 200) // 超时 20ms (200*100µs)
@@ -345,6 +364,8 @@ void TIM1_CC_IRQHandler(void)
 					while (!(USART2->ISR & USART_ISR_TC) && ++tc_wait < 3000) {}
 					USART2->ICR = USART_ICR_TCCF;
 					RS485DIR_RX;
+					ts_rs485_tx_done = TIM2->CNT;
+
 					enc_tx_pending = 1;
 					enc_timeout = 0;
 				}
@@ -363,6 +384,12 @@ void ADC_IRQHandler(void)
 	if (__HAL_ADC_GET_FLAG(&hadc1, ADC_FLAG_JEOS))
 	{
 		__HAL_ADC_CLEAR_FLAG(&hadc1, ADC_FLAG_JEOS);
+		ts_adc_done = TIM2->CNT;
+		adc_cnt_at_irq = TIM1->CNT;
+		adc_dir_at_irq = (TIM1->CR1 & TIM_CR1_DIR) ? 1u : 0u;
+		adc_ccr1_at_irq = TIM1->CCR1;
+		adc_ccr2_at_irq = TIM1->CCR2;
+		adc_ccr3_at_irq = TIM1->CCR3;
 
 		CurrentSample();
 		// VoltageSample 已移至主循环（ADC3 规则通道采样）
@@ -394,6 +421,7 @@ void ADC_IRQHandler(void)
 					{
 						if (p_encoder_g->cali_finish != 1)
 						{
+							printf("[ISR] 编码器未校准 → FSMstate=REST_MODE\r\n");
 							FSMstate = REST_MODE;
 							state_change = 0;
 							break;
@@ -471,6 +499,8 @@ void ADC_IRQHandler(void)
 								CurrentLoop();
 							break;
 							case FOC_POSITION_LOOP_PP:
+							{
+								static uint16_t pp_dbg_cnt = 0;
 								if (pos_loop_flag == 1)
 								{
 									if (trajcplt)
@@ -486,6 +516,7 @@ void ADC_IRQHandler(void)
 											}
 											else
 											{
+												p_position_loop_g->target = PP_position;
 												trajcplt = 0;
 												trace_task_complete = 0x01;
 												printf("[OK] Planner Successful\r\n");
@@ -500,7 +531,17 @@ void ADC_IRQHandler(void)
 									vel_loop_flag = 0;
 									VelocityLoop();
 								}
+								if (trajcplt && ++pp_dbg_cnt >= 2500)
+								{
+									pp_dbg_cnt = 0;
+									printf("[PP] tgt=%.4f fb=%.4f posOut=%.2f velTgt=%.2f velFb=%.2f iq=%.3f svpwm=%d\r\n",
+										p_position_loop_g->target, p_encoder2_g->pos_abs,
+										p_position_loop_g->output,
+										p_velocity_loop_g->target, p_encoder_g->mech_vel,
+										p_motor_g->i_q_ref, svpwm_on);
+								}
 								CurrentLoop();
+							}
 							break;
 							default:
 							break;
@@ -551,6 +592,7 @@ void ADC_IRQHandler(void)
 					}
 					if (fabs(p_encoder2_g->pos_abs) < 0.05f)
 					{
+						printf("[ISR] Homing完成 → FSMstate=REST_MODE\r\n");
 						DisablePWM();
 						FSMstate = REST_MODE;
 						state_change = 1;
@@ -587,6 +629,7 @@ void USART1_IRQHandler(void)
 	
 		if (c == 27)//ESC
 		{
+			printf("[UART] ESC键 → FSMstate=REST_MODE\r\n");
 			FSMstate = REST_MODE;
 			state_change = 1;
 			char_count = 0;
@@ -601,6 +644,7 @@ void USART1_IRQHandler(void)
 			switch (c)
 			{
 				case 'c':
+					printf("[UART] 'c' → FSMstate=CALIBRATION_MODE\r\n");
 					FSMstate = CALIBRATION_MODE;
 					printf("\n\r e-Encoder");
 					DelayUs(10);
@@ -613,6 +657,7 @@ void USART1_IRQHandler(void)
 				break;
 
 				case 'm':
+					printf("[UART] 'm' → FSMstate=MOTOR_MODE\r\n");
 					FSMstate = MOTOR_MODE;
 					state_change = 1;
 					printf("\n\r %-6s %-40s %-10s %-10s %-2s\n\r\n\r", "prefix", "parameter", "min", "max", "current value");
@@ -628,16 +673,19 @@ void USART1_IRQHandler(void)
 				break;
 
 				case 'e':
+					printf("[UART] 'e' → FSMstate=ENCODER_MODE\r\n");
 					FSMstate = ENCODER_MODE;
 					state_change = 1;
 				break;
 
 				case 's':
+					printf("[UART] 's' → FSMstate=SETUP_MODE\r\n");
 					FSMstate = SETUP_MODE;
 					state_change = 1;
 				break;
-				
+
 				case 'h':
+					printf("[UART] 'h' → FSMstate=HOMING_MODE\r\n");
 					FSMstate = HOMING_MODE;
 					state_change = 1;
 				break;
@@ -656,7 +704,11 @@ void USART1_IRQHandler(void)
 	//					FLASH_ProgramWord(PARAM_FLASH_SECTOR+4*i, flash_reg[i]);
 	//				}
 	//				printf("\n\r  Saved new zero position:  %.4f\n\r\n\r", p_encoder2_g->mech_offset);
-		  
+
+				break;
+
+				case 't':
+					timing_print_req = 1;
 				break;
 			}
 		}
@@ -983,6 +1035,8 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
 {
 	if (huart->Instance == USART2&&IDLE_flag==1)
 	{
+		ts_rs485_rx_done = TIM2->CNT;
+
 		USART2_RX_Cnt = Size;
 		IDLE_flag = 0;
 		HAL_UART_DMAStop(huart);

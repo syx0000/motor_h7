@@ -114,10 +114,10 @@ void MX_TIM1_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN TIM1_Init 2 */
-  // 配置 CH4 用于预触发编码器请求（45µs before UP event）
+  // 配置 CH4 用于预触发编码器请求（约 49.6µs before Update, 下降沿触发）
   TIM_OC_InitTypeDef sConfigOC_CH4 = {0};
   sConfigOC_CH4.OCMode = TIM_OCMODE_TIMING;  // 仅用于比较，不输出
-  sConfigOC_CH4.Pulse = 10800;  // 45µs before UP (at 240MHz)
+  sConfigOC_CH4.Pulse = 11900;  // 下降沿 CNT=11900 时触发，距 Update(CNT=0) 约 49.6µs
   sConfigOC_CH4.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC_CH4.OCFastMode = TIM_OCFAST_DISABLE;
   if (HAL_TIM_OC_ConfigChannel(&htim1, &sConfigOC_CH4, TIM_CHANNEL_4) != HAL_OK)
@@ -164,7 +164,13 @@ void MX_TIM2_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN TIM2_Init 2 */
-
+  // 重新配置 TIM2 为自由运行微秒计数器（用于中断时序测量）
+  TIM2->CR1 &= ~TIM_CR1_CEN;
+  TIM2->PSC = 239;                             // 240MHz / 240 = 1MHz (1µs/tick)
+  TIM2->ARR = 0xFFFFFFFF;                      // 32位最大值
+  TIM2->CR1 &= ~(TIM_CR1_DIR | TIM_CR1_CMS);  // 向上计数模式
+  TIM2->EGR = TIM_EGR_UG;                      // 加载预分频值
+  TIM2->CR1 |= TIM_CR1_CEN;
   /* USER CODE END TIM2_Init 2 */
 
 }
@@ -226,10 +232,10 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef* tim_baseHandle)
     HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
     /* TIM1 interrupt Init */
-    HAL_NVIC_SetPriority(TIM1_UP_IRQn, 0, 0);
+    HAL_NVIC_SetPriority(TIM1_UP_IRQn, 2, 0);  // 降低到优先级 2，让 USART2(1) 能抢占
     HAL_NVIC_EnableIRQ(TIM1_UP_IRQn);
   /* USER CODE BEGIN TIM1_MspInit 1 */
-    HAL_NVIC_SetPriority(TIM1_CC_IRQn, 0, 0);
+    HAL_NVIC_SetPriority(TIM1_CC_IRQn, 2, 0);  // CC4 与 Update 同优先级
     HAL_NVIC_EnableIRQ(TIM1_CC_IRQn);
   /* USER CODE END TIM1_MspInit 1 */
   }

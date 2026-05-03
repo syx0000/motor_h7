@@ -39,7 +39,20 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+extern volatile uint32_t ts_cc4_trigger;
+extern volatile uint32_t ts_rs485_tx_done;
+extern volatile uint32_t ts_pwm_update;
+extern volatile uint32_t ts_adc_done;
+extern volatile uint32_t ts_rs485_rx_done;
+extern volatile uint32_t update_cnt_at_irq;
+extern volatile uint32_t update_dir_at_irq;
+extern volatile uint32_t adc_cnt_at_irq;
+extern volatile uint32_t adc_dir_at_irq;
+extern volatile uint32_t adc_ccr1_at_irq;
+extern volatile uint32_t adc_ccr2_at_irq;
+extern volatile uint32_t adc_ccr3_at_irq;
+extern volatile uint8_t timing_print_req;
+extern float ISR_time_us;
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -212,9 +225,12 @@ int main(void)
 
 	// 清除 UDIS 前先重置计数器到已知状态，避免 CC4/UP 时序混乱
 	TIM1->CR1 &= ~TIM_CR1_CEN;  // 停止计数器
-	TIM1->CNT = 0;              // 重置计数器
+	TIM1->CNT = 0;              // 重置计数器到底部
+	TIM1->RCR = 1;              // 重置重复计数器（RepetitionCounter=1，每2次UPDATE触发一次TRGO）
+	TIM1->EGR = TIM_EGR_UG;     // 产生更新事件，加载RCR到影子寄存器
+	TIM1->SR = 0;               // 清除所有标志位（包括UIF）
 	TIM1->CR1 &= ~TIM_CR1_UDIS; // 清除 UDIS，允许更新事件
-	TIM1->CR1 |= TIM_CR1_CEN;   // 重新启动计数器
+	TIM1->CR1 |= TIM_CR1_CEN;   // 重新启动计数器（中心对齐模式从0开始向上计数）
 	EnterMenuState();
 	
 // 1. 初始化发生器
@@ -300,7 +316,35 @@ int main(void)
 			u8_1msFlag = 0;
 		}
 
-		// Flash写入标志检查（主循环执行，避免ISR阻塞）
+		if (timing_print_req)
+		{
+			timing_print_req = 0;
+			uint32_t t_cc4 = ts_cc4_trigger;
+			uint32_t t_tx  = ts_rs485_tx_done;
+			uint32_t t_up  = ts_pwm_update;
+			uint32_t t_adc = ts_adc_done;
+			uint32_t t_rx  = ts_rs485_rx_done;
+			int32_t dt_tx  = (int32_t)(t_tx  - t_cc4);
+			int32_t dt_up  = (int32_t)(t_up  - t_cc4);
+			int32_t dt_adc = (int32_t)(t_adc - t_cc4);
+			int32_t dt_rx  = (int32_t)(t_rx  - t_cc4);
+			// 负值加 100us（PWM 周期）
+			if (dt_tx < 0) dt_tx += 100;
+			if (dt_up < 0) dt_up += 100;
+			if (dt_adc < 0) dt_adc += 100;
+			if (dt_rx < 0) dt_rx += 100;
+			printf("\r\n=== ISR Timing (TIM2 @ 1us/tick) ===\r\n");
+			printf(" [  0 us] CC4 RS485 TX trigger\r\n");
+			printf(" [%+4d us] RS485 TX done\r\n", (int)dt_tx);
+			printf(" [%+4d us] RS485 RX done\r\n", (int)dt_rx);
+			printf(" [%+4d us] PWM Update IRQ\r\n", (int)dt_up);
+			printf(" [%+4d us] ADC JEOS done\r\n", (int)dt_adc);
+			printf(" Update CNT=%lu DIR=%lu\r\n", (unsigned long)update_cnt_at_irq, (unsigned long)update_dir_at_irq);
+			printf(" ADC    CNT=%lu DIR=%lu CCR1=%lu CCR2=%lu CCR3=%lu\r\n", (unsigned long)adc_cnt_at_irq, (unsigned long)adc_dir_at_irq, (unsigned long)adc_ccr1_at_irq, (unsigned long)adc_ccr2_at_irq, (unsigned long)adc_ccr3_at_irq);
+			printf(" ISR exec: %.1f us\r\n", ISR_time_us);
+			printf("====================================\r\n");
+		}
+
 		if (flash_write_pending == 1)
 		{
 			flash_write_pending = 0;
